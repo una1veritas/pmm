@@ -5,7 +5,10 @@
 #include <string>
 #include <vector>
 #include <stack>
+
 #include <time.h>
+#include <sstream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -34,7 +37,6 @@ struct Trie {
 };
 Trie *troot = new Trie();
 
-
 struct Node {
 	Node *edges[SIGMA_SIZE];
 	//edge_num[i]  0 = edgeなし 1 = primary-edgeあり 2 = secondary-edgeあり
@@ -48,7 +50,6 @@ struct Node {
 	int dawgtoac;
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
 	int torb;
-
 
 	Node() {
 		suff = NULL;
@@ -69,7 +70,6 @@ struct Node {
 };
 Node *nroot = new Node();
 
-
 Node *split(Node *parentnode, Node *childnode, char a) {
 	Node *newchildnode = new Node();
 	Node *currentnode = parentnode;
@@ -81,32 +81,31 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 	//childのedgeをすべてnewchildのsecondary-edgeにコピーする
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 		newchildnode->edges[i] = childnode->edges[i];
-		if(childnode->edges[i] != NULL)
+		if (childnode->edges[i] != NULL)
 			newchildnode->edge_num[i] = 2;
 	}
-
 
 	//parentnode->hassecedgechar[childnode->nodenum] = 0;
 
 	newchildnode->suff = childnode->suff;
 	newchildnode->suff->ine.push_back(newchildnode);
-	auto itr = find(childnode->suff->ine.begin(), childnode->suff->ine.end(), childnode);
+	auto itr = find(childnode->suff->ine.begin(), childnode->suff->ine.end(),
+			childnode);
 	childnode->suff->ine.erase(itr);
 	childnode->suff = newchildnode;
 	newchildnode->ine.push_back(childnode);
-
 
 	int m = 0;
 	while (currentnode != nroot) {
 		currentnode = currentnode->suff;
 		for (m = 0; m < SIGMA_SIZE; m++) {
-			if ((currentnode->edges[m] == childnode) && (currentnode->edge_num[m] == 2)) {
+			if ((currentnode->edges[m] == childnode)
+					&& (currentnode->edge_num[m] == 2)) {
 				currentnode->edges[m] = newchildnode;
 				break;
 			}
 
 		}
-
 
 		if (m == (SIGMA_SIZE - 1))
 			break;
@@ -117,10 +116,7 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 
 }
 
-
-
 Node *update(Node *activenode, char a) {
-
 
 	int charnum = a - ' ';
 
@@ -129,13 +125,11 @@ Node *update(Node *activenode, char a) {
 
 		if (activenode->edge_num[charnum] == 1) {
 			return activenode->edges[charnum];
-		}
-		else {
+		} else {
 			return split(activenode, activenode->edges[charnum], a);
 		}
 
-	}
-	else {
+	} else {
 		//辺がない場合
 		Node *newactivenode = new Node();
 		activenode->edges[charnum] = newactivenode;
@@ -143,19 +137,19 @@ Node *update(Node *activenode, char a) {
 
 		Node *currentnode = activenode;
 
-
 		while ((currentnode != nroot) && (newactivenode->suff == NULL)) {
 			currentnode = currentnode->suff;
 
-			if ((currentnode->edges[charnum] != NULL) && (currentnode->edge_num[charnum] == 1)) {
+			if ((currentnode->edges[charnum] != NULL)
+					&& (currentnode->edge_num[charnum] == 1)) {
 				newactivenode->suff = currentnode->edges[charnum];
 				newactivenode->suff->ine.push_back(newactivenode);
-			}
-			else if ((currentnode->edges[charnum] != NULL) && (currentnode->edge_num[charnum] == 2)) {
-				newactivenode->suff = split(currentnode, currentnode->edges[charnum], a);
+			} else if ((currentnode->edges[charnum] != NULL)
+					&& (currentnode->edge_num[charnum] == 2)) {
+				newactivenode->suff = split(currentnode,
+						currentnode->edges[charnum], a);
 				newactivenode->suff->ine.push_back(newactivenode);
-			}
-			else {
+			} else {
 				currentnode->edges[charnum] = newactivenode;
 				currentnode->edge_num[charnum] = 2;
 			}
@@ -166,13 +160,10 @@ Node *update(Node *activenode, char a) {
 			nroot->ine.push_back(newactivenode);
 		}
 
-
-
 		return newactivenode;
 
 	}
 }
-
 
 void Goto(Trie *node, string &curString, int depth = 0) {
 	if (depth == curString.size()) {
@@ -191,48 +182,46 @@ void Goto(Trie *node, string &curString, int depth = 0) {
 }
 
 /*
-int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
-	if (depth == curString.size()) {
-		node->out.insert(curString);
+ int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
+ if (depth == curString.size()) {
+ node->out.insert(curString);
 
-		return depth2;
-	}
+ return depth2;
+ }
 
 
-	int next = curString[depth] - ' ';
+ int next = curString[depth] - ' ';
 
-	if (node->edges[next] == NULL || node->edges[next] == troot) {
-		node->edges[next] = new Trie();
-		if (depth2 == -1)
-			depth2 = depth;
-	}
+ if (node->edges[next] == NULL || node->edges[next] == troot) {
+ node->edges[next] = new Trie();
+ if (depth2 == -1)
+ depth2 = depth;
+ }
 
-	Goto2(node->edges[next], curString, depth + 1, depth2);
-}
-*/
-
+ Goto2(node->edges[next], curString, depth + 1, depth2);
+ }
+ */
 
 vector<Trie *> getoutstates(string &string) {
 	vector<Trie *> outstates;
 	Node *activenode = nroot;
 	Node *node;
 	int stringsize = string.size();
-	stack <Node*> st;
+	stack<Node*> st;
 
 	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
 
 		activenode = activenode->edges[string[i] - ' '];
-		
+
 	}
 
-
 	if (activenode != NULL) {
-		queue <Node*> queue;
+		queue<Node*> queue;
 		queue.push(activenode);
 		while (!queue.empty()) {
 			node = queue.front();
 			queue.pop();
-			if ( node->torb == 1 ) {
+			if (node->torb == 1) {
 				outstates.push_back(node->dtoc);
 			}
 
@@ -246,10 +235,8 @@ vector<Trie *> getoutstates(string &string) {
 	return (outstates);
 }
 
-
-
 vector<Trie *> getfailstates(string &string, int depth) {
-	vector< Trie * > failstates;
+	vector<Trie *> failstates;
 	vector<int> tmp;
 	Node *activenode = nroot;
 	Node *node;
@@ -258,7 +245,6 @@ vector<Trie *> getfailstates(string &string, int depth) {
 	int stringsize = string.size();
 	stack<Node *> st;
 	stack<int> st_num;
-
 
 	for (int i = 0; (i <= stringsize) && (activenode != NULL); i++) {
 		if ((i >= (depth)) && (activenode != NULL)) {
@@ -291,8 +277,7 @@ vector<Trie *> getfailstates(string &string, int depth) {
 				if (enode->torb == 1) {
 					enode->dtoc->ine_num = num;
 					failstates.push_back(enode->dtoc);
-				}
-				else {
+				} else {
 
 					for (int i = 0; i < node->ine.size(); i++) {
 						queue.push(node->ine[i]);
@@ -306,13 +291,10 @@ vector<Trie *> getfailstates(string &string, int depth) {
 	return failstates;
 }
 
-
-
 int main(void) {
 
 	//キーワード（の集合）が入力として与えられる
 	//キーワードを用いて、通常の方法でACマシンとDAWGを作る
-
 
 	//
 	//ACマシンの構成
@@ -329,41 +311,43 @@ int main(void) {
 	//goto関数の構成
 
 	std::ifstream reading_file;
+	std::istringstream istr;
 
-		string ward_num;
-		int ward_num_i;
-		string ward_string;
-		string file_name;
+//	string ward_num;
+//	int ward_num_i;
+	int word_num;
+	string ward_string;
+	string file_name;
 
-		//file_name = "word_2000.txt";
-		//file_name = "test5.txt";
-		//file_name = "word_list3.txt";
-		file_name = "word_list2.txt";
-		//file_name = "aho_check_in.txt";
+	//file_name = "word_2000.txt";
+	//file_name = "test5.txt";
+	//file_name = "word_list3.txt";
+	file_name = "word_list2.txt";
+	//file_name = "aho_check_in.txt";
 
-		string reading_line;
+	string reading_line;
 
-		reading_file.open(file_name, std::ios::in);
-		if (reading_file.fail())
-		{
-			std::cerr << "失敗" << std::endl;
-			return -1;
-		}
+	std::cout << "Opening file " << file_name << std::endl;
+	reading_file.open(file_name, std::ios::in);
+	if (reading_file.fail()) {
+		std::cerr << "失敗" << std::endl;
+		return EXIT_FAILURE;
+	}
+	std::getline(reading_file, reading_line);
+//	ward_num = reading_line;
+//	ward_num_i = atoi(ward_num.c_str());
+	istr.str(reading_line);
+	istr.clear();
+	istr >> word_num;
+
+	for (int i = 0; i < word_num; i++) {
+
 		std::getline(reading_file, reading_line);
-		ward_num = reading_line;
 
-		ward_num_i = atoi(ward_num.c_str());
+		//cout << reading_line << " " << i << endl;
 
-		for (int i = 0; i < ward_num_i; i++) {
-
-			std::getline(reading_file, reading_line);
-
-			//cout << reading_line << " " << i << endl;
-
-			Goto(troot, reading_line);
-		}
-	
-
+		Goto(troot, reading_line);
+	}
 
 	// failure関数の構成
 	queue<Trie*> q;
@@ -392,7 +376,8 @@ int main(void) {
 				q.push(next);
 
 				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail);
+				for (; f->edges[i] == NULL; f = f->fail)
+					;
 
 				next->fail = f->edges[i];
 
@@ -405,7 +390,6 @@ int main(void) {
 
 	cout << "aho struct finish" << endl;
 
-
 	//
 	//dawgの構成
 	//
@@ -414,89 +398,83 @@ int main(void) {
 	DAWGTOAC_NUM++;
 	nroot->torb = 1;
 
-		//string ward_num;
-		//int ward_num_i;
-		//string ward_string;
-		//string file_name;
+	//string ward_num;
+	//int ward_num_i;
+	//string ward_string;
+	//string file_name;
 
-		Node *activenode;
-		activenode = nroot;
-		Node *tnode;
+	Node *activenode;
+	activenode = nroot;
+	Node *tnode;
 
-		Trie *trienode;
-		Trie *tmptrie;
+	Trie *trienode;
+	Trie *tmptrie;
 
-		//cout << "ファイル名を入力してください" << endl;
-		//cin >> file_name;
+	//cout << "ファイル名を入力してください" << endl;
+	//cin >> file_name;
 
-		//file_name = "word_2000.txt";
-		//file_name = "test5.txt";
-		//file_name = "word_list3.txt";
-		file_name = "word_list2.txt";
-		//file_name = "aho_check_in.txt";
+	//file_name = "word_2000.txt";
+	//file_name = "test5.txt";
+	//file_name = "word_list3.txt";
+	file_name = "word_list2.txt";
+	//file_name = "aho_check_in.txt";
 
-		std::ifstream reading_file2;
-		//string reading_line;
+	std::ifstream reading_file2;
+	//string reading_line;
 
-		reading_file2.open(file_name, std::ios::in);
-		if (reading_file2.fail())
-		{
-			std::cerr << "失敗" << std::endl;
-			return -1;
-		}
+	reading_file2.open(file_name, std::ios::in);
+	if (reading_file2.fail()) {
+		std::cerr << "失敗" << std::endl;
+		return -1;
+	}
+	std::getline(reading_file2, reading_line);
+	//ward_num = reading_line;
+	istr.str(reading_line);
+	istr.clear();
+	//ward_num_i = atoi(ward_num.c_str());
+	istr >> word_num;
+	for (int i = 0; i < word_num; i++) {
+
 		std::getline(reading_file2, reading_line);
-		ward_num = reading_line;
 
-		ward_num_i = atoi(ward_num.c_str());
+		//cout << reading_line << " " << i << endl;
 
+		int stringsize = reading_line.size();
 
-		for (int i = 0; i < ward_num_i; i++) {
+		for (int j = 0; j < stringsize; j++)
+			activenode = update(activenode, reading_line[j]);
 
-			std::getline(reading_file2, reading_line);
+		activenode = nroot;
+		trienode = troot;
 
-			//cout << reading_line << " " << i << endl;
+		activenode = activenode->edges[reading_line[0] - ' '];
+		trienode = trienode->edges[reading_line[0] - ' '];
 
-			int stringsize = reading_line.size();
-
-			for (int j = 0; j < stringsize; j++)
-				activenode = update(activenode, reading_line[j]);
-
-
-			activenode = nroot;
-			trienode = troot;
-
-			activenode = activenode->edges[reading_line[0] - ' '];
-			trienode = trienode->edges[reading_line[0] - ' '];
-
-
-			for (int j = 1; j < stringsize; j++) {
-				if (activenode->dawgtoac == 0) {
-				//if (activenode->torb == 1) {
-					activenode->dawgtoac = DAWGTOAC_NUM;
-					activenode->torb = 1;
-					DAWGTOAC_NUM++;
-					activenode->dtoc = trienode;
-				}
-
-
-				tnode = activenode->edges[reading_line[j] - ' '];
-				tmptrie = trienode->edges[reading_line[j] - ' '];
-				activenode = tnode;
-				trienode = tmptrie;
-			}
+		for (int j = 1; j < stringsize; j++) {
 			if (activenode->dawgtoac == 0) {
+				//if (activenode->torb == 1) {
 				activenode->dawgtoac = DAWGTOAC_NUM;
 				activenode->torb = 1;
 				DAWGTOAC_NUM++;
 				activenode->dtoc = trienode;
 			}
 
-			activenode = nroot;
+			tnode = activenode->edges[reading_line[j] - ' '];
+			tmptrie = trienode->edges[reading_line[j] - ' '];
+			activenode = tnode;
+			trienode = tmptrie;
 		}
-	
+		if (activenode->dawgtoac == 0) {
+			activenode->dawgtoac = DAWGTOAC_NUM;
+			activenode->torb = 1;
+			DAWGTOAC_NUM++;
+			activenode->dtoc = trienode;
+		}
+
+		activenode = nroot;
+	}
 
 	cout << "dawg struct finish" << endl;
-
 
 	//（動作確認）
 
@@ -504,8 +482,7 @@ int main(void) {
 	string bigString;
 	//std::ifstream ifs("test4.txt");
 	std::ifstream ifs("aho_check_out.txt");
-	if (ifs.fail())
-	{
+	if (ifs.fail()) {
 		std::cerr << "失敗" << std::endl;
 		return -1;
 	}
@@ -517,12 +494,10 @@ int main(void) {
 	for (int i = 0; i < k; i++) {
 		int cur = bigString[i] - ' ';
 
-
-		for (; node->edges[cur] == NULL; node = node->fail)
-		{
-			cout << "failure now... node number " << node->fail->nodenum << endl;
+		for (; node->edges[cur] == NULL; node = node->fail) {
+			cout << "failure now... node number " << node->fail->nodenum
+					<< endl;
 		}
-
 
 		node = node->edges[cur];
 
@@ -537,13 +512,11 @@ int main(void) {
 		}
 	}
 
-
 	//
 	//キーワードを新たに与える（一語ずつ）
 	//DAWGを動的に構成
 	//DAWGをもとにACマシンを更新
 	//
-
 
 	//std::ifstream readline2("word_list3.txt");
 	//std::ifstream readline2("test3.txt");
@@ -551,7 +524,7 @@ int main(void) {
 
 	//dynamic start
 
-	while (1) { 
+	while (1) {
 
 		int key_num = 0;
 
@@ -569,7 +542,6 @@ int main(void) {
 
 		for (int i7 = 0; i7 < key_num; i7++) {
 
-
 			Trie *node2 = troot;
 			Trie *nodepoint2 = troot;
 			Trie * tactivenode;
@@ -583,7 +555,6 @@ int main(void) {
 			Node *activenode = nroot;
 			Node *tnode = nroot;
 
-
 			//キーワードの読み込み
 
 			//getline(readline2, curString2);
@@ -592,7 +563,6 @@ int main(void) {
 			//cout << curString2 << " " << i7 << endl;
 
 			size2 = curString2.size();
-
 
 			//Algorithm1
 
@@ -606,11 +576,10 @@ int main(void) {
 				newstates[i] = tactivenode;
 				charnum = curString2[i] - ' ';
 
-
-				if ((tactivenode->edges[charnum] != NULL) && (tactivenode->edges[charnum] != troot)) {
+				if ((tactivenode->edges[charnum] != NULL)
+						&& (tactivenode->edges[charnum] != troot)) {
 					tactivenode = tactivenode->edges[charnum];
-				}
-				else {
+				} else {
 
 					if (trie_depth == 10000) {
 						trie_depth = i + 1;
@@ -624,7 +593,6 @@ int main(void) {
 
 				}
 
-
 			}
 			newstates[size2] = tactivenode;
 			tactivenode->out.insert(curString2);
@@ -634,15 +602,13 @@ int main(void) {
 
 			start = clock();
 
-			vector< Trie* > failstates;
+			vector<Trie*> failstates;
 			failstates = getfailstates(curString2, trie_depth);
 			int fstatesize = failstates.size();
-
 
 			for (int i = fstatesize - 1; i >= 0; i--) {
 				failstates[i]->fail = newstates[failstates[i]->ine_num];
 			}
-
 
 			end = clock();
 			time2 += (end - start);
@@ -661,13 +627,13 @@ int main(void) {
 					if (tactivenode == troot) {
 						tactivenode->edges[charnum2]->fail = troot;
 						tactivenode = tactivenode->edges[charnum2];
-					}
-					else {
+					} else {
 						failurenode = tactivenode->fail;
 
 						int j = 0;
-						while ((failurenode->edges[charnum2] == NULL) || (failurenode->edges[charnum2] == tactivenode) || 
-							   (failurenode == troot)) {
+						while ((failurenode->edges[charnum2] == NULL)
+								|| (failurenode->edges[charnum2] == tactivenode)
+								|| (failurenode == troot)) {
 
 							if (j >= 2)
 								break;
@@ -682,15 +648,12 @@ int main(void) {
 
 						tactivenode->fail = failurenode->edges[charnum2];
 
-						
 						for (auto s : failurenode->edges[charnum2]->out)
 							tactivenode->out.insert(s);
-						
 
 					}
-					
-				}
-				else {
+
+				} else {
 					tactivenode = tactivenode->edges[curString2[i] - ' '];
 				}
 			}
@@ -708,12 +671,10 @@ int main(void) {
 
 			out_size += outstatesize;
 
-			
 			for (int i = 0; i < outstatesize; i++) {
 				outstates[i]->out.insert(curString2);
 			}
-			
-			
+
 			end = clock();
 			time4 += (end - start);
 
@@ -726,15 +687,12 @@ int main(void) {
 			for (int i = 0; i < size2; i++)
 				activenode = update(activenode, curString2[i]);
 
-
 			activenode = nroot;
 			Trie *trienode = troot;
 			Trie *tmptrie;
 
-
 			activenode = activenode->edges[curString2[0] - ' '];
 			trienode = trienode->edges[curString2[0] - ' '];
-
 
 			for (int i = 1; i < size2; i++) {
 				if (activenode->dawgtoac == 0) {
@@ -744,13 +702,11 @@ int main(void) {
 					activenode->dtoc = trienode;
 				}
 
-
 				tnode = activenode->edges[curString2[i] - ' '];
 				tmptrie = trienode->edges[curString2[i] - ' '];
 				activenode = tnode;
 				trienode = tmptrie;
 			}
-
 
 			if (activenode->dawgtoac == 0) {
 				activenode->dawgtoac = DAWGTOAC_NUM;
@@ -764,16 +720,17 @@ int main(void) {
 			end = clock();
 			time5 += (end - start);
 
-
 		}
 
 		total_end = clock();
-		cout << "total time: " << (double)(total_end - total_start) / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time1: " << (double)time1 / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time2: " << (double)time2/ CLOCKS_PER_SEC << "sec.\n";
-		cout << "time3: " << (double)time3/ CLOCKS_PER_SEC << "sec.\n";
-		cout << "time4: " << (double)time4/ CLOCKS_PER_SEC << "sec.\n";
-		cout << "time5: " << (double)time5/ CLOCKS_PER_SEC << "sec.\n";
+		cout << "total time: "
+				<< (double) (total_end - total_start) / CLOCKS_PER_SEC
+				<< "sec.\n";
+		cout << "time1: " << (double) time1 / CLOCKS_PER_SEC << "sec.\n";
+		cout << "time2: " << (double) time2 / CLOCKS_PER_SEC << "sec.\n";
+		cout << "time3: " << (double) time3 / CLOCKS_PER_SEC << "sec.\n";
+		cout << "time4: " << (double) time4 / CLOCKS_PER_SEC << "sec.\n";
+		cout << "time5: " << (double) time5 / CLOCKS_PER_SEC << "sec.\n";
 
 		cout << "out size " << out_size << endl;
 
@@ -791,16 +748,14 @@ int main(void) {
 
 			int cur = bigString2[i] - ' ';
 
-			for (; node3->edges[cur] == NULL; node3 = node3->fail)
-			{
-				cout << "failure now... node number " << node3->fail->nodenum << endl;
+			for (; node3->edges[cur] == NULL; node3 = node3->fail) {
+				cout << "failure now... node number " << node3->fail->nodenum
+						<< endl;
 			}
-
 
 			node3 = node3->edges[cur];
 
 			cout << "current node number " << node3->nodenum << endl;
-
 
 			if (node3->out.size() != 0) {
 				cout << "At position " << i << " we found:\n";
@@ -812,9 +767,7 @@ int main(void) {
 
 		}
 
-
-
-	} 
+	}
 	//dynamic finish
 
 	return 0;
