@@ -15,13 +15,13 @@ INCLUDES = -I./
 #
 LIBOBJS = 
 
-all: ac 
+all: aho-dawg 
 
-acdawg:  acdawg.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o acdawg acdawg.o $(LIBOBJS)
+aho-dawg:  aho-dawg.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg aho-dawg.o $(LIBOBJS)
 	
-ac: ac.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o ac ac.o $(LIBOBJS)
+aho: aho.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho aho.o $(LIBOBJS)
 
 
 clean: 
