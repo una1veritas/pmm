@@ -7,6 +7,8 @@
 #include <stack>
 #include <time.h>
 
+#include <sstream>
+
 using namespace std;
 
 const int SIGMA_SIZE = 100;
@@ -32,21 +34,33 @@ struct Trie {
 
 	}
 };
-Trie *troot = new Trie();
+//Trie *troot = new Trie();
+
+class ACMachine {
+	Trie troot;
+
+public:
+	ACMachine() {}
+
+	Trie & trieroot(void) { return troot; }
+	void buildTransitions(string &str);
+};
+
 
 struct Node {
 	Node *edges[SIGMA_SIZE];
-	//edge_num[i]  0 = edgeãªã— 1 = primary-edgeã‚ã‚Š 2 = secondary-edgeã‚ã‚Š
+	//edge_num[i]  0 = edge‚È‚µ 1 = primary-edge‚ ‚è 2 = secondary-edge‚ ‚è
 	int edge_num[SIGMA_SIZE];
 	Node *suff;
 	Trie *dtoc;
 	vector<Node*> ine;
-	//dawgã«ãŠã‘ã‚‹ãƒãƒ¼ãƒ‰ã®ç•ªå·
+	//dawg‚É‚¨‚¯‚éƒm[ƒh‚Ì”Ô†
 	int nodenum;
-	//ACã®ãƒãƒ¼ãƒ‰ã¨dawgã®ãƒãƒ¼ãƒ‰ã®ç•ªå·ã‚’ä¸€è‡´ã•ã›ã‚‹ãŸã‚ã®å¤‰æ•°
+	//AC‚Ìƒm[ƒh‚Ædawg‚Ìƒm[ƒh‚Ì”Ô†‚ğˆê’v‚³‚¹‚é‚½‚ß‚Ì•Ï”
 	int dawgtoac;
-	//trunkãƒãƒ¼ãƒ‰ã‹branchãƒãƒ¼ãƒ‰ã‹ã®åˆ¤å®š 1ãªã‚‰trunkã€0ãªã‚‰branch åˆæœŸå€¤ã¯0
+	//trunkƒm[ƒh‚©branchƒm[ƒh‚©‚Ì”»’è 1‚È‚çtrunkA0‚È‚çbranch ‰Šú’l‚Í0
 	int torb;
+
 
 	Node() {
 		suff = NULL;
@@ -67,6 +81,7 @@ struct Node {
 };
 Node *nroot = new Node();
 
+
 Node *split(Node *parentnode, Node *childnode, char a) {
 	Node *newchildnode = new Node();
 	Node *currentnode = parentnode;
@@ -75,34 +90,35 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 	parentnode->edges[charnum] = newchildnode;
 	parentnode->edge_num[charnum] = 1;
 
-	//childã®edgeã‚’ã™ã¹ã¦newchildã®secondary-edgeã«ã‚³ãƒ”ãƒ¼ã™ã‚‹
+	//child‚Ìedge‚ğ‚·‚×‚Änewchild‚Ìsecondary-edge‚ÉƒRƒs[‚·‚é
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 		newchildnode->edges[i] = childnode->edges[i];
-		if (childnode->edges[i] != NULL)
+		if(childnode->edges[i] != NULL)
 			newchildnode->edge_num[i] = 2;
 	}
+
 
 	//parentnode->hassecedgechar[childnode->nodenum] = 0;
 
 	newchildnode->suff = childnode->suff;
 	newchildnode->suff->ine.push_back(newchildnode);
-	auto itr = find(childnode->suff->ine.begin(), childnode->suff->ine.end(),
-			childnode);
+	auto itr = find(childnode->suff->ine.begin(), childnode->suff->ine.end(), childnode);
 	childnode->suff->ine.erase(itr);
 	childnode->suff = newchildnode;
 	newchildnode->ine.push_back(childnode);
+
 
 	int m = 0;
 	while (currentnode != nroot) {
 		currentnode = currentnode->suff;
 		for (m = 0; m < SIGMA_SIZE; m++) {
-			if ((currentnode->edges[m] == childnode)
-					&& (currentnode->edge_num[m] == 2)) {
+			if ((currentnode->edges[m] == childnode) && (currentnode->edge_num[m] == 2)) {
 				currentnode->edges[m] = newchildnode;
 				break;
 			}
 
 		}
+
 
 		if (m == (SIGMA_SIZE - 1))
 			break;
@@ -113,40 +129,45 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 
 }
 
+
+
 Node *update(Node *activenode, char a) {
+
 
 	int charnum = a - ' ';
 
 	if (activenode->edges[charnum] != NULL) {
-		//è¾ºãŒã‚ã‚‹å ´åˆ
+		//•Ó‚ª‚ ‚éê‡
 
 		if (activenode->edge_num[charnum] == 1) {
 			return activenode->edges[charnum];
-		} else {
+		}
+		else {
 			return split(activenode, activenode->edges[charnum], a);
 		}
 
-	} else {
-		//è¾ºãŒãªã„å ´åˆ
+	}
+	else {
+		//•Ó‚ª‚È‚¢ê‡
 		Node *newactivenode = new Node();
 		activenode->edges[charnum] = newactivenode;
 		activenode->edge_num[charnum] = 1;
 
 		Node *currentnode = activenode;
 
+
 		while ((currentnode != nroot) && (newactivenode->suff == NULL)) {
 			currentnode = currentnode->suff;
 
-			if ((currentnode->edges[charnum] != NULL)
-					&& (currentnode->edge_num[charnum] == 1)) {
+			if ((currentnode->edges[charnum] != NULL) && (currentnode->edge_num[charnum] == 1)) {
 				newactivenode->suff = currentnode->edges[charnum];
 				newactivenode->suff->ine.push_back(newactivenode);
-			} else if ((currentnode->edges[charnum] != NULL)
-					&& (currentnode->edge_num[charnum] == 2)) {
-				newactivenode->suff = split(currentnode,
-						currentnode->edges[charnum], a);
+			}
+			else if ((currentnode->edges[charnum] != NULL) && (currentnode->edge_num[charnum] == 2)) {
+				newactivenode->suff = split(currentnode, currentnode->edges[charnum], a);
 				newactivenode->suff->ine.push_back(newactivenode);
-			} else {
+			}
+			else {
 				currentnode->edges[charnum] = newactivenode;
 				currentnode->edge_num[charnum] = 2;
 			}
@@ -157,11 +178,14 @@ Node *update(Node *activenode, char a) {
 			nroot->ine.push_back(newactivenode);
 		}
 
+
+
 		return newactivenode;
 
 	}
 }
 
+#ifdef USE_ORIGINAL
 void Goto(Trie *node, string &curString, int depth = 0) {
 	if (depth == curString.size()) {
 		node->out.insert(curString);
@@ -177,13 +201,34 @@ void Goto(Trie *node, string &curString, int depth = 0) {
 
 	Goto(node->edges[next], curString, depth + 1);
 }
+#else
+void ACMachine::buildTransitions(string &curString) {
+	Trie * node = &trieroot();
+	int depth = 0;
+	int next;
 
+	while ( depth < curString.size() ) {
+		next = curString[depth] - ' ';
+		if (node->edges[next] == NULL || node->edges[next] == &trieroot()) {
+			node->edges[next] = new Trie();
+		}
+		node = node->edges[next];
+		depth++;
+	}
+	node->out.insert(curString);
+	return;
+
+}
+#endif
+
+/*
 int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
 	if (depth == curString.size()) {
 		node->out.insert(curString);
 
 		return depth2;
 	}
+
 
 	int next = curString[depth] - ' ';
 
@@ -195,27 +240,30 @@ int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
 
 	Goto2(node->edges[next], curString, depth + 1, depth2);
 }
+*/
+
 
 vector<Trie *> getoutstates(string &string) {
 	vector<Trie *> outstates;
 	Node *activenode = nroot;
 	Node *node;
 	int stringsize = string.size();
-	stack<Node*> st;
+	stack <Node*> st;
 
 	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
 
 		activenode = activenode->edges[string[i] - ' '];
-
+		
 	}
 
+
 	if (activenode != NULL) {
-		queue<Node*> queue;
+		queue <Node*> queue;
 		queue.push(activenode);
 		while (!queue.empty()) {
 			node = queue.front();
 			queue.pop();
-			if ((node->torb == 1)) {
+			if ( node->torb == 1 ) {
 				outstates.push_back(node->dtoc);
 			}
 
@@ -229,8 +277,10 @@ vector<Trie *> getoutstates(string &string) {
 	return (outstates);
 }
 
+
+
 vector<Trie *> getfailstates(string &string, int depth) {
-	vector<Trie *> failstates;
+	vector< Trie * > failstates;
 	vector<int> tmp;
 	Node *activenode = nroot;
 	Node *node;
@@ -239,6 +289,7 @@ vector<Trie *> getfailstates(string &string, int depth) {
 	int stringsize = string.size();
 	stack<Node *> st;
 	stack<int> st_num;
+
 
 	for (int i = 0; (i <= stringsize) && (activenode != NULL); i++) {
 		if ((i >= (depth)) && (activenode != NULL)) {
@@ -268,10 +319,11 @@ vector<Trie *> getfailstates(string &string, int depth) {
 			auto itr = find(mark.begin(), mark.end(), enode);
 			if (itr == mark.end()) {
 				mark.push_back(enode);
-				if ((enode->torb == 1)) {
+				if ( enode->torb == 1 ) {
 					enode->dtoc->ine_num = num;
 					failstates.push_back(enode->dtoc);
-				} else {
+				}
+				else {
 
 					for (int i = 0; i < node->ine.size(); i++) {
 						queue.push(node->ine[i]);
@@ -285,68 +337,79 @@ vector<Trie *> getfailstates(string &string, int depth) {
 	return failstates;
 }
 
-int main(void) {
 
-	//ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ï¼ˆã®é›†åˆï¼‰ãŒå…¥åŠ›ã¨ã—ã¦ä¸ãˆã‚‰ã‚Œã‚‹
-	//ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’ç”¨ã„ã¦ã€é€šå¸¸ã®æ–¹æ³•ã§ACãƒã‚·ãƒ³ã¨DAWGã‚’ä½œã‚‹
+
+int main(int argc, char * argv[]) {
+
+	std::istringstream sstream;
+
+	//ƒL[ƒ[ƒhi‚ÌW‡j‚ª“ü—Í‚Æ‚µ‚Ä—^‚¦‚ç‚ê‚é
+	//ƒL[ƒ[ƒh‚ğ—p‚¢‚ÄA’Êí‚Ì•û–@‚ÅACƒ}ƒVƒ“‚ÆDAWG‚ğì‚é
 
 	//
-	//ACãƒã‚·ãƒ³ã®æ§‹æˆ
+	//ACƒ}ƒVƒ“‚Ì\¬
 	//
 
-	// rootã®åˆæœŸåŒ–
+	ACMachine acm;
+
+	// root‚Ì‰Šú‰»
 	for (int i = 0; i < SIGMA_SIZE; i++) {
-		troot->edges[i] = troot;
-		troot->fail = troot;
+		acm.trieroot().edges[i] = &acm.trieroot();
+		acm.trieroot().fail = &acm.trieroot();
 	}
 
 	int out_size = 0;
 
-	//gotoé–¢æ•°ã®æ§‹æˆ
+	//gotoŠÖ”‚Ì\¬
 
 	std::ifstream reading_file;
 
-	string ward_num;
-	int ward_num_i;
-	string ward_string;
-	string file_name;
+	int word_num;
+//		string ward_num;
+//		int ward_num_i;
+//		string ward_string;
+		string file_name;
 
-	//file_name = "word_2000.txt";
-	//file_name = "test5.txt";
-	//file_name = "word_list3.txt";
-	file_name = "word_list2.txt";
-	//file_name = "aho_check_in.txt";
+		//file_name = "word_2000.txt";
+		//file_name = "test5.txt";
+		//file_name = "word_list3.txt";
+		file_name = "word_list2.txt";
+		//file_name = "aho_check_in.txt";
 
-	string reading_line;
+		string reading_line;
 
-	reading_file.open(file_name, std::ios::in);
-	if (reading_file.fail()) {
-		std::cerr << "å¤±æ•—" << std::endl;
-		return -1;
-	}
-	std::getline(reading_file, reading_line);
-	ward_num = reading_line;
-
-	ward_num_i = atoi(ward_num.c_str());
-
-	for (int i = 0; i < ward_num_i; i++) {
-
+		reading_file.open(file_name, std::ios::in);
+		if (reading_file.fail())
+		{
+			std::cerr << "failed to open " << file_name << std::endl;
+			return -1;
+		}
 		std::getline(reading_file, reading_line);
+		sstream.str(reading_line);
+		sstream.clear();
+//		ward_num = reading_line;
+//		ward_num_i = atoi(ward_num.c_str());
+		sstream >> word_num;
+		for (int i = 0; i < word_num; i++) {
 
-		//cout << reading_line << " " << i << endl;
+			std::getline(reading_file, reading_line);
 
-		Goto(troot, reading_line);
-	}
+			//cout << reading_line << " " << i << endl;
 
-	// failureé–¢æ•°ã®æ§‹æˆ
+			acm.buildTransitions(reading_line); //Goto(troot, reading_line);
+		}
+	
+
+
+	// failureŠÖ”‚Ì\¬
 	queue<Trie*> q;
 
 	// Must to this before, because of the fact that every edge out of the root is
 	// not NULL
 	for (int i = 0; i < SIGMA_SIZE; i++) {
-		if ((troot->edges[i] != NULL) && (troot->edges[i] != troot)) {
-			troot->edges[i]->fail = troot;
-			q.push(troot->edges[i]);
+		if ((acm.trieroot().edges[i] != NULL) && (acm.trieroot().edges[i] != &acm.trieroot() )) {
+			acm.trieroot().edges[i]->fail = &acm.trieroot();
+			q.push(acm.trieroot().edges[i]);
 		}
 	}
 
@@ -354,19 +417,18 @@ int main(void) {
 
 	//cout << "check point1" << endl;
 
-	int j = 1;
+//	int j = 1;
 	while (!q.empty()) {
 		Trie *curNode = q.front();
 		q.pop();
 
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			Trie *next = curNode->edges[i];
-			if (next != NULL && next != troot) {
+			if (next != NULL && next != &acm.trieroot() ) {
 				q.push(next);
 
 				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail)
-					;
+				for (; f->edges[i] == NULL; f = f->fail);
 
 				next->fail = f->edges[i];
 
@@ -379,132 +441,147 @@ int main(void) {
 
 	cout << "aho struct finish" << endl;
 
+
 	//
-	//dawgã®æ§‹æˆ
+	//dawg‚Ì\¬
 	//
 
 	nroot->dawgtoac = DAWGTOAC_NUM;
 	DAWGTOAC_NUM++;
 	nroot->torb = 1;
 
-	//string ward_num;
-	//int ward_num_i;
-	//string ward_string;
-	//string file_name;
+		//string ward_num;
+		//int ward_num_i;
+		//string ward_string;
+		//string file_name;
 
-	Node *activenode;
-	activenode = nroot;
-	Node *tnode;
-
-	Trie *trienode;
-	Trie *tmptrie;
-
-	//cout << "ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å…¥åŠ›ã—ã¦ãã ã•ã„" << endl;
-	//cin >> file_name;
-
-	//file_name = "word_2000.txt";
-	//file_name = "test5.txt";
-	//file_name = "word_list3.txt";
-	file_name = "word_list2.txt";
-	//file_name = "aho_check_in.txt";
-
-	std::ifstream reading_file2;
-	//string reading_line;
-
-	reading_file2.open(file_name, std::ios::in);
-	if (reading_file2.fail()) {
-		std::cerr << "å¤±æ•—" << std::endl;
-		return -1;
-	}
-	std::getline(reading_file2, reading_line);
-	ward_num = reading_line;
-
-	ward_num_i = atoi(ward_num.c_str());
-
-	for (int i = 0; i < ward_num_i; i++) {
-
-		std::getline(reading_file2, reading_line);
-
-		//cout << reading_line << " " << i << endl;
-
-		int stringsize = reading_line.size();
-
-		for (int j = 0; j < stringsize; j++)
-			activenode = update(activenode, reading_line[j]);
-
+		Node *activenode;
 		activenode = nroot;
-		trienode = troot;
+		Node *tnode;
 
-		activenode = activenode->edges[reading_line[0] - ' '];
-		trienode = trienode->edges[reading_line[0] - ' '];
+		Trie *trienode;
+		Trie *tmptrie;
 
-		for (int j = 1; j < stringsize; j++) {
-			if (activenode->dawgtoac == 0) {
+		//cout << "ƒtƒ@ƒCƒ‹–¼‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢" << endl;
+		//cin >> file_name;
+
+		//file_name = "word_2000.txt";
+		//file_name = "test5.txt";
+		//file_name = "word_list3.txt";
+		file_name = "word_list2.txt";
+		//file_name = "aho_check_in.txt";
+
+		std::ifstream reading_file2;
+		//string reading_line;
+
+		reading_file2.open(file_name, std::ios::in);
+		if (reading_file2.fail())
+		{
+			std::cerr << "failed to open " << file_name << std::endl;
+			return -1;
+		}
+		std::getline(reading_file2, reading_line);
+		sstream.str(reading_line);
+		sstream.clear();
+		//ward_num = reading_line;
+		//ward_num_i = atoi(ward_num.c_str());
+		sstream >> word_num;
+
+		for (int i = 0; i < word_num; i++) {
+
+			std::getline(reading_file2, reading_line);
+
+			//cout << reading_line << " " << i << endl;
+
+			int stringsize = reading_line.size();
+
+			for (int j = 0; j < stringsize; j++)
+				activenode = update(activenode, reading_line[j]);
+
+
+			activenode = nroot;
+			trienode = &acm.trieroot();
+
+			activenode = activenode->edges[reading_line[0] - ' '];
+			trienode = trienode->edges[reading_line[0] - ' '];
+
+
+			for (int j = 1; j < stringsize; j++) {
+				if (activenode->dawgtoac == 0) {
 				//if (activenode->torb == 1) {
+					activenode->dawgtoac = DAWGTOAC_NUM;
+					activenode->torb = 1;
+					DAWGTOAC_NUM++;
+					activenode->dtoc = trienode;
+				}
+
+
+				tnode = activenode->edges[reading_line[j] - ' '];
+				tmptrie = trienode->edges[reading_line[j] - ' '];
+				activenode = tnode;
+				trienode = tmptrie;
+			}
+			if (activenode->dawgtoac == 0) {
 				activenode->dawgtoac = DAWGTOAC_NUM;
 				activenode->torb = 1;
 				DAWGTOAC_NUM++;
 				activenode->dtoc = trienode;
 			}
 
-			tnode = activenode->edges[reading_line[j] - ' '];
-			tmptrie = trienode->edges[reading_line[j] - ' '];
-			activenode = tnode;
-			trienode = tmptrie;
+			activenode = nroot;
 		}
-		if (activenode->dawgtoac == 0) {
-			activenode->dawgtoac = DAWGTOAC_NUM;
-			activenode->torb = 1;
-			DAWGTOAC_NUM++;
-			activenode->dtoc = trienode;
-		}
-
-		activenode = nroot;
-	}
+	
 
 	cout << "dawg struct finish" << endl;
 
-	//ï¼ˆå‹•ä½œç¢ºèªï¼‰
 
-	// ãƒ†ã‚­ã‚¹ãƒˆã‹ã‚‰ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’æ¤œå‡º
+	//i“®ìŠm”Fj
+
+	// ƒeƒLƒXƒg‚©‚çƒL[ƒ[ƒh‚ğŒŸo
 	string bigString;
 	//std::ifstream ifs("test4.txt");
-	std::ifstream ifs("aho_check_out.txt");
-	if (ifs.fail()) {
-		std::cerr << "å¤±æ•—" << std::endl;
+	file_name = "aho_check_out.txt";
+	std::ifstream ifs(file_name);
+	if (ifs.fail())
+	{
+		std::cerr << "failed to open " << file_name << std::endl;
 		return -1;
 	}
 	getline(ifs, bigString);
 	cout << bigString << endl;
 
-	Trie *node = troot;
+	Trie *node = &acm.trieroot();
 	int k = bigString.size();
 	for (int i = 0; i < k; i++) {
 		int cur = bigString[i] - ' ';
 
-		for (; node->edges[cur] == NULL; node = node->fail) {
-			cout << "failure now... node number " << node->fail->nodenum
-					<< endl;
+
+		for (; node->edges[cur] == NULL; node = node->fail)
+		{
+			cout << "failure now... node number " << node->fail->nodenum << endl;
 		}
+
 
 		node = node->edges[cur];
 
 		cout << "current node number " << node->nodenum << endl;
 
 		if (node->out.size() != 0) {
-			cout << "At position " << i << " we found:\n";
+			cout << "At position " << i << " we found:" << std::endl;
 
 			for (auto s : node->out) {
-				cout << s << "\n";
+				cout << s << std::endl;
 			}
 		}
 	}
 
+
 	//
-	//ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’æ–°ãŸã«ä¸ãˆã‚‹ï¼ˆä¸€èªãšã¤ï¼‰
-	//DAWGã‚’å‹•çš„ã«æ§‹æˆ
-	//DAWGã‚’ã‚‚ã¨ã«ACãƒã‚·ãƒ³ã‚’æ›´æ–°
+	//ƒL[ƒ[ƒh‚ğV‚½‚É—^‚¦‚éiˆêŒê‚¸‚Âj
+	//DAWG‚ğ“®“I‚É\¬
+	//DAWG‚ğ‚à‚Æ‚ÉACƒ}ƒVƒ“‚ğXV
 	//
+
 
 	//std::ifstream readline2("word_list3.txt");
 	//std::ifstream readline2("test3.txt");
@@ -512,11 +589,11 @@ int main(void) {
 
 	//dynamic start
 
-	while (1) {
+	while (1) { 
 
 		int key_num = 0;
 
-		cout << "ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’ã„ãã¤è¿½åŠ ã—ã¾ã™ã‹ï¼Ÿ" << endl;
+		cout << "How many keywords would you like to add?" << endl;
 		cin >> key_num;
 
 		//std::ifstream readline2("word_list3.txt");
@@ -530,20 +607,22 @@ int main(void) {
 
 		for (int i7 = 0; i7 < key_num; i7++) {
 
-			Trie *node2 = troot;
-			Trie *nodepoint2 = troot;
+
+//			Trie *node2 = troot;
+//			Trie *nodepoint2 = troot;
 			Trie * tactivenode;
 			Trie *newstates[50];
-			int depth = 0;
+//			int depth = 0;
 
 			string curString2;
 			int size2 = 0;
-			int cur3 = 0;
+//			int cur3 = 0;
 
 			Node *activenode = nroot;
 			Node *tnode = nroot;
 
-			//ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã®èª­ã¿è¾¼ã¿
+
+			//ƒL[ƒ[ƒh‚Ì“Ç‚İ‚İ
 
 			//getline(readline2, curString2);
 			getline(reading_file, curString2);
@@ -552,9 +631,10 @@ int main(void) {
 
 			size2 = curString2.size();
 
+
 			//Algorithm1
 
-			tactivenode = troot;
+			tactivenode = &acm.trieroot();
 			int charnum = 0;
 			int trie_depth = 10000;
 
@@ -564,10 +644,12 @@ int main(void) {
 				newstates[i] = tactivenode;
 				charnum = curString2[i] - ' ';
 
-				if ((tactivenode->edges[charnum] != NULL)
-						&& (tactivenode->edges[charnum] != troot)) {
+
+				if ( tactivenode->edges[charnum] != NULL
+						&& tactivenode->edges[charnum] != &acm.trieroot() ) {
 					tactivenode = tactivenode->edges[charnum];
-				} else {
+				}
+				else {
 
 					if (trie_depth == 10000) {
 						trie_depth = i + 1;
@@ -581,6 +663,7 @@ int main(void) {
 
 				}
 
+
 			}
 			newstates[size2] = tactivenode;
 			tactivenode->out.insert(curString2);
@@ -590,18 +673,20 @@ int main(void) {
 
 			start = clock();
 
-			vector<Trie*> failstates;
+			vector< Trie* > failstates;
 			failstates = getfailstates(curString2, trie_depth);
 			int fstatesize = failstates.size();
+
 
 			for (int i = fstatesize - 1; i >= 0; i--) {
 				failstates[i]->fail = newstates[failstates[i]->ine_num];
 			}
 
+
 			end = clock();
 			time2 += (end - start);
 
-			tactivenode = troot;
+			tactivenode = &acm.trieroot();
 			Trie *failurenode;
 
 			start = clock();
@@ -612,22 +697,22 @@ int main(void) {
 				charnum2 = curString2[i] - ' ';
 
 				if ((i + 1) >= trie_depth) {
-					if (tactivenode == troot) {
-						tactivenode->edges[charnum2]->fail = troot;
+					if (tactivenode == &acm.trieroot()) {
+						tactivenode->edges[charnum2]->fail = &acm.trieroot();
 						tactivenode = tactivenode->edges[charnum2];
-					} else {
+					}
+					else {
 						failurenode = tactivenode->fail;
 
 						int j = 0;
-						while ((failurenode->edges[charnum2] == NULL)
-								|| (failurenode->edges[charnum2] == tactivenode)
-								|| (failurenode == troot)) {
+						while ((failurenode->edges[charnum2] == NULL) || (failurenode->edges[charnum2] == tactivenode) || 
+							   (failurenode == &acm.trieroot())) {
 
 							if (j >= 2)
 								break;
 
 							failurenode = failurenode->fail;
-							if (failurenode == troot)
+							if (failurenode == &acm.trieroot())
 								j++;
 
 						}
@@ -636,12 +721,15 @@ int main(void) {
 
 						tactivenode->fail = failurenode->edges[charnum2];
 
+						
 						for (auto s : failurenode->edges[charnum2]->out)
 							tactivenode->out.insert(s);
+						
 
 					}
-
-				} else {
+					
+				}
+				else {
 					tactivenode = tactivenode->edges[curString2[i] - ' '];
 				}
 			}
@@ -659,14 +747,16 @@ int main(void) {
 
 			out_size += outstatesize;
 
+			
 			for (int i = 0; i < outstatesize; i++) {
 				outstates[i]->out.insert(curString2);
 			}
-
+			
+			
 			end = clock();
 			time4 += (end - start);
 
-			Trie *check_trie = troot;
+//			Trie *check_trie = troot;
 
 			activenode = nroot;
 
@@ -675,12 +765,15 @@ int main(void) {
 			for (int i = 0; i < size2; i++)
 				activenode = update(activenode, curString2[i]);
 
+
 			activenode = nroot;
-			Trie *trienode = troot;
+			Trie *trienode = &acm.trieroot();
 			Trie *tmptrie;
+
 
 			activenode = activenode->edges[curString2[0] - ' '];
 			trienode = trienode->edges[curString2[0] - ' '];
+
 
 			for (int i = 1; i < size2; i++) {
 				if (activenode->dawgtoac == 0) {
@@ -690,11 +783,13 @@ int main(void) {
 					activenode->dtoc = trienode;
 				}
 
+
 				tnode = activenode->edges[curString2[i] - ' '];
 				tmptrie = trienode->edges[curString2[i] - ' '];
 				activenode = tnode;
 				trienode = tmptrie;
 			}
+
 
 			if (activenode->dawgtoac == 0) {
 				activenode->dawgtoac = DAWGTOAC_NUM;
@@ -708,17 +803,16 @@ int main(void) {
 			end = clock();
 			time5 += (end - start);
 
+
 		}
 
 		total_end = clock();
-		cout << "total time: "
-				<< (double) (total_end - total_start) / CLOCKS_PER_SEC
-				<< "sec.\n";
-		cout << "time1: " << (double) time1 / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time2: " << (double) time2 / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time3: " << (double) time3 / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time4: " << (double) time4 / CLOCKS_PER_SEC << "sec.\n";
-		cout << "time5: " << (double) time5 / CLOCKS_PER_SEC << "sec.\n";
+		cout << "total time: " << (double)(total_end - total_start) / CLOCKS_PER_SEC << "sec." << std::endl;
+		cout << "time1: " << (double)time1 / CLOCKS_PER_SEC << "sec." << std::endl;
+		cout << "time2: " << (double)time2/ CLOCKS_PER_SEC << "sec." << std::endl;
+		cout << "time3: " << (double)time3/ CLOCKS_PER_SEC << "sec." << std::endl;
+		cout << "time4: " << (double)time4/ CLOCKS_PER_SEC << "sec." << std::endl;
+		cout << "time5: " << (double)time5/ CLOCKS_PER_SEC << "sec." << std::endl;
 
 		cout << "out size " << out_size << endl;
 
@@ -728,7 +822,7 @@ int main(void) {
 		getline(ifs, bigString2);
 		cout << bigString2 << endl;
 
-		Trie *node3 = troot;
+		Trie *node3 = &acm.trieroot();
 		int k2 = bigString2.size();
 		cout << "string size " << k2 << endl;
 
@@ -736,26 +830,30 @@ int main(void) {
 
 			int cur = bigString2[i] - ' ';
 
-			for (; node3->edges[cur] == NULL; node3 = node3->fail) {
-				cout << "failure now... node number " << node3->fail->nodenum
-						<< endl;
+			for (; node3->edges[cur] == NULL; node3 = node3->fail)
+			{
+				cout << "failure now... node number " << node3->fail->nodenum << endl;
 			}
+
 
 			node3 = node3->edges[cur];
 
 			cout << "current node number " << node3->nodenum << endl;
 
+
 			if (node3->out.size() != 0) {
-				cout << "At position " << i << " we found:\n";
+				cout << "At position " << i << " we found:" << std::endl;
 
 				for (auto s : node3->out) {
-					cout << s << "\n";
+					cout << s << std::endl;
 				}
 			}
 
 		}
 
-	}
+
+
+	} 
 	//dynamic finish
 
 	return 0;
