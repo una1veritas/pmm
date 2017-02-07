@@ -5,16 +5,20 @@
 #include <string>
 #include <vector>
 #include <stack>
+
 #include <time.h>
+#include <sstream>
+#include <cstdlib>
 
 using namespace std;
 
 const int SIGMA_SIZE = 100;
-int NODE_NUM_AHO = 0;
 int NODE_NUM_DAWG = 0;
 int DAWGTOAC_NUM = 0;
 
 struct Trie {
+	static int NODE_NUM_TRIE;
+
 	Trie *edges[SIGMA_SIZE];
 	Trie *fail;
 	set<string> out;
@@ -24,15 +28,47 @@ struct Trie {
 	Trie() {
 		fail = NULL;
 		ine_num = 0;
-		nodenum = NODE_NUM_AHO;
-		NODE_NUM_AHO++;
+		nodenum = NODE_NUM_TRIE;
+		NODE_NUM_TRIE++;
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			edges[i] = NULL;
 		}
 
 	}
 };
-Trie *troot = new Trie();
+int Trie::NODE_NUM_TRIE = 0;
+
+class ACMachine {
+	Trie troot;
+//	int node_num;
+public:
+	ACMachine() {
+		init();
+	}
+
+	void init(void) {
+		for (int i = 0; i < SIGMA_SIZE; i++) {
+			troot.edges[i] = &troot;
+			troot.fail = &troot;
+		}
+	}
+
+	Trie & root(void) {
+		return troot;
+	}
+
+	bool isRoot(const Trie & node) const {
+		return &node == &troot;
+	}
+/*
+	void addState(Trie & t, int c) {
+		t.edges[c] = new Trie(); //node_num);
+		//node_num++;
+	}
+	*/
+	void addTransitions(string & str);
+	void buildFailures();
+};
 
 struct Node {
 	Node *edges[SIGMA_SIZE];
@@ -162,6 +198,7 @@ Node *update(Node *activenode, char a) {
 	}
 }
 
+#ifdef USE_ORIGINAL
 void Goto(Trie *node, string &curString, int depth = 0) {
 	if (depth == curString.size()) {
 		node->out.insert(curString);
@@ -177,24 +214,89 @@ void Goto(Trie *node, string &curString, int depth = 0) {
 
 	Goto(node->edges[next], curString, depth + 1);
 }
+#else
+void ACMachine::addTransitions(string &curString) {
+	int depth = 0;
+	Trie * node = & root();
+	while ( depth < curString.size() ) {
+		int next = curString[depth] - ' ';
 
-int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
-	if (depth == curString.size()) {
+		if (node->edges[next] == NULL || isRoot(*node->edges[next]) ) {
+			node->edges[next] = new Trie();
+			//addState(*node, next);
+		}
+		node = node->edges[next];
+		depth += 1;
+	}
+	// if (depth == curString.size()) {
 		node->out.insert(curString);
-
-		return depth2;
-	}
-
-	int next = curString[depth] - ' ';
-
-	if (node->edges[next] == NULL || node->edges[next] == troot) {
-		node->edges[next] = new Trie();
-		if (depth2 == -1)
-			depth2 = depth;
-	}
-
-	Goto2(node->edges[next], curString, depth + 1, depth2);
+		return;
+	//}
+//	Goto(node->edges[next], curString, depth + 1);
 }
+#endif
+
+void ACMachine::buildFailures() {
+// failure関数の構成
+
+	queue<Trie*> q;
+
+// Must to this before, because of the fact that every edge out of the root is
+// not NULL
+	for (int i = 0; i < SIGMA_SIZE; i++) {
+		if ( (troot.edges[i] != NULL) && isRoot(*troot.edges[i]) ) {
+			troot.edges[i]->fail = &troot;
+			q.push(troot.edges[i]);
+		}
+	}
+
+//Trie *tnode;
+
+//cout << "check point1" << endl;
+
+	//int j = 1;
+	while (!q.empty()) {
+		Trie *curNode = q.front();
+		q.pop();
+
+		for (int i = 0; i < SIGMA_SIZE; i++) {
+			Trie *next = curNode->edges[i];
+			if (next != NULL && isRoot(*next) ) {
+				q.push(next);
+
+				Trie *f = curNode->fail;
+				for (; f->edges[i] == NULL; f = f->fail)
+					;
+
+				next->fail = f->edges[i];
+
+				for (auto s : next->fail->out) {
+					next->out.insert(s);
+				}
+			}
+		}
+	}
+}
+/*
+ int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
+ if (depth == curString.size()) {
+ node->out.insert(curString);
+
+ return depth2;
+ }
+
+
+ int next = curString[depth] - ' ';
+
+ if (node->edges[next] == NULL || node->edges[next] == troot) {
+ node->edges[next] = new Trie();
+ if (depth2 == -1)
+ depth2 = depth;
+ }
+
+ Goto2(node->edges[next], curString, depth + 1, depth2);
+ }
+ */
 
 vector<Trie *> getoutstates(string &string) {
 	vector<Trie *> outstates;
@@ -204,9 +306,7 @@ vector<Trie *> getoutstates(string &string) {
 	stack<Node*> st;
 
 	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
-
 		activenode = activenode->edges[string[i] - ' '];
-
 	}
 
 	if (activenode != NULL) {
@@ -215,14 +315,12 @@ vector<Trie *> getoutstates(string &string) {
 		while (!queue.empty()) {
 			node = queue.front();
 			queue.pop();
-			if ((node->torb == 1)) {
+			if (node->torb == 1) {
 				outstates.push_back(node->dtoc);
 			}
-
 			for (int i = 0; i < node->ine.size(); i++) {
 				queue.push(node->ine[i]);
 			}
-
 		}
 	}
 
@@ -268,7 +366,7 @@ vector<Trie *> getfailstates(string &string, int depth) {
 			auto itr = find(mark.begin(), mark.end(), enode);
 			if (itr == mark.end()) {
 				mark.push_back(enode);
-				if ((enode->torb == 1)) {
+				if (enode->torb == 1) {
 					enode->dtoc->ine_num = num;
 					failstates.push_back(enode->dtoc);
 				} else {
@@ -285,7 +383,7 @@ vector<Trie *> getfailstates(string &string, int depth) {
 	return failstates;
 }
 
-int main(void) {
+int main(int argc, char * argv[]) {
 
 	//キーワード（の集合）が入力として与えられる
 	//キーワードを用いて、通常の方法でACマシンとDAWGを作る
@@ -294,20 +392,26 @@ int main(void) {
 	//ACマシンの構成
 	//
 
+	ACMachine acm;
+#ifdef USE_ORIGINAL
 	// rootの初期化
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 		troot->edges[i] = troot;
 		troot->fail = troot;
 	}
-
+#else
+	// initialization procedures are done in the constructor.
+#endif
 	int out_size = 0;
 
 	//goto関数の構成
 
 	std::ifstream reading_file;
+	std::istringstream istr;
 
-	string ward_num;
-	int ward_num_i;
+//	string ward_num;
+//	int ward_num_i;
+	int word_num;
 	string ward_string;
 	string file_name;
 
@@ -319,28 +423,32 @@ int main(void) {
 
 	string reading_line;
 
+	std::cout << "Opening file " << file_name << std::endl;
 	reading_file.open(file_name, std::ios::in);
 	if (reading_file.fail()) {
-		std::cerr << "失敗" << std::endl;
-		return -1;
+		std::cerr << "file " << file_name << " open failed." << std::endl;
+		return EXIT_FAILURE;
 	}
 	std::getline(reading_file, reading_line);
-	ward_num = reading_line;
+//	ward_num = reading_line;
+//	ward_num_i = atoi(ward_num.c_str());
+	istr.str(reading_line);
+	istr.clear();
+	istr >> word_num;
 
-	ward_num_i = atoi(ward_num.c_str());
-
-	for (int i = 0; i < ward_num_i; i++) {
+	for (int i = 0; i < word_num; i++) {
 
 		std::getline(reading_file, reading_line);
 
 		//cout << reading_line << " " << i << endl;
 
-		Goto(troot, reading_line);
+		acm.addTransitions(reading_line);
 	}
 
+#ifdef USE_ORIGINAL
 	// failure関数の構成
 	queue<Trie*> q;
-
+Trie * troot = &acm.root();
 	// Must to this before, because of the fact that every edge out of the root is
 	// not NULL
 	for (int i = 0; i < SIGMA_SIZE; i++) {
@@ -376,7 +484,9 @@ int main(void) {
 			}
 		}
 	}
-
+#else
+	acm.buildFailures();
+#endif
 	cout << "aho struct finish" << endl;
 
 	//
@@ -417,11 +527,12 @@ int main(void) {
 		return -1;
 	}
 	std::getline(reading_file2, reading_line);
-	ward_num = reading_line;
-
-	ward_num_i = atoi(ward_num.c_str());
-
-	for (int i = 0; i < ward_num_i; i++) {
+	//ward_num = reading_line;
+	istr.str(reading_line);
+	istr.clear();
+	//ward_num_i = atoi(ward_num.c_str());
+	istr >> word_num;
+	for (int i = 0; i < word_num; i++) {
 
 		std::getline(reading_file2, reading_line);
 
@@ -433,7 +544,7 @@ int main(void) {
 			activenode = update(activenode, reading_line[j]);
 
 		activenode = nroot;
-		trienode = troot;
+		trienode = &acm.root(); //troot;
 
 		activenode = activenode->edges[reading_line[0] - ' '];
 		trienode = trienode->edges[reading_line[0] - ' '];
@@ -477,7 +588,7 @@ int main(void) {
 	getline(ifs, bigString);
 	cout << bigString << endl;
 
-	Trie *node = troot;
+	Trie *node = &acm.root(); //troot;
 	int k = bigString.size();
 	for (int i = 0; i < k; i++) {
 		int cur = bigString[i] - ' ';
@@ -529,16 +640,17 @@ int main(void) {
 		total_start = clock();
 
 		for (int i7 = 0; i7 < key_num; i7++) {
-
-			Trie *node2 = troot;
-			Trie *nodepoint2 = troot;
+#ifdef USE_ORIGINAL
+			Trie *node2 = &acm.root(); //troot;
+			Trie *nodepoint2 = &acm.root(); //troot;
+			int depth = 0;
+			int cur3 = 0;
+#endif
 			Trie * tactivenode;
 			Trie *newstates[50];
-			int depth = 0;
 
 			string curString2;
 			int size2 = 0;
-			int cur3 = 0;
 
 			Node *activenode = nroot;
 			Node *tnode = nroot;
@@ -554,7 +666,7 @@ int main(void) {
 
 			//Algorithm1
 
-			tactivenode = troot;
+			tactivenode = & acm.root(); //troot;
 			int charnum = 0;
 			int trie_depth = 10000;
 
@@ -564,8 +676,8 @@ int main(void) {
 				newstates[i] = tactivenode;
 				charnum = curString2[i] - ' ';
 
-				if ((tactivenode->edges[charnum] != NULL)
-						&& (tactivenode->edges[charnum] != troot)) {
+				if ( (tactivenode->edges[charnum] != NULL)
+						&& acm.isRoot(*tactivenode->edges[charnum]) ) {
 					tactivenode = tactivenode->edges[charnum];
 				} else {
 
@@ -573,9 +685,8 @@ int main(void) {
 						trie_depth = i + 1;
 					}
 
-					Trie *newstate = new Trie();
-
-					tactivenode->edges[charnum] = newstate;
+					//acm.addState(*tactivenode, charnum);
+					tactivenode->edges[charnum] = new Trie();
 
 					tactivenode = tactivenode->edges[charnum];
 
@@ -601,7 +712,7 @@ int main(void) {
 			end = clock();
 			time2 += (end - start);
 
-			tactivenode = troot;
+			tactivenode = &acm.root(); //troot;
 			Trie *failurenode;
 
 			start = clock();
@@ -612,8 +723,8 @@ int main(void) {
 				charnum2 = curString2[i] - ' ';
 
 				if ((i + 1) >= trie_depth) {
-					if (tactivenode == troot) {
-						tactivenode->edges[charnum2]->fail = troot;
+					if (tactivenode == &acm.root() /* troot */) {
+						tactivenode->edges[charnum2]->fail = &acm.root() /* troot */;
 						tactivenode = tactivenode->edges[charnum2];
 					} else {
 						failurenode = tactivenode->fail;
@@ -621,13 +732,13 @@ int main(void) {
 						int j = 0;
 						while ((failurenode->edges[charnum2] == NULL)
 								|| (failurenode->edges[charnum2] == tactivenode)
-								|| (failurenode == troot)) {
+								|| (failurenode == &acm.root() /* troot */)) {
 
 							if (j >= 2)
 								break;
 
 							failurenode = failurenode->fail;
-							if (failurenode == troot)
+							if (failurenode == &acm.root() /* troot */)
 								j++;
 
 						}
@@ -665,9 +776,9 @@ int main(void) {
 
 			end = clock();
 			time4 += (end - start);
-
-			Trie *check_trie = troot;
-
+#ifdef USE_ORIGINAL
+			Trie *check_trie = &acm.root() /* troot */;
+#endif
 			activenode = nroot;
 
 			start = clock();
@@ -676,7 +787,7 @@ int main(void) {
 				activenode = update(activenode, curString2[i]);
 
 			activenode = nroot;
-			Trie *trienode = troot;
+			Trie *trienode = &acm.root() /* troot */;
 			Trie *tmptrie;
 
 			activenode = activenode->edges[curString2[0] - ' '];
@@ -728,7 +839,7 @@ int main(void) {
 		getline(ifs, bigString2);
 		cout << bigString2 << endl;
 
-		Trie *node3 = troot;
+		Trie *node3 = &acm.root() /* troot */;
 		int k2 = bigString2.size();
 		cout << "string size " << k2 << endl;
 
