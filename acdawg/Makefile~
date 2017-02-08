@@ -2,9 +2,9 @@
 # Created on: 2017/01/19
 #     Author: sin
 
-GCCPATH=/usr/bin/
-CXX = $(GCCPATH)g++ -std=c++14
-CXXFLAGS = -Wall -O0 -g
+PATH=/usr/bin
+CXX = $(PATH)g++ -std=c++14
+CXXFLAGS = -Wall -O0 -g3
 INCLUDES = -I./
 
 %.o: %.c
@@ -26,4 +26,4 @@ aho: aho.o $(LIBOBJS)
 
 
 clean: 
-	rm *.o acdawg ac #*#
+	\rm *.o acdawg ac #*#

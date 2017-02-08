@@ -76,6 +76,7 @@ public:
 		node_num++;
 	}
 	void buildMachine(std::vector<std::string> & keywords);
+	void scan(string & text);
 };
 
 void ACTrie::buildMachine(std::vector<std::string> & keywords) {
@@ -90,39 +91,65 @@ void ACTrie::buildMachine(std::vector<std::string> & keywords) {
 	// not NULL
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 //		if ((actrie.root().edges[i] != NULL) && (actrie.root().edges[i] != &actrie.root() )) {
-		if ((root().edges[i] != NULL)
-				&& !isRoot(*root().edges[i])) {
-			std::cout << "actrie.root.edges[" << (char)i << "] is not root." << std::endl;
+		if ( root().edges[i] == NULL )
+			continue;
+		if ( !isRoot(*root().edges[i]) ) {
+//			std::cout << "actrie.root.edges[" << (char)i << "] is not root." << std::endl;
 			root().edges[i]->fail = &root();
 			q.push(root().edges[i]);
 		}
 	}
 
-	while (!q.empty()) {
+	while ( !q.empty() ) {
 		Trie *curNode = q.front();
 		q.pop();
 
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			Trie *next = curNode->edges[i];
-			if (next != NULL && next != &root()) {
+//			if (next != NULL && next != &root()) {
+			if ( next == NULL)
+				continue;
+			if ( !isRoot(*next) ) {
 				q.push(next);
 
 				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail)
-					;
-
+				for (; f->edges[i] == NULL; f = f->fail) {}
 				next->fail = f->edges[i];
+				next->out.insert(next->fail->out.begin(), next->fail->out.end() );
+//				for (string s : next->fail->out) {
+//					next->out.insert(s);
+//				}
+			}
+		}
+	}
+}
 
-				for (auto s : next->fail->out) {
-					next->out.insert(s);
-				}
+void ACTrie::scan(string & text) {
+	Trie *node = &root();
+	int k = text.size();
+
+	for (int i = 0; i < k; i++) {
+		int cur = text[i] - ' ';
+
+		for (; node->edges[cur] == NULL; node = node->fail) {
+			cout << "failure now... node number " << node->fail->nodenum
+					<< endl;
+		}
+
+		node = node->edges[cur];
+
+		cout << "current node number " << node->nodenum << endl;
+
+		if (node->out.size() != 0) {
+			cout << "At position " << i << " we found:" << std::endl;
+
+			for (string s : node->out) {
+				cout << s << std::endl;
 			}
 		}
 	}
 
-
 }
-
 
 
 struct Node {
@@ -615,7 +642,7 @@ int main(int argc, char * argv[]) {
 	}
 	getline(ifs, bigString);
 	cout << bigString << endl;
-
+#ifdef USE_ORIGINAL
 	Trie *node = &actrie.root();
 	int k = bigString.size();
 	for (int i = 0; i < k; i++) {
@@ -633,11 +660,14 @@ int main(int argc, char * argv[]) {
 		if (node->out.size() != 0) {
 			cout << "At position " << i << " we found:" << std::endl;
 
-			for (auto s : node->out) {
+			for (string s : node->out) {
 				cout << s << std::endl;
 			}
 		}
 	}
+#else
+	actrie.scan(bigString);
+#endif
 
 	//
 	//キーワードを新たに与える（一語ずつ）
