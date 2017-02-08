@@ -2,7 +2,7 @@
 # Created on: 2017/01/19
 #     Author: sin
 
-GCCPATH=/usr/bin/
+GCCPATH=
 CXX = $(GCCPATH)g++ -std=c++14
 CXXFLAGS = -Wall -O0 -g
 INCLUDES = -I./

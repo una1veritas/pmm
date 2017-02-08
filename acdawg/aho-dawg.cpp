@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <algorithm>
 #include <time.h>
 
 #include <sstream>
@@ -204,8 +205,8 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 
 	newchildnode->suff = childnode->suff;
 	newchildnode->suff->ine.push_back(newchildnode);
-	auto itr = find(childnode->suff->ine.begin(), childnode->suff->ine.end(),
-			childnode);
+	std::vector<Node*>::iterator itr =
+			std::find(childnode->suff->ine.begin(), childnode->suff->ine.end(), childnode);
 	childnode->suff->ine.erase(itr);
 	childnode->suff = newchildnode;
 	newchildnode->ine.push_back(childnode);
@@ -299,7 +300,7 @@ void Goto(Trie *node, string &curString, int depth = 0) {
 #else
 void ACTrie::addTransitions(string &curString) {
 	Trie * node = &root();
-	int depth = 0;
+	unsigned int depth = 0;
 	int next;
 
 	while (depth < curString.size()) {
@@ -360,7 +361,7 @@ vector<Trie *> getoutstates(string &string) {
 				outstates.push_back(node->dtoc);
 			}
 
-			for (int i = 0; i < node->ine.size(); i++) {
+			for (unsigned int i = 0; i < node->ine.size(); i++) {
 				queue.push(node->ine[i]);
 			}
 
@@ -414,7 +415,7 @@ vector<Trie *> getfailstates(string &string, int depth) {
 					failstates.push_back(enode->dtoc);
 				} else {
 
-					for (int i = 0; i < node->ine.size(); i++) {
+					for (unsigned int i = 0; i < node->ine.size(); i++) {
 						queue.push(node->ine[i]);
 					}
 				}
