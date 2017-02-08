@@ -33,33 +33,22 @@ struct Trie {
 		}
 
 	}
-	/*
-	 Trie() {
-	 fail = NULL;
-	 ine_num = 0;
-	 nodenum = NODE_NUM_AHO;
-	 NODE_NUM_AHO++;
-	 for (int i = 0; i < SIGMA_SIZE; i++) {
-	 edges[i] = NULL;
-	 }
-
-	 }
-	 */
 };
 //Trie *troot = new Trie();
 
 class ACTrie {
-	Trie troot = Trie(0);
+	Trie troot; // = Trie(0);
 	int node_num;
+	set<string> keywords;
 
 public:
-	ACTrie() {
-		node_num = troot.nodenum++;
+	ACTrie() : troot(0), node_num(1) {
 		// rootの初期化
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			root().edges[i] = &root();
 			root().fail = &root();
 		}
+		keywords.clear();
 	}
 
 	unsigned int size() const {
@@ -80,12 +69,14 @@ public:
 	void scan(string & text);
 };
 
-void ACTrie::buildMachine(std::vector<std::string> & keywords) {
+void ACTrie::buildMachine(std::vector<std::string> & words) {
 	std::queue<Trie *> q;
 
 	// goto関数と状態の追加
-	for(std::vector<string>::iterator it = keywords.begin(); it != keywords.end(); it++ )
+	for(std::vector<string>::iterator it = words.begin(); it != words.end(); it++ ) {
+		keywords.insert(*it);
 		addTransitions(*it); //Goto(troot, reading_line);
+	}
 
 	// failure関数の構成
 	// Must to this before, because of the fact that every edge out of the root is
@@ -153,25 +144,25 @@ void ACTrie::scan(string & text) {
 }
 
 
-struct Node {
-	Node *edges[SIGMA_SIZE];
+struct WGNode {
+	WGNode *edges[SIGMA_SIZE];
 	//edge_num[i]  0 = edgeなし 1 = primary-edgeあり 2 = secondary-edgeあり
 	int edge_num[SIGMA_SIZE];
-	Node *suff;
+	WGNode *suff;
 	Trie *dtoc;
-	vector<Node*> ine;
+	vector<WGNode*> ine;
 	//dawgにおけるノードの番号
 	int nodenum;
 	//ACのノードとdawgのノードの番号を一致させるための変数
-	int dawgtoac;
+	int isTrunk;
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
 	int torb;
 
-	Node() {
+	WGNode() {
 		suff = NULL;
 		dtoc = NULL;
 		torb = 0;
-		dawgtoac = 0;
+		isTrunk = 0;
 		nodenum = NODE_NUM_DAWG;
 		NODE_NUM_DAWG++;
 		for (int i = 0; i < SIGMA_SIZE; i++) {
@@ -184,11 +175,22 @@ struct Node {
 	}
 
 };
-Node *nroot = new Node();
 
-Node *split(Node *parentnode, Node *childnode, char a) {
-	Node *newchildnode = new Node();
-	Node *currentnode = parentnode;
+class DAWG {
+	WGNode nroot;
+public:
+	DAWG() { }
+
+	WGNode & root() { return nroot; }
+	WGNode * split(WGNode *parentnode, WGNode *childnode, char a);
+	WGNode * update(WGNode *activenode, char a);
+	vector<Trie *> getoutstates(string &string);
+	vector<Trie *> getfailstates(string &string, int depth);
+};
+
+WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
+	WGNode *newchildnode = new WGNode();
+	WGNode *currentnode = parentnode;
 	int charnum = a - ' ';
 
 	parentnode->edges[charnum] = newchildnode;
@@ -205,14 +207,14 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 
 	newchildnode->suff = childnode->suff;
 	newchildnode->suff->ine.push_back(newchildnode);
-	std::vector<Node*>::iterator itr =
+	std::vector<WGNode*>::iterator itr =
 			std::find(childnode->suff->ine.begin(), childnode->suff->ine.end(), childnode);
 	childnode->suff->ine.erase(itr);
 	childnode->suff = newchildnode;
 	newchildnode->ine.push_back(childnode);
 
 	int m = 0;
-	while (currentnode != nroot) {
+	while (currentnode != &nroot) {
 		currentnode = currentnode->suff;
 		for (m = 0; m < SIGMA_SIZE; m++) {
 			if ((currentnode->edges[m] == childnode)
@@ -232,7 +234,7 @@ Node *split(Node *parentnode, Node *childnode, char a) {
 
 }
 
-Node *update(Node *activenode, char a) {
+WGNode * DAWG::update(WGNode *activenode, char a) {
 
 	int charnum = a - ' ';
 
@@ -247,13 +249,13 @@ Node *update(Node *activenode, char a) {
 
 	} else {
 		//辺がない場合
-		Node *newactivenode = new Node();
+		WGNode *newactivenode = new WGNode();
 		activenode->edges[charnum] = newactivenode;
 		activenode->edge_num[charnum] = 1;
 
-		Node *currentnode = activenode;
+		WGNode *currentnode = activenode;
 
-		while ((currentnode != nroot) && (newactivenode->suff == NULL)) {
+		while ((currentnode != &nroot) && (newactivenode->suff == NULL)) {
 			currentnode = currentnode->suff;
 
 			if ((currentnode->edges[charnum] != NULL)
@@ -272,8 +274,8 @@ Node *update(Node *activenode, char a) {
 		}
 
 		if (newactivenode->suff == NULL) {
-			newactivenode->suff = nroot;
-			nroot->ine.push_back(newactivenode);
+			newactivenode->suff = &nroot;
+			nroot.ine.push_back(newactivenode);
 		}
 
 		return newactivenode;
@@ -298,20 +300,20 @@ void Goto(Trie *node, string &curString, int depth = 0) {
 	Goto(node->edges[next], curString, depth + 1);
 }
 #else
-void ACTrie::addTransitions(string &curString) {
+void ACTrie::addTransitions(string & str) {
 	Trie * node = &root();
 	unsigned int depth = 0;
 	int next;
 
-	while (depth < curString.size()) {
-		next = curString[depth] - ' ';
+	while (depth < str.size()) {
+		next = str[depth] - ' ';
 		if (node->edges[next] == NULL || node->edges[next] == &root()) {
 			addState(*node, next); //node->edges[next] = new Trie();
 		}
 		node = node->edges[next];
 		depth++;
 	}
-	node->out.insert(curString);
+	node->out.insert(str);
 	return;
 
 }
@@ -338,12 +340,12 @@ void ACTrie::addTransitions(string &curString) {
  }
  */
 
-vector<Trie *> getoutstates(string &string) {
+vector<Trie *> DAWG::getoutstates(string &string) {
 	vector<Trie *> outstates;
-	Node *activenode = nroot;
-	Node *node;
+	WGNode *activenode = &nroot;
+	WGNode *node;
 	int stringsize = string.size();
-	stack<Node*> st;
+	stack<WGNode*> st;
 
 	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
 
@@ -352,7 +354,7 @@ vector<Trie *> getoutstates(string &string) {
 	}
 
 	if (activenode != NULL) {
-		queue<Node*> queue;
+		queue<WGNode*> queue;
 		queue.push(activenode);
 		while (!queue.empty()) {
 			node = queue.front();
@@ -371,15 +373,15 @@ vector<Trie *> getoutstates(string &string) {
 	return (outstates);
 }
 
-vector<Trie *> getfailstates(string &string, int depth) {
+vector<Trie *> DAWG::getfailstates(string &string, int depth) {
 	vector<Trie *> failstates;
 	vector<int> tmp;
-	Node *activenode = nroot;
-	Node *node;
-	Node *enode;
+	WGNode *activenode = &nroot;
+	WGNode *node;
+	WGNode *enode;
 	int num;
 	int stringsize = string.size();
-	stack<Node *> st;
+	stack<WGNode *> st;
 	stack<int> st_num;
 
 	for (int i = 0; (i <= stringsize) && (activenode != NULL); i++) {
@@ -393,8 +395,8 @@ vector<Trie *> getfailstates(string &string, int depth) {
 		activenode = activenode->edges[string[i] - ' '];
 	}
 
-	queue<Node*> queue;
-	vector<Node*> mark;
+	queue<WGNode*> queue;
+	vector<WGNode*> mark;
 
 	while (!st.empty()) {
 		node = st.top();
@@ -438,6 +440,7 @@ int main(int argc, char * argv[]) {
 	//ACマシンの構成
 	//
 
+	DAWG dawg;
 	ACTrie actrie;
 #ifdef USE_ORIGINAL
 	// rootの初期化
@@ -547,18 +550,18 @@ int main(int argc, char * argv[]) {
 	//dawgの構成
 	//
 
-	nroot->dawgtoac = DAWGTOAC_NUM;
+	dawg.root().isTrunk = DAWGTOAC_NUM;
 	DAWGTOAC_NUM++;
-	nroot->torb = 1;
+	dawg.root().torb = 1;
 
 	//string ward_num;
 	//int ward_num_i;
 	//string ward_string;
 	//string file_name;
 
-	Node *activenode;
-	activenode = nroot;
-	Node *tnode;
+	WGNode *activenode;
+	activenode = & dawg.root();
+	WGNode *tnode;
 
 	Trie *trienode;
 	Trie *tmptrie;
@@ -596,18 +599,18 @@ int main(int argc, char * argv[]) {
 		int stringsize = reading_line.size();
 
 		for (int j = 0; j < stringsize; j++)
-			activenode = update(activenode, reading_line[j]);
+			activenode = dawg.update(activenode, reading_line[j]);
 
-		activenode = nroot;
+		activenode = &dawg.root(); //nroot;
 		trienode = &actrie.root();
 
 		activenode = activenode->edges[reading_line[0] - ' '];
 		trienode = trienode->edges[reading_line[0] - ' '];
 
 		for (int j = 1; j < stringsize; j++) {
-			if (activenode->dawgtoac == 0) {
+			if (activenode->isTrunk == 0) {
 				//if (activenode->torb == 1) {
-				activenode->dawgtoac = DAWGTOAC_NUM;
+				activenode->isTrunk = DAWGTOAC_NUM;
 				activenode->torb = 1;
 				DAWGTOAC_NUM++;
 				activenode->dtoc = trienode;
@@ -618,14 +621,14 @@ int main(int argc, char * argv[]) {
 			activenode = tnode;
 			trienode = tmptrie;
 		}
-		if (activenode->dawgtoac == 0) {
-			activenode->dawgtoac = DAWGTOAC_NUM;
+		if (activenode->isTrunk == 0) {
+			activenode->isTrunk = DAWGTOAC_NUM;
 			activenode->torb = 1;
 			DAWGTOAC_NUM++;
 			activenode->dtoc = trienode;
 		}
 
-		activenode = nroot;
+		activenode = & dawg.root(); //nroot;
 	}
 
 	cout << "dawg struct finish" << endl;
@@ -709,8 +712,8 @@ int main(int argc, char * argv[]) {
 			int size2 = 0;
 //			int cur3 = 0;
 
-			Node *activenode = nroot;
-			Node *tnode = nroot;
+			WGNode *activenode = &dawg.root(); //nroot;
+			WGNode *tnode = &dawg.root(); //nroot;
 
 			//キーワードの読み込み
 
@@ -760,7 +763,7 @@ int main(int argc, char * argv[]) {
 			start = clock();
 
 			vector<Trie*> failstates;
-			failstates = getfailstates(curString2, trie_depth);
+			failstates = dawg.getfailstates(curString2, trie_depth);
 			int fstatesize = failstates.size();
 
 			for (int i = fstatesize - 1; i >= 0; i--) {
@@ -822,7 +825,7 @@ int main(int argc, char * argv[]) {
 
 			start = clock();
 
-			outstates = getoutstates(curString2);
+			outstates = dawg.getoutstates(curString2);
 
 			int outstatesize = outstates.size();
 
@@ -837,14 +840,14 @@ int main(int argc, char * argv[]) {
 
 //			Trie *check_trie = troot;
 
-			activenode = nroot;
+			activenode = &dawg.root(); //nroot;
 
 			start = clock();
 
 			for (int i = 0; i < size2; i++)
-				activenode = update(activenode, curString2[i]);
+				activenode = dawg.update(activenode, curString2[i]);
 
-			activenode = nroot;
+			activenode = &dawg.root(); //nroot;
 			Trie *trienode = &actrie.root();
 			Trie *tmptrie;
 
@@ -852,8 +855,8 @@ int main(int argc, char * argv[]) {
 			trienode = trienode->edges[curString2[0] - ' '];
 
 			for (int i = 1; i < size2; i++) {
-				if (activenode->dawgtoac == 0) {
-					activenode->dawgtoac = DAWGTOAC_NUM;
+				if (activenode->isTrunk == 0) {
+					activenode->isTrunk = DAWGTOAC_NUM;
 					activenode->torb = 1;
 					DAWGTOAC_NUM++;
 					activenode->dtoc = trienode;
@@ -865,14 +868,14 @@ int main(int argc, char * argv[]) {
 				trienode = tmptrie;
 			}
 
-			if (activenode->dawgtoac == 0) {
-				activenode->dawgtoac = DAWGTOAC_NUM;
+			if (activenode->isTrunk == 0) {
+				activenode->isTrunk = DAWGTOAC_NUM;
 				activenode->torb = 1;
 				DAWGTOAC_NUM++;
 				activenode->dtoc = trienode;
 			}
 
-			activenode = nroot;
+			activenode = &dawg.root(); //nroot;
 
 			end = clock();
 			time5 += (end - start);

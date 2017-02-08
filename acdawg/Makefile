@@ -2,8 +2,8 @@
 # Created on: 2017/01/19
 #     Author: sin
 
-GCCPATH=
-CXX = $(GCCPATH)g++ -std=c++14
+
+CXX = g++ -std=c++14
 CXXFLAGS = -Wall -O0 -g
 INCLUDES = -I./
 
