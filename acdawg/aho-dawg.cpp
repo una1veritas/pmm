@@ -39,7 +39,6 @@ struct Trie {
 class ACTrie {
 	Trie troot; // = Trie(0);
 	int node_num;
-	set<string> keywords;
 
 public:
 	ACTrie() : troot(0), node_num(1) {
@@ -48,7 +47,6 @@ public:
 			root().edges[i] = &root();
 			root().fail = &root();
 		}
-		keywords.clear();
 	}
 
 	unsigned int size() const {
@@ -69,12 +67,29 @@ public:
 	void scan(string & text);
 };
 
+void ACTrie::addTransitions(string & str) {
+	Trie * node = &root();
+	unsigned int depth = 0;
+	int next;
+
+	while (depth < str.size()) {
+		next = str[depth] - ' ';
+		if (node->edges[next] == NULL || node->edges[next] == &root()) {
+			addState(*node, next); //node->edges[next] = new Trie();
+		}
+		node = node->edges[next];
+		depth++;
+	}
+	node->out.insert(str);
+	return;
+
+}
+
 void ACTrie::buildMachine(std::vector<std::string> & words) {
 	std::queue<Trie *> q;
 
 	// gotoä÷êîÇ∆èÛë‘ÇÃí«â¡
 	for(std::vector<string>::iterator it = words.begin(); it != words.end(); it++ ) {
-		keywords.insert(*it);
 		addTransitions(*it); //Goto(troot, reading_line);
 	}
 
@@ -83,13 +98,11 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 	// not NULL
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 //		if ((actrie.root().edges[i] != NULL) && (actrie.root().edges[i] != &actrie.root() )) {
-		if ( root().edges[i] == NULL )
+		if ( root().edges[i] == NULL || isRoot(*root().edges[i]) )
 			continue;
-		if ( !isRoot(*root().edges[i]) ) {
 //			std::cout << "actrie.root.edges[" << (char)i << "] is not root." << std::endl;
-			root().edges[i]->fail = &root();
-			q.push(root().edges[i]);
-		}
+		root().edges[i]->fail = &root();
+		q.push(root().edges[i]);
 	}
 
 	while ( !q.empty() ) {
@@ -99,19 +112,15 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			Trie *next = curNode->edges[i];
 //			if (next != NULL && next != &root()) {
-			if ( next == NULL)
+			if ( next == NULL || isRoot(*next) )
 				continue;
-			if ( !isRoot(*next) ) {
-				q.push(next);
 
-				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail) {}
-				next->fail = f->edges[i];
-				next->out.insert(next->fail->out.begin(), next->fail->out.end() );
-//				for (string s : next->fail->out) {
-//					next->out.insert(s);
-//				}
-			}
+			q.push(next);
+			Trie *f = curNode->fail;
+			for (; f->edges[i] == NULL; f = f->fail) {}
+			next->fail = f->edges[i];
+			//for (string s : next->fail->out) {
+			next->out.insert(next->fail->out.begin(), next->fail->out.end() );
 		}
 	}
 }
@@ -282,63 +291,6 @@ WGNode * DAWG::update(WGNode *activenode, char a) {
 
 	}
 }
-
-#ifdef USE_ORIGINAL
-void Goto(Trie *node, string &curString, int depth = 0) {
-	if (depth == curString.size()) {
-		node->out.insert(curString);
-
-		return;
-	}
-
-	int next = curString[depth] - ' ';
-
-	if (node->edges[next] == NULL || node->edges[next] == troot) {
-		node->edges[next] = new Trie();
-	}
-
-	Goto(node->edges[next], curString, depth + 1);
-}
-#else
-void ACTrie::addTransitions(string & str) {
-	Trie * node = &root();
-	unsigned int depth = 0;
-	int next;
-
-	while (depth < str.size()) {
-		next = str[depth] - ' ';
-		if (node->edges[next] == NULL || node->edges[next] == &root()) {
-			addState(*node, next); //node->edges[next] = new Trie();
-		}
-		node = node->edges[next];
-		depth++;
-	}
-	node->out.insert(str);
-	return;
-
-}
-#endif
-
-/*
- int Goto2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
- if (depth == curString.size()) {
- node->out.insert(curString);
-
- return depth2;
- }
-
-
- int next = curString[depth] - ' ';
-
- if (node->edges[next] == NULL || node->edges[next] == troot) {
- node->edges[next] = new Trie();
- if (depth2 == -1)
- depth2 = depth;
- }
-
- Goto2(node->edges[next], curString, depth + 1, depth2);
- }
- */
 
 vector<Trie *> DAWG::getoutstates(string &string) {
 	vector<Trie *> outstates;
