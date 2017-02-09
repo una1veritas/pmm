@@ -131,22 +131,22 @@ void ACTrie::scan(string & text) {
 
 	for (int i = 0; i < k; i++) {
 		int cur = text[i] - ' ';
-
+		std::cerr << "node " << node->nodenum << ", ";
 		for (; node->edges[cur] == NULL; node = node->fail) {
-			cout << "failure now... node number " << node->fail->nodenum
-					<< endl;
+			std::cerr << "failure " << node->fail->nodenum << ", ";
 		}
 
 		node = node->edges[cur];
 
-		cout << "current node number " << node->nodenum << endl;
+		cout << "to " << node->nodenum << ", " << endl;
 
 		if (node->out.size() != 0) {
-			cout << "At position " << i << " we found:" << std::endl;
+			cout << "Found keywords: ";
 
 			for (string s : node->out) {
-				cout << s << std::endl;
+				cout << s << ", ";
 			}
+			cout << " @ " << i << std::endl;
 		}
 	}
 
