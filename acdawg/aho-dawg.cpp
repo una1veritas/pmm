@@ -195,6 +195,7 @@ public:
 	WGNode * update(WGNode *activenode, char a);
 	vector<Trie *> getoutstates(string &string);
 	vector<Trie *> getfailstates(string &string, int depth);
+	void build(ACTrie & actrie, std::vector<std::string> & keywords);
 };
 
 WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
@@ -381,8 +382,71 @@ vector<Trie *> DAWG::getfailstates(string &string, int depth) {
 	return failstates;
 }
 
+void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
+	std::string wordstr;
+	//
+	//dawgの構成
+	//
+
+	root().isTrunk = DAWGTOAC_NUM;
+	DAWGTOAC_NUM++;
+	root().torb = 1;
+
+	//string ward_num;
+	//int ward_num_i;
+	//string ward_string;
+	//string file_name;
+
+	WGNode *activenode;
+	activenode = & root();
+	WGNode *tnode;
+
+	Trie *trienode;
+	Trie *tmptrie;
+
+	for (std::vector<string>::iterator iter = keywords.begin();
+			iter != keywords.end(); ++iter) {
+
+		wordstr = *iter;
+		for (int j = 0; j < wordstr.length(); j++)
+			activenode = update(activenode, wordstr[j]);
+
+		activenode = &root(); //nroot;
+		trienode = &actrie.root();
+
+		activenode = activenode->edges[wordstr[0] - ' '];
+		trienode = trienode->edges[wordstr[0] - ' '];
+
+		for (int j = 1; j < wordstr.length(); j++) {
+			if (activenode->isTrunk == 0) {
+				//if (activenode->torb == 1) {
+				activenode->isTrunk = DAWGTOAC_NUM;
+				activenode->torb = 1;
+				DAWGTOAC_NUM++;
+				activenode->dtoc = trienode;
+			}
+
+			tnode = activenode->edges[wordstr[j] - ' '];
+			tmptrie = trienode->edges[wordstr[j] - ' '];
+			activenode = tnode;
+			trienode = tmptrie;
+		}
+		if (activenode->isTrunk == 0) {
+			activenode->isTrunk = DAWGTOAC_NUM;
+			activenode->torb = 1;
+			DAWGTOAC_NUM++;
+			activenode->dtoc = trienode;
+		}
+
+		activenode = & root(); //nroot;
+	}
+
+	cout << "dawg struct finish" << endl;
+}
+
 int main(int argc, char * argv[]) {
 
+	std::vector<string> keywords;
 	std::istringstream sstream;
 
 	//キーワード（の集合）が入力として与えられる
@@ -394,39 +458,22 @@ int main(int argc, char * argv[]) {
 
 	DAWG dawg;
 	ACTrie actrie;
-#ifdef USE_ORIGINAL
-	// rootの初期化
-	for (int i = 0; i < SIGMA_SIZE; i++) {
-		actrie.root().edges[i] = &actrie.root();
-		actrie.root().fail = &actrie.root();
-	}
-#endif
+
 	int out_size = 0;
 
 	//goto関数の構成
 
 	std::ifstream reading_file;
-	std::string file1name;
+	// default data file names
+	std::string file1name = "word_list2.txt";
 	std::string checkfilename;
 
 	if (argc > 1)
 		file1name = argv[1];
-	else
-		file1name = "word_list2.txt";
-	//file_name = "word_2000.txt";
-	//file_name = "test5.txt";
-	//file_name = "word_list3.txt";
-	//file_name = "word_list2.txt";
-	//file_name = "aho_check_in.txt";
 
 	int word_num;
 	string wordstr;
-//		string ward_num;
-//		int ward_num_i;
-//		string ward_string;
-
 	string reading_line;
-	std::vector<std::string> keywords;
 
 	reading_file.open(file1name, std::ios::in);
 	if (reading_file.fail()) {
@@ -498,6 +545,7 @@ int main(int argc, char * argv[]) {
 #endif
 	cout << "aho struct finish" << endl;
 
+#ifdef USE_ORIGINAL
 	//
 	//dawgの構成
 	//
@@ -518,48 +566,20 @@ int main(int argc, char * argv[]) {
 	Trie *trienode;
 	Trie *tmptrie;
 
-	//cout << "ファイル名を入力してください" << endl;
-	//cin >> file_name;
+	for (std::vector<string>::iterator iter = keywords.begin();
+			iter != keywords.end(); ++iter) {
 
-	//file_name = "word_2000.txt";
-	//file_name = "test5.txt";
-	//file_name = "word_list3.txt";
-	//file_name = "word_list2.txt";
-	//file_name = "aho_check_in.txt";
-
-	std::ifstream reading_file2;
-	//string reading_line;
-
-	reading_file2.open(file1name, std::ios::in);
-	if (reading_file2.fail()) {
-		std::cerr << "failed to open " << file1name << std::endl;
-		return -1;
-	}
-	std::getline(reading_file2, reading_line);
-	sstream.str(reading_line);
-	sstream.clear();
-	//ward_num = reading_line;
-	//ward_num_i = atoi(ward_num.c_str());
-	sstream >> word_num;
-
-	for (int i = 0; i < word_num; i++) {
-
-		std::getline(reading_file2, reading_line);
-
-		//cout << reading_line << " " << i << endl;
-
-		int stringsize = reading_line.size();
-
-		for (int j = 0; j < stringsize; j++)
-			activenode = dawg.update(activenode, reading_line[j]);
+		wordstr = *iter;
+		for (int j = 0; j < wordstr.length(); j++)
+			activenode = dawg.update(activenode, wordstr[j]);
 
 		activenode = &dawg.root(); //nroot;
 		trienode = &actrie.root();
 
-		activenode = activenode->edges[reading_line[0] - ' '];
-		trienode = trienode->edges[reading_line[0] - ' '];
+		activenode = activenode->edges[wordstr[0] - ' '];
+		trienode = trienode->edges[wordstr[0] - ' '];
 
-		for (int j = 1; j < stringsize; j++) {
+		for (int j = 1; j < wordstr.length(); j++) {
 			if (activenode->isTrunk == 0) {
 				//if (activenode->torb == 1) {
 				activenode->isTrunk = DAWGTOAC_NUM;
@@ -568,8 +588,8 @@ int main(int argc, char * argv[]) {
 				activenode->dtoc = trienode;
 			}
 
-			tnode = activenode->edges[reading_line[j] - ' '];
-			tmptrie = trienode->edges[reading_line[j] - ' '];
+			tnode = activenode->edges[wordstr[j] - ' '];
+			tmptrie = trienode->edges[wordstr[j] - ' '];
 			activenode = tnode;
 			trienode = tmptrie;
 		}
@@ -584,6 +604,9 @@ int main(int argc, char * argv[]) {
 	}
 
 	cout << "dawg struct finish" << endl;
+#else
+	dawg.build(actrie, keywords);
+#endif
 
 	//（動作確認）
 

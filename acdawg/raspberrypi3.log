@@ -1,0 +1,107 @@
+99995: 'eternalise'
+99996: 'eternalised'
+99997: 'eternalising'
+99998: 'eternalism'
+99999: 'eternalist'
+aho struct finish
+dawg struct finish
+bestitemforanappleandapineappleovertheworld
+node 0, to 68551, 
+Found keywords: b,  @ 0
+node 68551, to 77611, 
+Found keywords: be, e,  @ 1
+node 77611, to 84809, 
+Found keywords: bes, es,  @ 2
+node 84809, to 85521, 
+Found keywords: best, est,  @ 3
+node 85521, to 85559, 
+node 85559, failure 269403, failure 0, to 0, 
+node 0, to 242754, 
+Found keywords: e,  @ 6
+node 242754, to 251063, 
+Found keywords: em,  @ 7
+node 251063, to 252549, 
+Found keywords: emf,  @ 8
+node 252549, to 252550, 
+node 252550, to 252551, 
+node 252551, failure 0, to 1, 
+node 1, to 29098, 
+Found keywords: an,  @ 12
+node 29098, to 29102, 
+Found keywords: ana,  @ 13
+node 29102, to 30228, 
+Found keywords: ap,  @ 14
+node 30228, failure 45036, to 47477, 
+Found keywords: app,  @ 15
+node 47477, to 48057, 
+Found keywords: appl,  @ 16
+node 48057, to 48091, 
+Found keywords: apple, e,  @ 17
+node 48091, failure 242754, to 242760, 
+Found keywords: ea,  @ 18
+node 242760, to 242845, 
+Found keywords: an, ean,  @ 19
+node 242845, failure 29098, to 31273, 
+Found keywords: and, d,  @ 20
+node 31273, to 31277, 
+Found keywords: anda, da,  @ 21
+node 31277, failure 193668, to 195534, 
+Found keywords: ap, dap,  @ 22
+node 195534, to 195558, 
+node 195558, failure 45873, to 46007, 
+node 46007, failure 0, to 242754, 
+Found keywords: e,  @ 25
+node 242754, to 242760, 
+Found keywords: ea,  @ 26
+node 242760, failure 1, to 45036, 
+Found keywords: ap,  @ 27
+node 45036, to 47477, 
+Found keywords: app,  @ 28
+node 47477, to 48057, 
+Found keywords: appl,  @ 29
+node 48057, to 48091, 
+Found keywords: apple, e,  @ 30
+node 48091, failure 242754, to 261906, 
+Found keywords: eo,  @ 31
+node 261906, failure 0, to 0, 
+node 0, to 242754, 
+Found keywords: e,  @ 33
+node 242754, to 266300, 
+Found keywords: er,  @ 34
+node 266300, to 267327, 
+node 267327, to 267328, 
+Found keywords: erth,  @ 36
+node 267328, to 267329, 
+Found keywords: e,  @ 37
+node 267329, failure 242754, failure 0, to 0, 
+node 0, to 0, 
+node 0, to 0, 
+node 0, to 0, 
+node 0, to 193647, 
+Found keywords: d,  @ 42
+How many keywords would you like to add?
+100000
+total time: 11.6601sec.
+time1: 0.93658sec.
+time2: 2.67053sec.
+time3: 1.00982sec.
+time4: 2.63585sec.
+time5: 3.47807sec.
+out size 446034
+axaax
+string size 5
+current node number 1
+current node number 67337
+At position 1 we found:
+ax
+current node number 67338
+failure now... node number 1
+current node number 2
+At position 3 we found:
+aa
+failure now... node number 1
+current node number 67337
+At position 4 we found:
+ax
+How many keywords would you like to add?
+
