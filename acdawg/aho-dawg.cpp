@@ -13,7 +13,6 @@
 using namespace std;
 
 const int SIGMA_SIZE = 100;
-//int NODE_NUM_AHO = 0;
 int NODE_NUM_DAWG = 0;
 int DAWGTOAC_NUM = 0;
 
@@ -24,24 +23,23 @@ struct Trie {
 	int nodenum;
 	int ine_num;
 
-	Trie(const int id) {
-		fail = NULL;
-		ine_num = 0;
-		nodenum = id;
-		for (int i = 0; i < SIGMA_SIZE; i++) {
+	Trie(const int id) : fail(NULL), nodenum(id), ine_num(0) {
+		for (int i = 0; i < SIGMA_SIZE; i++)
 			edges[i] = NULL;
-		}
-
+		out.clear();
 	}
 };
 //Trie *troot = new Trie();
 
+// AC Machine by Trie
 class ACTrie {
 	Trie troot; // = Trie(0);
 	int node_num;
 
+	Trie & current;
+
 public:
-	ACTrie() : troot(0), node_num(1) {
+	ACTrie() : troot(0), node_num(1), current(troot) {
 		// rootの初期化
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			root().edges[i] = &root();
@@ -52,22 +50,26 @@ public:
 	unsigned int size() const {
 		return node_num;
 	}
-	Trie & root(void) {
-		return troot;
-	}
+	Trie & root(void) {	return troot; }
 	bool isRoot(const Trie & t) const {
 		return &t == &troot;
 	}
-	void addTransitions(string &str);
+	void addTransitions(const string &str);
 	void addState(Trie & t, int ch) {
 		t.edges[ch] = new Trie(node_num);
 		node_num++;
 	}
 	void buildMachine(std::vector<std::string> & keywords);
 	void scan(string & text);
+	int addString2(Trie *node, const string & curString, int depth, int depth2);
+	void addKeyword(const string & patt);
+
+	void resetState(void) { current = troot; }
+	Trie & currentState(void) { return current; }
+	void transition(int ch);
 };
 
-void ACTrie::addTransitions(string & str) {
+void ACTrie::addTransitions(const string & str) {
 	Trie * node = &root();
 	unsigned int depth = 0;
 	int next;
@@ -83,6 +85,25 @@ void ACTrie::addTransitions(string & str) {
 	node->out.insert(str);
 	return;
 
+}
+
+int ACTrie::addString2(Trie *node, const string &curString, int depth = 0, int depth2 = -1) {
+
+	if (depth == curString.size()) {
+		node->out.insert(curString);
+
+		return depth2;
+	}
+
+	int next = curString[depth] - ' ';
+
+	if (node->edges[next] == NULL || isRoot(*node->edges[next]) ) {
+		addState(*node, next); //node->edges[next] = new Trie();
+		if (depth2 == -1)
+			depth2 = depth;
+	}
+
+	return addString2(node->edges[next], curString, depth + 1, depth2);
 }
 
 void ACTrie::buildMachine(std::vector<std::string> & words) {
@@ -125,6 +146,14 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 	}
 }
 
+// ch is the character for which the machine will make a transition.
+void ACTrie::transition(int ch)  {
+	while ( current.edges[ch] == NULL ) {
+		current = current.fail;
+	}
+	current = current.edges[ch];
+}
+
 void ACTrie::scan(string & text) {
 	Trie *node = &root();
 	int k = text.size();
@@ -152,6 +181,175 @@ void ACTrie::scan(string & text) {
 
 }
 
+#ifdef USE_ORIGINAL
+void ACTrie::addKeyword(const string & patt) {
+	//dynamic start
+
+	int depth = 0;
+	Trie *node2 = &root();
+	Trie *nodepoint;
+	Trie *nodepoint2 = &root();
+	int size2 = patt.size();
+	int cur3 = 0;
+
+	depth = addString2(&root(), patt);
+
+	if (depth == -1) {
+		cout << "depth = -1" << endl;
+		cout << patt << endl;
+
+		if (count(node2->out.begin(), node2->out.end(), patt) > 0) {
+			;
+		} else {
+			queue<Trie*> q4;
+			Trie *rq;
+
+			for (int k = 0; k < size2; k++) {
+				cur3 = patt[k] - ' ';
+				node2 = node2->edges[cur3];
+			}
+
+			q4.push(node2);
+
+			while (!q4.empty()) {
+				rq = q4.front();
+				q4.pop();
+				rq->out.insert(patt);
+				for (auto s : rq->ine)
+					q4.push(s);
+			}
+
+		}
+	} else {
+		if (depth != 0) {
+			for (int k = 0; k < depth; k++) {
+				cur3 = patt[k] - ' ';
+				node2 = node2->edges[cur3];
+				//cout << "cur3 " << cur3 << " " << node2->nodenum << endl;
+			}
+		}
+
+		nodepoint = node2;
+		nodepoint2 = nodepoint;
+
+		Trie *next3 = nodepoint->edges[patt[depth] - ' '];
+
+		for (int k = depth; k < size2; k++) {
+			Trie *next2 = nodepoint->edges[patt[k] - ' '];
+
+			Trie *f = nodepoint->fail;
+			int h = patt[k] - ' ';
+
+			int p = 0;
+			for (; (f->edges[patt[k] - ' '] == NULL); f = f->fail)
+				;
+
+			if (k == 0) {
+				next2->fail = root;
+
+				root->ine.push_back(next2);
+			} else if ((f->edges[patt[k] - ' '] == root)) {
+				next2->fail = root;
+
+				root->ine.push_back(next2);
+			} else {
+				next2->fail = f->edges[patt[k] - ' '];
+
+				f->edges[patt[k] - ' ']->ine.push_back(next2);
+
+				if (next2->fail->out.size() > 0)
+					for (auto s : next2->fail->out)
+						next2->out.insert(s);
+
+			}
+
+			nodepoint = next2;
+
+		}
+
+		//既存の関数の更新
+
+		// build the fail function
+		queue<Trie*> q2;
+		queue<int> q2_num;
+		int q2_n = 0;
+
+		for (int i = 0; i < nodepoint2->ine.size(); i++) {
+			if (nodepoint2->ine[i] != next3) {
+				q2.push(nodepoint2->ine[i]);
+				q2_num.push(depth);
+			}
+		}
+
+		Trie *temp = root;
+		for (int i = 0; i < size2; i++) {
+			tr[i] = temp;
+			temp = temp->edges[patt[i] - ' '];
+
+		}
+
+		char curString3[50];
+
+		for (int i = 0; i < size2; i++) {
+			curString3[i] = patt[i];
+		}
+
+		curString3[size2] = '*';
+		curString3[size2 + 1] = '\0';
+
+		Trie *r, *rnext;
+		Trie *nodepoint3;
+
+		fail_size = 0;
+		while (!q2.empty()) {
+			r = q2.front();
+			q2.pop();
+			int i = q2_num.front();
+			q2_num.pop();
+
+			nodepoint3 = tr[i];
+
+			while ((r->edges[curString3[i] - ' '] != NULL)) {
+				rnext = r->edges[curString3[i] - ' '];
+
+				rnext->fail = nodepoint3->edges[curString3[i] - ' '];
+				nodepoint3->edges[curString3[i] - ' ']->ine.push_back(rnext);
+
+				r = rnext;
+
+				nodepoint3 = nodepoint3->edges[curString3[i] - ' '];
+
+				i = i + 1;
+
+			}
+
+			c_start = clock();
+			if (size2 <= i) {
+
+				auto itr = r->out.find(curString2);
+				if (itr == r->out.end()) {
+					r->out.insert(curString2);
+					out_size++;
+				}
+			}
+			c_end = clock();
+			c_time += c_end - c_start;
+
+			for (int j = 0; j < r->ine.size(); j++) {
+				q2.push(r->ine[j]);
+				q2_num.push(i);
+			}
+
+		}
+
+		end = clock();
+		time3 += end - start;
+
+	}
+
+	//dynamic finish
+}
+#endif
 
 struct WGNode {
 	WGNode *edges[SIGMA_SIZE];
@@ -167,11 +365,7 @@ struct WGNode {
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
 	int torb;
 
-	WGNode() {
-		suff = NULL;
-		dtoc = NULL;
-		torb = 0;
-		isTrunk = 0;
+	WGNode() : suff(NULL), dtoc(NULL), isTrunk(0), torb(0) {
 		nodenum = NODE_NUM_DAWG;
 		NODE_NUM_DAWG++;
 		for (int i = 0; i < SIGMA_SIZE; i++) {
@@ -232,12 +426,10 @@ WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
 				currentnode->edges[m] = newchildnode;
 				break;
 			}
-
 		}
 
 		if (m == (SIGMA_SIZE - 1))
 			break;
-
 	}
 
 	return newchildnode;
@@ -578,15 +770,12 @@ int main(int argc, char * argv[]) {
 					if (trie_depth == 10000) {
 						trie_depth = i + 1;
 					}
-
 					//Trie *newstate = new Trie();
 					//tactivenode->edges[charnum] = newstate;
 					actrie.addState(*tactivenode, charnum);
 
 					tactivenode = tactivenode->edges[charnum];
-
 				}
-
 			}
 			newstates[size2] = tactivenode;
 			tactivenode->out.insert(curString2);
