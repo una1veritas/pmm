@@ -250,13 +250,11 @@ WGNode * DAWG::update(WGNode *activenode, char a) {
 
 	if (activenode->edges[charnum] != NULL) {
 		//辺がある場合
-
 		if (activenode->edge_num[charnum] == 1) {
 			return activenode->edges[charnum];
 		} else {
 			return split(activenode, activenode->edges[charnum], a);
 		}
-
 	} else {
 		//辺がない場合
 		WGNode *newactivenode = new WGNode();
@@ -287,9 +285,7 @@ WGNode * DAWG::update(WGNode *activenode, char a) {
 			newactivenode->suff = &nroot;
 			nroot.ine.push_back(newactivenode);
 		}
-
 		return newactivenode;
-
 	}
 }
 
@@ -376,9 +372,7 @@ vector<Trie *> DAWG::getfailstates(string &string, int depth) {
 				}
 			}
 		}
-
 	}
-
 	return failstates;
 }
 
@@ -391,11 +385,6 @@ void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
 	root().isTrunk = DAWGTOAC_NUM;
 	DAWGTOAC_NUM++;
 	root().torb = 1;
-
-	//string ward_num;
-	//int ward_num_i;
-	//string ward_string;
-	//string file_name;
 
 	WGNode *activenode;
 	activenode = & root();
@@ -496,117 +485,11 @@ int main(int argc, char * argv[]) {
 		keywords.push_back(wordstr);
 	}
 
-#ifdef USE_ORIGINAL
-	for(std::vector<string>::iterator it = keywords.begin(); it != keywords.end(); it++ )
-		actrie.addTransitions(*it); //Goto(troot, reading_line);
-
-	// failure関数の構成
-	queue<Trie*> q;
-
-	// Must to this before, because of the fact that every edge out of the root is
-	// not NULL
-	for (int i = 0; i < SIGMA_SIZE; i++) {
-//		if ((actrie.root().edges[i] != NULL) && (actrie.root().edges[i] != &actrie.root() )) {
-		if ((actrie.root().edges[i] != NULL)
-				&& !actrie.isRoot(*actrie.root().edges[i])) {
-			std::cout << "actrie.root.edges[" << (char)i << "] is not root." << std::endl;
-			actrie.root().edges[i]->fail = &actrie.root();
-			q.push(actrie.root().edges[i]);
-		}
-	}
-
-	//Trie *tnode;
-	//cout << "check point1" << endl;
-
-//	int j = 1;
-	while (!q.empty()) {
-		Trie *curNode = q.front();
-		q.pop();
-
-		for (int i = 0; i < SIGMA_SIZE; i++) {
-			Trie *next = curNode->edges[i];
-			if (next != NULL && next != &actrie.root()) {
-				q.push(next);
-
-				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail)
-					;
-
-				next->fail = f->edges[i];
-
-				for (auto s : next->fail->out) {
-					next->out.insert(s);
-				}
-			}
-		}
-	}
-#else
 	actrie.buildMachine(keywords);
-#endif
+
 	cout << "aho struct finish" << endl;
 
-#ifdef USE_ORIGINAL
-	//
-	//dawgの構成
-	//
-
-	dawg.root().isTrunk = DAWGTOAC_NUM;
-	DAWGTOAC_NUM++;
-	dawg.root().torb = 1;
-
-	//string ward_num;
-	//int ward_num_i;
-	//string ward_string;
-	//string file_name;
-
-	WGNode *activenode;
-	activenode = & dawg.root();
-	WGNode *tnode;
-
-	Trie *trienode;
-	Trie *tmptrie;
-
-	for (std::vector<string>::iterator iter = keywords.begin();
-			iter != keywords.end(); ++iter) {
-
-		wordstr = *iter;
-		for (int j = 0; j < wordstr.length(); j++)
-			activenode = dawg.update(activenode, wordstr[j]);
-
-		activenode = &dawg.root(); //nroot;
-		trienode = &actrie.root();
-
-		activenode = activenode->edges[wordstr[0] - ' '];
-		trienode = trienode->edges[wordstr[0] - ' '];
-
-		for (int j = 1; j < wordstr.length(); j++) {
-			if (activenode->isTrunk == 0) {
-				//if (activenode->torb == 1) {
-				activenode->isTrunk = DAWGTOAC_NUM;
-				activenode->torb = 1;
-				DAWGTOAC_NUM++;
-				activenode->dtoc = trienode;
-			}
-
-			tnode = activenode->edges[wordstr[j] - ' '];
-			tmptrie = trienode->edges[wordstr[j] - ' '];
-			activenode = tnode;
-			trienode = tmptrie;
-		}
-		if (activenode->isTrunk == 0) {
-			activenode->isTrunk = DAWGTOAC_NUM;
-			activenode->torb = 1;
-			DAWGTOAC_NUM++;
-			activenode->dtoc = trienode;
-		}
-
-		activenode = & dawg.root(); //nroot;
-	}
-
-	cout << "dawg struct finish" << endl;
-#else
 	dawg.build(actrie, keywords);
-#endif
 
 	//（動作確認）
 
@@ -621,32 +504,8 @@ int main(int argc, char * argv[]) {
 	}
 	getline(ifs, bigString);
 	cout << bigString << endl;
-#ifdef USE_ORIGINAL
-	Trie *node = &actrie.root();
-	int k = bigString.size();
-	for (int i = 0; i < k; i++) {
-		int cur = bigString[i] - ' ';
 
-		for (; node->edges[cur] == NULL; node = node->fail) {
-			cout << "failure now... node number " << node->fail->nodenum
-					<< endl;
-		}
-
-		node = node->edges[cur];
-
-		cout << "current node number " << node->nodenum << endl;
-
-		if (node->out.size() != 0) {
-			cout << "At position " << i << " we found:" << std::endl;
-
-			for (string s : node->out) {
-				cout << s << std::endl;
-			}
-		}
-	}
-#else
 	actrie.scan(bigString);
-#endif
 
 	//
 	//キーワードを新たに与える（一語ずつ）
