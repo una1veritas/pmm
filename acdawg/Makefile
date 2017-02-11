@@ -3,7 +3,7 @@
 #     Author: sin
 
 
-CXX = g++ -std=c++14
+CXX = g++ -std=c++11
 CXXFLAGS = -Wall -O0 -g
 INCLUDES = -I./
 
@@ -19,11 +19,11 @@ LIBOBJS =
 all: aho-dawg 
 
 aho-dawg:  aho-dawg.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg aho-dawg.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg.exe aho-dawg.o $(LIBOBJS)
 	
 aho: aho.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho aho.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho.exe aho.o $(LIBOBJS)
 
 
 clean: 
-	rm *.o acdawg ac #*#
+	rm *.o *.exe #*#
