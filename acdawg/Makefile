@@ -4,7 +4,7 @@
 
 
 CXX = g++ -std=c++11
-CXXFLAGS = -Wall -O0 -g
+CXXFLAGS = -Wall -O2 -g
 INCLUDES = -I./
 
 %.o: %.c
