@@ -36,10 +36,10 @@ class ACTrie {
 	Trie troot; // = Trie(0);
 	int node_num;
 
-	Trie & current;
+	Trie * current;
 
 public:
-	ACTrie() : troot(0), node_num(1), current(troot) {
+	ACTrie() : troot(0), node_num(1), current(&troot) {
 		// root‚Ì‰Šú‰»
 		for (int i = 0; i < SIGMA_SIZE; i++) {
 			root().edges[i] = &root();
@@ -64,8 +64,8 @@ public:
 	int addString2(Trie *node, const string & curString, int depth, int depth2);
 	void addKeyword(const string & patt);
 
-	void resetState(void) { current = troot; }
-	Trie & currentState(void) { return current; }
+	void resetState(void) { current = &troot; }
+	Trie & currentState(void) { return *current; }
 	void transition(int ch);
 };
 
@@ -148,10 +148,10 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 
 // ch is the character for which the machine will make a transition.
 void ACTrie::transition(int ch)  {
-	while ( current.edges[ch] == NULL ) {
-		current = current.fail;
+	while ( current->edges[ch] == NULL ) {
+		current = current->fail;
 	}
-	current = current.edges[ch];
+	current = current->edges[ch];
 }
 
 void ACTrie::scan(string & text) {
