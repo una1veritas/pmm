@@ -4,7 +4,7 @@
 
 
 CXX = g++ -std=c++11
-CXXFLAGS = -Wall -O0 -g
+CXXFLAGS = -Wall -O2 -g3
 INCLUDES = -I./
 
 %.o: %.c
@@ -26,4 +26,4 @@ aho: aho.o $(LIBOBJS)
 
 
 clean: 
-	rm *.o *.exe #*#
+	rm *.o *.exe #*# *~
