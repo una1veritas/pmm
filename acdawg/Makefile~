@@ -3,7 +3,7 @@
 #     Author: sin
 
 
-CXX = g++ -std=c++11
+CXX = g++ -std=c++14
 CXXFLAGS = -Wall -O0 -g
 INCLUDES = -I./
 
