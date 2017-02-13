@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const int SIGMA_SIZE = 100;
+const int SIGMA_SIZE = 255;
 int NODE_NUM_DAWG = 0;
 int DAWGTOAC_NUM = 0;
 
@@ -66,7 +66,7 @@ public:
 
 	void resetState(void) { current = &troot; }
 	Trie & currentState(void) { return *current; }
-	void transition(int ch);
+	void transferState(int ch);
 };
 
 void ACTrie::addTransitions(const string & str) {
@@ -75,7 +75,7 @@ void ACTrie::addTransitions(const string & str) {
 	int next;
 
 	while (depth < str.size()) {
-		next = str[depth] - ' ';
+		next = str[depth] /* - ' ' */;
 		if (node->edges[next] == NULL || node->edges[next] == &root()) {
 			addState(*node, next); //node->edges[next] = new Trie();
 		}
@@ -95,7 +95,7 @@ int ACTrie::addString2(Trie *node, const string &curString, int depth = 0, int d
 		return depth2;
 	}
 
-	int next = curString[depth] - ' ';
+	int next = curString[depth] /* - ' ' */;
 
 	if (node->edges[next] == NULL || isRoot(*node->edges[next]) ) {
 		addState(*node, next); //node->edges[next] = new Trie();
@@ -147,7 +147,7 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 }
 
 // ch is the character for which the machine will make a transition.
-void ACTrie::transition(int ch)  {
+void ACTrie::transferState(int ch)  {
 	while ( current->edges[ch] == NULL ) {
 		current = current->fail;
 	}
@@ -155,27 +155,29 @@ void ACTrie::transition(int ch)  {
 }
 
 void ACTrie::scan(string & text) {
-	Trie *node = &root();
-	int k = text.size();
+//	Trie *node = &root();
+//	int k = text.size();
 
-	for (int i = 0; i < k; i++) {
-		int cur = text[i] - ' ';
-		std::cerr << "node " << node->nodenum << ", ";
+	for (int i = 0; i < text.size(); i++) {
+		transferState(text[i]);
+		/*
+		int cur = text[i]; // - ' '
+		// std::cerr << "node " << node->nodenum << ", ";
 		for (; node->edges[cur] == NULL; node = node->fail) {
-			std::cerr << "failure " << node->fail->nodenum << ", ";
+			//std::cerr << "failure " << node->fail->nodenum << ", ";
 		}
 
 		node = node->edges[cur];
 
-		cout << "to " << node->nodenum << ", " << endl;
+		//cout << "to " << node->nodenum << ", " << endl;
+		 	*/
+		if (currentState().out.size() != 0) {
+			cout << "Found @ " << i << " words ";
 
-		if (node->out.size() != 0) {
-			cout << "Found keywords: ";
-
-			for (string s : node->out) {
+			for (string s : currentState().out) {
 				cout << s << ", ";
 			}
-			cout << " @ " << i << std::endl;
+			cout << "." << std::endl;
 		}
 	}
 
@@ -205,7 +207,7 @@ void ACTrie::addKeyword(const string & patt) {
 			Trie *rq;
 
 			for (int k = 0; k < size2; k++) {
-				cur3 = patt[k] - ' ';
+				cur3 = patt[k] /* - ' ' */;
 				node2 = node2->edges[cur3];
 			}
 
@@ -223,7 +225,7 @@ void ACTrie::addKeyword(const string & patt) {
 	} else {
 		if (depth != 0) {
 			for (int k = 0; k < depth; k++) {
-				cur3 = patt[k] - ' ';
+				cur3 = patt[k] /* - ' ' */;
 				node2 = node2->edges[cur3];
 				//cout << "cur3 " << cur3 << " " << node2->nodenum << endl;
 			}
@@ -232,30 +234,30 @@ void ACTrie::addKeyword(const string & patt) {
 		nodepoint = node2;
 		nodepoint2 = nodepoint;
 
-		Trie *next3 = nodepoint->edges[patt[depth] - ' '];
+		Trie *next3 = nodepoint->edges[patt[depth] /* - ' ' */];
 
 		for (int k = depth; k < size2; k++) {
-			Trie *next2 = nodepoint->edges[patt[k] - ' '];
+			Trie *next2 = nodepoint->edges[patt[k] /* - ' ' */];
 
 			Trie *f = nodepoint->fail;
-			int h = patt[k] - ' ';
+			int h = patt[k] /* - ' ' */;
 
 			int p = 0;
-			for (; (f->edges[patt[k] - ' '] == NULL); f = f->fail)
+			for (; (f->edges[patt[k] /* - ' ' */] == NULL); f = f->fail)
 				;
 
 			if (k == 0) {
 				next2->fail = root;
 
 				root->ine.push_back(next2);
-			} else if ((f->edges[patt[k] - ' '] == root)) {
+			} else if ((f->edges[patt[k] /* - ' ' */] == root)) {
 				next2->fail = root;
 
 				root->ine.push_back(next2);
 			} else {
-				next2->fail = f->edges[patt[k] - ' '];
+				next2->fail = f->edges[patt[k] /* - ' ' */];
 
-				f->edges[patt[k] - ' ']->ine.push_back(next2);
+				f->edges[patt[k] /* - ' ' */]->ine.push_back(next2);
 
 				if (next2->fail->out.size() > 0)
 					for (auto s : next2->fail->out)
@@ -284,7 +286,7 @@ void ACTrie::addKeyword(const string & patt) {
 		Trie *temp = root;
 		for (int i = 0; i < size2; i++) {
 			tr[i] = temp;
-			temp = temp->edges[patt[i] - ' '];
+			temp = temp->edges[patt[i] /* - ' ' */];
 
 		}
 
@@ -309,15 +311,15 @@ void ACTrie::addKeyword(const string & patt) {
 
 			nodepoint3 = tr[i];
 
-			while ((r->edges[curString3[i] - ' '] != NULL)) {
-				rnext = r->edges[curString3[i] - ' '];
+			while ((r->edges[curString3[i] /* - ' ' */] != NULL)) {
+				rnext = r->edges[curString3[i] /* - ' ' */];
 
-				rnext->fail = nodepoint3->edges[curString3[i] - ' '];
-				nodepoint3->edges[curString3[i] - ' ']->ine.push_back(rnext);
+				rnext->fail = nodepoint3->edges[curString3[i] /* - ' ' */];
+				nodepoint3->edges[curString3[i] /* - ' ' */]->ine.push_back(rnext);
 
 				r = rnext;
 
-				nodepoint3 = nodepoint3->edges[curString3[i] - ' '];
+				nodepoint3 = nodepoint3->edges[curString3[i] /* - ' ' */];
 
 				i = i + 1;
 
@@ -395,7 +397,7 @@ public:
 WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
 	WGNode *newchildnode = new WGNode();
 	WGNode *currentnode = parentnode;
-	int charnum = a - ' ';
+	int charnum = a /* - ' ' */;
 
 	parentnode->edges[charnum] = newchildnode;
 	parentnode->edge_num[charnum] = 1;
@@ -438,7 +440,7 @@ WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
 
 WGNode * DAWG::update(WGNode *activenode, char a) {
 
-	int charnum = a - ' ';
+	int charnum = a /* - ' ' */;
 
 	if (activenode->edges[charnum] != NULL) {
 		//辺がある場合
@@ -490,7 +492,7 @@ vector<Trie *> DAWG::getoutstates(string &string) {
 
 	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
 
-		activenode = activenode->edges[string[i] - ' '];
+		activenode = activenode->edges[(int)string[i] /* - ' ' */];
 
 	}
 
@@ -533,7 +535,7 @@ vector<Trie *> DAWG::getfailstates(string &string, int depth) {
 		if (i == stringsize)
 			break;
 
-		activenode = activenode->edges[string[i] - ' '];
+		activenode = activenode->edges[(int)string[i] /* - ' ' */];
 	}
 
 	queue<WGNode*> queue;
@@ -595,8 +597,8 @@ void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
 		activenode = &root(); //nroot;
 		trienode = &actrie.root();
 
-		activenode = activenode->edges[wordstr[0] - ' '];
-		trienode = trienode->edges[wordstr[0] - ' '];
+		activenode = activenode->edges[(int)wordstr[0] /* - ' ' */];
+		trienode = trienode->edges[(int)wordstr[0] /* - ' ' */];
 
 		for (int j = 1; j < wordstr.length(); j++) {
 			if (activenode->isTrunk == 0) {
@@ -607,8 +609,8 @@ void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
 				activenode->dtoc = trienode;
 			}
 
-			tnode = activenode->edges[wordstr[j] - ' '];
-			tmptrie = trienode->edges[wordstr[j] - ' '];
+			tnode = activenode->edges[(int)wordstr[j] /* - ' ' */];
+			tmptrie = trienode->edges[(int)wordstr[j] /* - ' ' */];
 			activenode = tnode;
 			trienode = tmptrie;
 		}
@@ -647,13 +649,19 @@ int main(int argc, char * argv[]) {
 	std::ifstream reading_file;
 	// default data file names
 	std::string file1name = "word_list2.txt";
-	std::string checkfilename;
+	std::string checkfilename = "aho_check_out.txt";
 
-	if (argc > 1)
+	int word_num = 0;
+	if (argc > 1) {
 		file1name = argv[1];
+	}
+	if ( argc > 2 ) {
+		sstream.str(argv[2]);
+		sstream.clear();
+		sstream >> word_num;
+	}
 
-	int word_num;
-	string wordstr;
+	string str;
 	string reading_line;
 
 	reading_file.open(file1name, std::ios::in);
@@ -666,15 +674,16 @@ int main(int argc, char * argv[]) {
 	sstream.clear();
 //		ward_num = reading_line;
 //		ward_num_i = atoi(ward_num.c_str());
-	sstream >> word_num;
+	if ( word_num <= 0 )
+		sstream >> word_num;
 	for (int i = 0; i < word_num; i++) {
 		std::getline(reading_file, reading_line);
 		sstream.str(reading_line);
 		sstream.clear();
-		sstream >> wordstr;
+		sstream >> str;
 		//cout << reading_line << " " << i << endl;
-		std::cout << i << ": '" << wordstr << "'" << std::endl;
-		keywords.push_back(wordstr);
+		std::cout << i << ": '" << str << "'" << std::endl;
+		keywords.push_back(str);
 	}
 
 	actrie.buildMachine(keywords);
@@ -686,18 +695,20 @@ int main(int argc, char * argv[]) {
 	//（動作確認）
 
 	// テキストからキーワードを検出
-	string bigString;
-	//std::ifstream ifs("test4.txt");
-	checkfilename = "aho_check_out.txt";
+	string text;
 	std::ifstream ifs(checkfilename);
 	if (ifs.fail()) {
 		std::cerr << "failed to open " << checkfilename << std::endl;
 		return -1;
 	}
-	getline(ifs, bigString);
-	cout << bigString << endl;
+	while ( !ifs.eof() ) {
+		getline(ifs, str);
+		text.append(str);
+		text.append("\n");
+	}
 
-	actrie.scan(bigString);
+	cout << "test text = '" << text << "'" << endl;
+	actrie.scan(text);
 
 	//
 	//キーワードを新たに与える（一語ずつ）
@@ -705,8 +716,6 @@ int main(int argc, char * argv[]) {
 	//DAWGをもとにACマシンを更新
 	//
 
-	//std::ifstream readline2("word_list3.txt");
-	//std::ifstream readline2("test3.txt");
 	std::ifstream readline2("aho_check_in_plus.txt");
 
 	//dynamic start
@@ -760,7 +769,7 @@ int main(int argc, char * argv[]) {
 
 			for (int i = 0; i < size2; i++) {
 				newstates[i] = tactivenode;
-				charnum = curString2[i] - ' ';
+				charnum = curString2[i] /* - ' ' */;
 
 				if (tactivenode->edges[charnum] != NULL
 						&& tactivenode->edges[charnum] != &actrie.root()) {
@@ -804,7 +813,7 @@ int main(int argc, char * argv[]) {
 			int charnum2 = 0;
 
 			for (int i = 0; i < size2; i++) {
-				charnum2 = curString2[i] - ' ';
+				charnum2 = curString2[i] /* - ' ' */;
 
 				if ((i + 1) >= trie_depth) {
 					if (tactivenode == &actrie.root()) {
@@ -837,7 +846,7 @@ int main(int argc, char * argv[]) {
 					}
 
 				} else {
-					tactivenode = tactivenode->edges[curString2[i] - ' '];
+					tactivenode = tactivenode->edges[(int)curString2[i] /* - ' ' */];
 				}
 			}
 
@@ -874,8 +883,8 @@ int main(int argc, char * argv[]) {
 			Trie *trienode = &actrie.root();
 			Trie *tmptrie;
 
-			activenode = activenode->edges[curString2[0] - ' '];
-			trienode = trienode->edges[curString2[0] - ' '];
+			activenode = activenode->edges[(int)curString2[0] /* - ' ' */];
+			trienode = trienode->edges[(int)curString2[0] /* - ' ' */];
 
 			for (int i = 1; i < size2; i++) {
 				if (activenode->isTrunk == 0) {
@@ -885,8 +894,8 @@ int main(int argc, char * argv[]) {
 					activenode->dtoc = trienode;
 				}
 
-				tnode = activenode->edges[curString2[i] - ' '];
-				tmptrie = trienode->edges[curString2[i] - ' '];
+				tnode = activenode->edges[(int)curString2[i] /* - ' ' */];
+				tmptrie = trienode->edges[(int)curString2[i] /* - ' ' */];
 				activenode = tnode;
 				trienode = tmptrie;
 			}
@@ -934,7 +943,7 @@ int main(int argc, char * argv[]) {
 
 		for (int i = 0; i < k2; i++) {
 
-			int cur = bigString2[i] - ' ';
+			int cur = bigString2[i] /* - ' ' */;
 
 			for (; node3->edges[cur] == NULL; node3 = node3->fail) {
 				cout << "failure now... node number " << node3->fail->nodenum
