@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <map>
 #include <queue>
 #include <string>
 #include <vector>
@@ -17,15 +18,18 @@ int NODE_NUM_DAWG = 0;
 int DAWGTOAC_NUM = 0;
 
 struct Trie {
-	Trie *edges[SIGMA_SIZE];
+	//Trie *edges[SIGMA_SIZE];
+	map<int, Trie *> edges;
 	Trie *fail;
 	set<string> out;
 	int nodenum;
 	int ine_num;
 
 	Trie(const int id) : fail(NULL), nodenum(id), ine_num(0) {
+		/*
 		for (int i = 0; i < SIGMA_SIZE; i++)
 			edges[i] = NULL;
+			*/
 		out.clear();
 	}
 };
@@ -54,14 +58,28 @@ public:
 	bool isRoot(const Trie & t) const {
 		return &t == &troot;
 	}
-	void addTransitions(const string &str);
-	void addState(Trie & t, int ch) {
-		t.edges[ch] = new Trie(node_num);
+	bool isRoot(const Trie * t) const {
+		return t == &troot;
+	}
+	Trie * branch(Trie & node, int ch) {
+		try {
+			return node.edges.at(ch);
+		} catch (const std::out_of_range & excep) {
+			return NULL;
+		}
+	}
+	inline Trie * branch(int ch) { return branch(*current, ch); }
+
+	void addOutput(const string &str);
+	void addBranch(Trie & node, int ch) {
+		node.edges[ch] = new Trie(node_num);
 		node_num++;
 	}
+	inline void addBranch(int ch) { return addBranch(*current, ch); }
+
 	void buildMachine(std::vector<std::string> & keywords);
 	void scan(string & text);
-	int addString2(Trie *node, const string & curString, int depth, int depth2);
+//	int addString2(Trie *node, const string & curString, int depth, int depth2);
 	void addKeyword(const string & patt);
 
 	void resetState(void) { current = &troot; }
@@ -69,24 +87,27 @@ public:
 	void transferState(int ch);
 };
 
-void ACTrie::addTransitions(const string & str) {
-	Trie * node = &root();
+void ACTrie::addOutput(const string & str) {
+	//Trie * node = &root();
 	unsigned int depth = 0;
-	int next;
+	int ch;
+	resetState();
 
 	while (depth < str.size()) {
-		next = str[depth] /* - ' ' */;
-		if (node->edges[next] == NULL || node->edges[next] == &root()) {
-			addState(*node, next); //node->edges[next] = new Trie();
+		ch = str[depth] /* - ' ' */;
+		Trie * br = branch(ch);
+		if ( br == NULL	|| isRoot(br) ) {
+			addBranch(ch); //node->edges[next] = new Trie();
 		}
-		node = node->edges[next];
+		transferState(ch);
 		depth++;
 	}
-	node->out.insert(str);
+	currentState().out.insert(str);
 	return;
 
 }
 
+/*
 int ACTrie::addString2(Trie *node, const string &curString, int depth = 0, int depth2 = -1) {
 
 	if (depth == curString.size()) {
@@ -95,35 +116,37 @@ int ACTrie::addString2(Trie *node, const string &curString, int depth = 0, int d
 		return depth2;
 	}
 
-	int next = curString[depth] /* - ' ' */;
+	int next = curString[depth]; // - ' ';
 
-	if (node->edges[next] == NULL || isRoot(*node->edges[next]) ) {
-		addState(*node, next); //node->edges[next] = new Trie();
+	if (node->edges.find(next) == node->edges.end() || isRoot(*node->edges[next]) ) {
+		addBranch(*node, next); //node->edges[next] = new Trie();
 		if (depth2 == -1)
 			depth2 = depth;
 	}
 
 	return addString2(node->edges[next], curString, depth + 1, depth2);
 }
+*/
 
 void ACTrie::buildMachine(std::vector<std::string> & words) {
 	std::queue<Trie *> q;
 
 	// gotoä÷êîÇ∆èÛë‘ÇÃí«â¡
 	for(std::vector<string>::iterator it = words.begin(); it != words.end(); it++ ) {
-		addTransitions(*it); //Goto(troot, reading_line);
+		addOutput(*it); //Goto(troot, reading_line);
 	}
 
-	// failureä÷êîÇÃç\ê¨
-	// Must to this before, because of the fact that every edge out of the root is
-	// not NULL
+	// set up failures of root
+	// Must to this before, because of the fact that every edge out of the root
+	// must not be NULL.
+	resetState();
 	for (int i = 0; i < SIGMA_SIZE; i++) {
-//		if ((actrie.root().edges[i] != NULL) && (actrie.root().edges[i] != &actrie.root() )) {
-		if ( root().edges[i] == NULL || isRoot(*root().edges[i]) )
+		// if is an explicit failure, or is root-failure
+		if ( branch(i) == NULL || isRoot(branch(i)) )
 			continue;
-//			std::cout << "actrie.root.edges[" << (char)i << "] is not root." << std::endl;
-		root().edges[i]->fail = &root();
-		q.push(root().edges[i]);
+		// if has a branch
+		branch(i)->fail = &root();
+		q.push(branch(i));
 	}
 
 	while ( !q.empty() ) {
@@ -131,15 +154,17 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 		q.pop();
 
 		for (int i = 0; i < SIGMA_SIZE; i++) {
-			Trie *next = curNode->edges[i];
+			Trie *next = NULL;
+			if ( curNode->edges.find(i) != curNode->edges.end() )
+				next = curNode->edges.at(i);
 //			if (next != NULL && next != &root()) {
 			if ( next == NULL || isRoot(*next) )
 				continue;
 
 			q.push(next);
 			Trie *f = curNode->fail;
-			for (; f->edges[i] == NULL; f = f->fail) {}
-			next->fail = f->edges[i];
+			for (; f->edges.find(i) == f->edges.end(); f = f->fail) {}
+			next->fail = f->edges.at(i);
 			//for (string s : next->fail->out) {
 			next->out.insert(next->fail->out.begin(), next->fail->out.end() );
 		}
@@ -148,10 +173,10 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 
 // ch is the character for which the machine will make a transition.
 void ACTrie::transferState(int ch)  {
-	while ( current->edges[ch] == NULL ) {
+	while ( branch(ch) == NULL ) {
 		current = current->fail;
 	}
-	current = current->edges[ch];
+	current = branch(ch);
 }
 
 void ACTrie::scan(string & text) {
@@ -166,13 +191,12 @@ void ACTrie::scan(string & text) {
 		for (; node->edges[cur] == NULL; node = node->fail) {
 			//std::cerr << "failure " << node->fail->nodenum << ", ";
 		}
-
 		node = node->edges[cur];
 
 		//cout << "to " << node->nodenum << ", " << endl;
 		 	*/
 		if (currentState().out.size() != 0) {
-			cout << "Found @ " << i << " words ";
+			cout << "@" << i << " : ";
 
 			for (string s : currentState().out) {
 				cout << s << ", ";
@@ -781,7 +805,7 @@ int main(int argc, char * argv[]) {
 					}
 					//Trie *newstate = new Trie();
 					//tactivenode->edges[charnum] = newstate;
-					actrie.addState(*tactivenode, charnum);
+					actrie.addBranch(*tactivenode, charnum);
 
 					tactivenode = tactivenode->edges[charnum];
 				}
