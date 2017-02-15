@@ -69,6 +69,10 @@ public:
 		}
 	}
 	inline Trie * branch(int ch) { return branch(*current, ch); }
+	bool branchIsNullOrRoot(int ch) {
+		Trie * node = branch(*current, ch);
+		return node == NULL || isRoot(node);
+	}
 
 	void addOutput(const string &str);
 	void addBranch(Trie & node, int ch) {
@@ -85,22 +89,17 @@ public:
 	void resetState(void) { current = &troot; }
 	Trie & currentState(void) { return *current; }
 	void transferState(int ch);
+	void gotoState(const Trie & node) { current = &node; }
 };
 
 void ACTrie::addOutput(const string & str) {
-	//Trie * node = &root();
-	unsigned int depth = 0;
-	int ch;
 	resetState();
 
-	while (depth < str.size()) {
-		ch = str[depth] /* - ' ' */;
-		Trie * br = branch(ch);
-		if ( br == NULL	|| isRoot(br) ) {
-			addBranch(ch); //node->edges[next] = new Trie();
+	for (unsigned int depth = 0; depth < str.size(); depth++) {
+		if ( branchIsNullOrRoot(str[depth] /* - ' ' */ ) ) {
+			addBranch(str[depth]); //node->edges[next] = new Trie();
 		}
-		transferState(ch);
-		depth++;
+		transferState(str[depth]);
 	}
 	currentState().out.insert(str);
 	return;
@@ -141,12 +140,12 @@ void ACTrie::buildMachine(std::vector<std::string> & words) {
 	// must not be NULL.
 	resetState();
 	for (int i = 0; i < SIGMA_SIZE; i++) {
-		// if is an explicit failure, or is root-failure
-		if ( branch(i) == NULL || isRoot(branch(i)) )
-			continue;
-		// if has a branch
-		branch(i)->fail = &root();
-		q.push(branch(i));
+		// if is neither an explicit failure, nor go-root-failure
+		if ( !branchIsNullOrRoot(i) ) {
+			// if the current (== root) has a branch
+			branch(i)->fail = &root();
+			q.push(branch(i));
+		}
 	}
 
 	while ( !q.empty() ) {
