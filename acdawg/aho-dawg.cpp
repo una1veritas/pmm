@@ -29,7 +29,6 @@ struct Trie {
 		out.clear();
 	}
 };
-//Trie *troot = new Trie();
 
 // AC Machine by Trie
 class ACTrie {
@@ -60,17 +59,18 @@ public:
 	Trie * branch(Trie & node, int ch) const;
 	inline Trie * branch(int ch) const { return branch(*current, ch); }
 
-	void addPattern(const string &str);
 	void addBranch(Trie & node, int ch) {
 		node.edges[ch] = new Trie(node_num);
 		node_num++;
 	}
 	inline void addBranch(int ch) { return addBranch(*current, ch); }
+	void addString(const string &str);
 
-	void buildMachine(std::vector<std::string> & keywords);
-	void scan(string & text);
-//	int addString2(Trie *node, const string & curString, int depth, int depth2);
-//	void addKeyword(const string & patt);
+	void addPattern(const string & patt);
+
+	void build(const std::vector<std::string>::iterator & start, const std::vector<std::string>::iterator & end);
+	void scan(string & text, vector<pair<int,string>> & occurrs);
+
 
 	void resetState(void) { current = &troot; }
 	Trie & currentState(void) { return *current; }
@@ -86,7 +86,7 @@ Trie * ACTrie::branch(Trie & node, int ch) const {
 	return entry.second;
 }
 
-void ACTrie::addPattern(const string & str) {
+void ACTrie::addString(const string & str) {
 	resetState();
 	for (unsigned int depth = 0; depth < str.size(); depth++) {
 		Trie * next = branch(str[depth]);
@@ -121,12 +121,12 @@ int ACTrie::addString2(Trie *node, const string &curString, int depth = 0, int d
 }
 */
 
-void ACTrie::buildMachine(std::vector<std::string> & words) {
+void ACTrie::build(const vector<string>::iterator & start, const vector<string>::iterator & end) {
 	std::queue<Trie *> q;
 
 	// goto関数と状態の追加
-	for(std::vector<string>::iterator it = words.begin(); it != words.end(); it++ ) {
-		addPattern(*it); //Goto(troot, reading_line);
+	for(std::vector<string>::iterator it = start; it != end; it++ ) {
+		addString(*it); //Goto(troot, reading_line);
 	}
 
 	// set up failures of root
@@ -180,59 +180,72 @@ void ACTrie::transferState(int ch)  {
 	current = branch(ch);
 }
 
-void ACTrie::scan(string & text) {
+void ACTrie::scan(string & text, vector<pair<int,string>> & occurrs) {
+	resetState();
 //	Trie *node = &root();
-//	int k = text.size();
 
 	for (int i = 0; i < text.size(); i++) {
 		transferState(text[i]);
-		/*
-		int cur = text[i]; // - ' '
-		// std::cerr << "node " << node->nodenum << ", ";
-		for (; node->edges[cur] == NULL; node = node->fail) {
-			//std::cerr << "failure " << node->fail->nodenum << ", ";
-		}
-		node = node->edges[cur];
-
-		//cout << "to " << node->nodenum << ", " << endl;
-		 	*/
 		if (currentState().out.size() != 0) {
-			cout << "@" << i << " : ";
-
-			for (const string str : currentState().out) {
-				cout << str << ", ";
+			for (const string & str : currentState().out) {
+				occurrs.push_back(pair<int, string>(i-str.length()+1, str));
 			}
-			cout << "." << std::endl;
 		}
 	}
 
 }
 
+//#define USE_ORIGINAL
 #ifdef USE_ORIGINAL
-void ACTrie::addKeyword(const string & patt) {
-	//dynamic start
+/*
+int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
+
+	if (depth == curString.size()) {
+		node->out.insert(curString);
+
+		return depth2;
+	}
+
+	int next = curString[depth] - ' ';
+
+	if (node->edges[next] == NULL || node->edges[next] == root) {
+		node->edges[next] = new Trie();
+		if (depth2 == -1)
+			depth2 = depth;
+	}
+
+	addString2(node->edges[next], curString, depth + 1, depth2);
+}
+ */
+void ACTrie::addPattern(const string & patt) {
 
 	int depth = 0;
-	Trie *node2 = &root();
+	string curString2;
+	Trie *node2 = root;
 	Trie *nodepoint;
-	Trie *nodepoint2 = &root();
-	int size2 = patt.size();
+	Trie *nodepoint2 = root;
 	int cur3 = 0;
 
-	depth = addString2(&root(), patt);
+	//int size2 = 0;
+	//size2 = curString2.size();
 
+	depth = addString2(root, curString2);
+	// seems that depth == -1 means no new branch has spawned,
+	// string has been inserted to the out set of already existing node.
 	if (depth == -1) {
-		cout << "depth = -1" << endl;
-		cout << patt << endl;
 
-		if (count(node2->out.begin(), node2->out.end(), patt) > 0) {
+		cout << "depth = -1" << endl;
+		cout << curString2 << endl;
+
+		if (count(node2->out.begin(), node2->out.end(), curString2) > 0) {
 			;
-		} else {
+		}
+		else {
 			queue<Trie*> q4;
 			Trie *rq;
 
 			for (int k = 0; k < size2; k++) {
-				cur3 = patt[k] /* - ' ' */;
+				cur3 = curString2[k] - ' ';
 				node2 = node2->edges[cur3];
 			}
 
@@ -241,16 +254,20 @@ void ACTrie::addKeyword(const string & patt) {
 			while (!q4.empty()) {
 				rq = q4.front();
 				q4.pop();
-				rq->out.insert(patt);
+				rq->out.insert(curString2);
 				for (auto s : rq->ine)
 					q4.push(s);
 			}
 
 		}
-	} else {
+	}
+	else {
+
+		start = clock();
+
 		if (depth != 0) {
 			for (int k = 0; k < depth; k++) {
-				cur3 = patt[k] /* - ' ' */;
+				cur3 = curString2[k] - ' ';
 				node2 = node2->edges[cur3];
 				//cout << "cur3 " << cur3 << " " << node2->nodenum << endl;
 			}
@@ -259,30 +276,32 @@ void ACTrie::addKeyword(const string & patt) {
 		nodepoint = node2;
 		nodepoint2 = nodepoint;
 
-		Trie *next3 = nodepoint->edges[patt[depth] /* - ' ' */];
+		Trie *next3 = nodepoint->edges[curString2[depth] - ' '];
+
 
 		for (int k = depth; k < size2; k++) {
-			Trie *next2 = nodepoint->edges[patt[k] /* - ' ' */];
+			Trie *next2 = nodepoint->edges[curString2[k] - ' '];
 
 			Trie *f = nodepoint->fail;
-			int h = patt[k] /* - ' ' */;
+			int h = curString2[k] - ' ';
 
 			int p = 0;
-			for (; (f->edges[patt[k] /* - ' ' */] == NULL); f = f->fail)
-				;
+			for (; (f->edges[curString2[k] - ' '] == NULL); f = f->fail);
 
 			if (k == 0) {
 				next2->fail = root;
 
 				root->ine.push_back(next2);
-			} else if ((f->edges[patt[k] /* - ' ' */] == root)) {
+			}
+			else if ((f->edges[curString2[k] - ' '] == root)) {
 				next2->fail = root;
 
 				root->ine.push_back(next2);
-			} else {
-				next2->fail = f->edges[patt[k] /* - ' ' */];
+			}
+			else {
+				next2->fail = f->edges[curString2[k] - ' '];
 
-				f->edges[patt[k] /* - ' ' */]->ine.push_back(next2);
+				f->edges[curString2[k] - ' ']->ine.push_back(next2);
 
 				if (next2->fail->out.size() > 0)
 					for (auto s : next2->fail->out)
@@ -294,12 +313,19 @@ void ACTrie::addKeyword(const string & patt) {
 
 		}
 
+		end = clock();
+		time2 += end - start;
+
+
+
 		//既存の関数の更新
 
 		// build the fail function
 		queue<Trie*> q2;
 		queue<int> q2_num;
 		int q2_n = 0;
+
+		start = clock();
 
 		for (int i = 0; i < nodepoint2->ine.size(); i++) {
 			if (nodepoint2->ine[i] != next3) {
@@ -311,18 +337,20 @@ void ACTrie::addKeyword(const string & patt) {
 		Trie *temp = root;
 		for (int i = 0; i < size2; i++) {
 			tr[i] = temp;
-			temp = temp->edges[patt[i] /* - ' ' */];
+			temp = temp->edges[curString2[i] - ' '];
 
 		}
+
 
 		char curString3[50];
 
 		for (int i = 0; i < size2; i++) {
-			curString3[i] = patt[i];
+			curString3[i] = curString2[i];
 		}
 
+
 		curString3[size2] = '*';
-		curString3[size2 + 1] = '\0';
+		curString3[size2+1] = '\0';
 
 		Trie *r, *rnext;
 		Trie *nodepoint3;
@@ -336,15 +364,15 @@ void ACTrie::addKeyword(const string & patt) {
 
 			nodepoint3 = tr[i];
 
-			while ((r->edges[curString3[i] /* - ' ' */] != NULL)) {
-				rnext = r->edges[curString3[i] /* - ' ' */];
+			while ((r->edges[curString3[i] - ' '] != NULL)) {
+				rnext = r->edges[curString3[i] - ' '];
 
-				rnext->fail = nodepoint3->edges[curString3[i] /* - ' ' */];
-				nodepoint3->edges[curString3[i] /* - ' ' */]->ine.push_back(rnext);
+				rnext->fail = nodepoint3->edges[curString3[i] - ' '];
+				nodepoint3->edges[curString3[i] - ' ']->ine.push_back(rnext);
 
 				r = rnext;
 
-				nodepoint3 = nodepoint3->edges[curString3[i] /* - ' ' */];
+				nodepoint3 = nodepoint3->edges[curString3[i] - ' '];
 
 				i = i + 1;
 
@@ -373,8 +401,6 @@ void ACTrie::addKeyword(const string & patt) {
 		time3 += end - start;
 
 	}
-
-	//dynamic finish
 }
 #endif
 
@@ -416,7 +442,7 @@ public:
 	WGNode * update(WGNode *activenode, char a);
 	vector<Trie *> getoutstates(string &string);
 	vector<Trie *> getfailstates(string &string, int depth);
-	void build(ACTrie & actrie, std::vector<std::string> & keywords);
+	void build(ACTrie & actrie, const vector<string>::iterator & start, const vector<string>::iterator & end);
 };
 
 WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
@@ -595,8 +621,8 @@ vector<Trie *> DAWG::getfailstates(string &string, int depth) {
 	return failstates;
 }
 
-void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
-	std::string wordstr;
+void DAWG::build(ACTrie & actrie, const vector<string>::iterator & start, const vector<string>::iterator & end) {
+	string wordstr;
 	//
 	//dawgの構成
 	//
@@ -612,9 +638,7 @@ void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
 	Trie *trienode;
 	Trie *tmptrie;
 
-	for (std::vector<string>::iterator iter = keywords.begin();
-			iter != keywords.end(); ++iter) {
-
+	for (std::vector<string>::iterator iter = start; iter != end; ++iter) {
 		wordstr = *iter;
 		for (int j = 0; j < wordstr.length(); j++)
 			activenode = update(activenode, wordstr[j]);
@@ -645,17 +669,20 @@ void DAWG::build(ACTrie & actrie, std::vector<std::string> & keywords) {
 			DAWGTOAC_NUM++;
 			activenode->dtoc = trienode;
 		}
-
 		activenode = & root(); //nroot;
 	}
-
-	cout << "dawg struct finish" << endl;
 }
 
-int main(int argc, char * argv[]) {
+int getWordsInFile(std::string & filename, vector<string> & words, const int limit_num = 0);
 
+int main(int argc, char * argv[]) {
 	std::vector<string> keywords;
 	std::istringstream sstream;
+	std::string file1name = "word_list2.txt";
+	std::string checkfilename = "aho_check_out.txt";
+
+	int word_build_num = 10000;
+	int word_add_num = 10000;
 
 	//キーワード（の集合）が入力として与えられる
 	//キーワードを用いて、通常の方法でACマシンとDAWGを作る
@@ -671,69 +698,55 @@ int main(int argc, char * argv[]) {
 
 	//goto関数の構成
 
-	std::ifstream reading_file;
-	// default data file names
-	std::string file1name = "word_list2.txt";
-	std::string checkfilename = "aho_check_out.txt";
-
-	int word_num = 0;
-	if (argc > 1) {
+	if ( argc == 4 ) {
 		file1name = argv[1];
-	}
-	if ( argc > 2 ) {
 		sstream.str(argv[2]);
 		sstream.clear();
-		sstream >> word_num;
-	}
-
-	string str;
-	string reading_line;
-
-	reading_file.open(file1name, std::ios::in);
-	if (reading_file.fail()) {
-		std::cerr << "failed to open " << file1name << std::endl;
-		return -1;
-	}
-	std::getline(reading_file, reading_line);
-	sstream.str(reading_line);
-	sstream.clear();
-	if ( word_num <= 0 )
-		sstream >> word_num;
-	cout << "reading " << word_num << " words...";
-	for (int i = 0; i < word_num; i++) {
-		std::getline(reading_file, reading_line);
-		sstream.str(reading_line);
+		sstream >> word_build_num;
+		sstream.str(argv[3]);
 		sstream.clear();
-		sstream >> str;
-		if ((i % 1000) == 0 || i == word_num - 1)
-		std::cout << i << ": '" << str << "'" << std::endl;
-		keywords.push_back(str);
+		sstream >> word_add_num;
 	}
-	cout << " done." << endl;
 
-	actrie.buildMachine(keywords);
+	cout << "Reading file " << file1name << "... ";
+	int wcount = getWordsInFile(file1name, keywords);
+	if ( wcount < 0 ) {
+		std::cerr << std::endl << "failed to open " << file1name << std::endl;
+		return EXIT_FAILURE;
+	}
+	cout << "done. " << std::endl << "Extracted " << wcount << "words. " << std::endl << std::endl;
 
-	cout << "aho struct finish" << endl;
+	actrie.build(keywords.begin(), keywords.begin() + word_build_num);
 
-	dawg.build(actrie, keywords);
+	cout << "Construct ac machine finished." << endl;
+
+	dawg.build(actrie, keywords.begin(), keywords.begin() + word_build_num);
+	cout << "Construct DAWG finished." << endl;
+	cout << endl;
 
 	//（動作確認）
-
-	// テキストからキーワードを検出
 	string text;
 	std::ifstream ifs(checkfilename);
 	if (ifs.fail()) {
 		std::cerr << "failed to open " << checkfilename << std::endl;
-		return -1;
+		return EXIT_FAILURE;
 	}
 	while ( !ifs.eof() ) {
+		string str;
 		getline(ifs, str);
 		text.append(str);
 		text.append("\n");
 	}
 
 	cout << "test text = '" << text << "'" << endl;
-	actrie.scan(text);
+	cout << "length = " << text.length() << std::endl;
+	vector<pair<int,string>> occurrences;
+	actrie.scan(text, occurrences);
+	for(const pair<int,string> & occurr : occurrences ) {
+		std::cout << "'" << occurr.second << "'@" << occurr.first << ", ";
+	}
+	cout << std::endl << std::endl;
+	occurrences.clear();
 
 	//
 	//キーワードを新たに与える（一語ずつ）
@@ -741,44 +754,32 @@ int main(int argc, char * argv[]) {
 	//DAWGをもとにACマシンを更新
 	//
 
-	std::ifstream readline2("aho_check_in_plus.txt");
-
 	//dynamic start
 
-	while (1) {
-
-		int key_num = 0;
-
-		cout << "How many keywords would you like to add?" << endl;
-		cin >> key_num;
-
-		//std::ifstream readline2("word_list3.txt");
-		//std::ifstream readline2("test3.txt");
-		//std::ifstream readline2("aho_check_in_plus.txt");
+	cout << "Going to add " << word_add_num << " keywords to the existing machine. " << endl << endl;
 
 		clock_t start, end, total_start, total_end;
 		double time1 = 0, time2 = 0, time3 = 0, time4 = 0, time5 = 0;
 
 		total_start = clock();
 
-		for (int i7 = 0; i7 < key_num; i7++) {
-//			Trie *node2 = troot;
+		for (vector<string>::iterator it = keywords.begin() + word_build_num;
+				it != keywords.end() && it != keywords.begin() + word_build_num + word_add_num;
+				it++) {
+//		for (int i7 = 0; i7 < key_num; i7++) {
+
+			//			Trie *node2 = troot;
 //			Trie *nodepoint2 = troot;
 			Trie * tactivenode;
 			Trie *newstates[50];
 //			int depth = 0;
 
-			string curString2;
+			string curString2 = *it;;
 			int size2 = 0;
 //			int cur3 = 0;
 
 			WGNode *activenode = &dawg.root(); //nroot;
 			WGNode *tnode = &dawg.root(); //nroot;
-
-			//キーワードの読み込み
-
-			//getline(readline2, curString2);
-			getline(reading_file, curString2);
 
 			//cout << curString2 << " " << i7 << endl;
 
@@ -989,8 +990,34 @@ int main(int argc, char * argv[]) {
 
 		}
 
-	}
 	//dynamic finish
 
 	return 0;
 }
+
+int getWordsInFile(std::string & filename, vector<string> & words, const int limit_num) {
+	std::ifstream file;
+	std::istringstream sstream;
+	string line, str;
+	int count;
+
+	file.open(filename, std::ios::in);
+	if ( file.fail() ) {
+		return -1;
+	}
+	count = 0;
+	while ( !file.eof() ) {
+		if ( limit_num != 0 && !(count < limit_num) )
+			break;
+		std::getline(file, line);
+		sstream.str(line);
+		sstream.clear();
+		sstream >> str;
+		words.push_back(str);
+		count++;
+	}
+	file.close();
+
+	return count;
+}
+
