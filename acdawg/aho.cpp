@@ -8,11 +8,8 @@
 
 using namespace std;
 
-
 const int SIGMA_SIZE = 100;
 int NODE_NUM = 0;
-
-
 
 struct Trie {
 	Trie *edges[SIGMA_SIZE];
@@ -34,95 +31,75 @@ struct Trie {
 	}
 };
 Trie *root = new Trie();
+Trie * current;
 
 void addString(Trie *node, string &curString, int depth = 0) {
 	if (depth == curString.size()) {
 		node->out.insert(curString);
-
 		return;
 	}
-
 	int next = curString[depth] - ' ';
-
 	if (node->edges[next] == NULL || node->edges[next] == root) {
 		node->edges[next] = new Trie();
 	}
-
 	addString(node->edges[next], curString, depth + 1);
 }
 
 int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
-
+	current = node;
 	if (depth == curString.size()) {
 		node->out.insert(curString);
-
 		return depth2;
 	}
-
 	int next = curString[depth] - ' ';
-
 	if (node->edges[next] == NULL || node->edges[next] == root) {
 		node->edges[next] = new Trie();
 		if (depth2 == -1)
 			depth2 = depth;
 	}
-
-	addString2(node->edges[next], curString, depth + 1, depth2);
+	return addString2(node->edges[next], curString, depth + 1, depth2);
 }
 
-int main() {
-	// root‚Ì‰Šú‰»
+int main(int argc, char * argv[]) {
+	// rootã®åˆæœŸåŒ–
 	for (int i = 0; i < SIGMA_SIZE; i++) {
 		root->edges[i] = root;
 		root->fail = root;
 	}
 
-
 	Trie *tr[50];
-	int queue_size = 0;
+//	int queue_size = 0;
 	int out_size = 0;
 	int fail_size = 0;
 
-	//gotoŠÖ”‚Ì\¬
-	
+	int word_num = 1;
+	if ( argc > 1 )
+		word_num = atoi(argv[1]);
+
+	//gotoé–¢æ•°ã®æ§‹æˆ
 	std::ifstream reading_file;
+	string wordstr;
+	string file_name;
 
-		string ward_num;
-		int ward_num_i;
-		string ward_string;
-		string file_name;
+	file_name = "word_list2.txt";
+	//file_name = "test5.txt";
+	//file_name = "aho_check_in.txt";
 
+	//std::ifstream reading_file;
+	string reading_line;
 
-		file_name = "word_list2.txt";
-		//file_name = "test5.txt";
-		//file_name = "aho_check_in.txt";
+	reading_file.open(file_name, std::ios::in);
+	if (reading_file.fail()) {
+		std::cerr << "å¤±æ•—" << std::endl;
+		return -1;
+	}
 
-		//std::ifstream reading_file;
-		string reading_line;
-
-		reading_file.open(file_name, std::ios::in);
-		if (reading_file.fail())
-		{
-			std::cerr << "¸”s" << std::endl;
-			return -1;
-		}
+	for (int i = 0; i < word_num; i++) {
 		std::getline(reading_file, reading_line);
-		ward_num = reading_line;
+		addString(root, reading_line);
+	}
 
-		ward_num_i = atoi(ward_num.c_str());
-
-		for (int i = 0; i < ward_num_i; i++) {
-
-			std::getline(reading_file, reading_line);
-
-			//cout << reading_line << " " << i << endl;
-
-			addString(root, reading_line);
-		}
-	
-
-
-	// failureŠÖ”‚Ì\¬
+	// failureé–¢æ•°ã®æ§‹æˆ
 	queue<Trie*> q;
 
 	// Must to this before, because of the fact that every edge out of the root is
@@ -135,8 +112,7 @@ int main() {
 		}
 	}
 
-
-	int j = 1;
+//	int j = 1;
 	while (!q.empty()) {
 		Trie *curNode = q.front();
 		q.pop();
@@ -147,7 +123,8 @@ int main() {
 				q.push(next);
 
 				Trie *f = curNode->fail;
-				for (; f->edges[i] == NULL; f = f->fail);
+				for (; f->edges[i] == NULL; f = f->fail)
+					;
 
 				next->fail = f->edges[i];
 
@@ -162,16 +139,14 @@ int main() {
 
 	cout << "struct finish" << endl;
 
-
-	// ƒeƒLƒXƒg‚©‚çƒL[ƒ[ƒh‚ğŒŸo
+	// ãƒ†ã‚­ã‚¹ãƒˆã‹ã‚‰ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’æ¤œå‡º
 	string bigString;
 	//std::ifstream ifs("test_text.txt");
 	//std::ifstream ifs("test2.txt");
 	//std::ifstream ifs("test4.txt");
 	std::ifstream ifs("aho_check_out.txt");
-	if (ifs.fail())
-	{
-		std::cerr << "¸”s" << std::endl;
+	if (ifs.fail()) {
+		std::cerr << "å¤±æ•—" << std::endl;
 		return -1;
 	}
 	getline(ifs, bigString);
@@ -182,7 +157,8 @@ int main() {
 	for (int i = 0; i < k; i++) {
 		int cur = bigString[i] - ' ';
 
-		for (; node->edges[cur] == NULL; node = node->fail);
+		for (; node->edges[cur] == NULL; node = node->fail)
+			;
 
 		node = node->edges[cur];
 
@@ -195,45 +171,34 @@ int main() {
 		}
 	}
 
-
 	//std::ifstream readline2("word_list2.txt");
 	//std::ifstream readline2("test3.txt");
 	std::ifstream readline2("aho_check_in_plus.txt");
 
-	//“®“I‚È\¬
+	//å‹•çš„ãªæ§‹æˆ
+
+	string curString2;
 
 	//dynamic start
-	while (1) { 
-
-		int key_num = 0;
-		
-		cout << "ƒL[ƒ[ƒh‚ğ‚¢‚­‚Â’Ç‰Á‚µ‚Ü‚·‚©H" << endl;
-		cin >> key_num;
-
-		//std::ifstream readline2("word_list2.txt");
-		//std::ifstream readline2("test3.txt");
-		//std::ifstream readline2("aho_check_in_plus.txt");
+	while (1) {
+		cout << "è¿½åŠ ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã¯ï¼Ÿ" << endl;
+		cin >> curString2;
 
 		clock_t total_start, total_end, start, end, c_start, c_end;
 		double time1 = 0, time2 = 0, time3 = 0, c_time = 0;
 
 		total_start = clock();
 
-		for (int i7 = 0; i7 < key_num; i7++) {
+		if ( curString2.length() > 0 ) {
 
 			int depth = 0;
-			string curString2;
 			Trie *node2 = root;
 			Trie *nodepoint;
 			Trie *nodepoint2 = root;
-			int size2 = 0;
+//			int size2 = 0;
 			int cur3 = 0;
 
-			getline(reading_file, curString2);
-
-
-			size2 = curString2.size();
-
+//			size2 = curString2.size();
 
 			start = clock();
 
@@ -241,24 +206,23 @@ int main() {
 
 			end = clock();
 			time1 += end - start;
-
+			cout << "depth = "<< depth << ": " << curString2 << endl;
 
 			if (depth == -1) {
-
-				cout << "depth = -1" << endl;
-				cout << curString2 << endl;
-
-				if (count(node2->out.begin(), node2->out.end(), curString2) > 0) {
-					;
-				}
-				else {
+				if (count(node2->out.begin(), node2->out.end(), curString2)
+						> 0) {
+					cout << "Why am I not occurring in the set .out?" << endl;
+				} else {
 					queue<Trie*> q4;
 					Trie *rq;
 
-					for (int k = 0; k < size2; k++) {
+					for (int k = 0; k < curString2.size(); k++) {
 						cur3 = curString2[k] - ' ';
 						node2 = node2->edges[cur3];
 					}
+
+					if ( current == node2 )
+						cout << "It's current node!" << endl;
 
 					q4.push(node2);
 
@@ -271,8 +235,7 @@ int main() {
 					}
 
 				}
-			}
-			else {
+			} else {
 
 				start = clock();
 
@@ -289,35 +252,33 @@ int main() {
 
 				Trie *next3 = nodepoint->edges[curString2[depth] - ' '];
 
-
-				for (int k = depth; k < size2; k++) {
-					Trie *next2 = nodepoint->edges[curString2[k] - ' ']; 	 
+				for (int k = depth; k < curString2.size(); k++) {
+					Trie *next2 = nodepoint->edges[curString2[k] - ' '];
 
 					Trie *f = nodepoint->fail;
-					int h = curString2[k] - ' '; 
+//					int h = curString2[k] - ' ';
 
-					int p = 0;
-					for (; (f->edges[curString2[k] - ' '] == NULL); f = f->fail);
+//					int p = 0;
+					for (; f->edges[curString2[k] - ' '] == NULL; f = f->fail)
+						;
 
 					if (k == 0) {
 						next2->fail = root;
 
 						root->ine.push_back(next2);
-					}
-					else if ((f->edges[curString2[k] - ' '] == root)) {
+					} else if (f->edges[curString2[k] - ' '] == root) {
 						next2->fail = root;
 
 						root->ine.push_back(next2);
-					}
-					else {
-						next2->fail = f->edges[curString2[k] - ' ']; 
+					} else {
+						next2->fail = f->edges[curString2[k] - ' '];
 
 						f->edges[curString2[k] - ' ']->ine.push_back(next2);
 
 						if (next2->fail->out.size() > 0)
 							for (auto s : next2->fail->out)
 								next2->out.insert(s);
-								
+
 					}
 
 					nodepoint = next2;
@@ -327,14 +288,12 @@ int main() {
 				end = clock();
 				time2 += end - start;
 
+				//æ—¢å­˜ã®é–¢æ•°ã®æ›´æ–°
 
-
-				//Šù‘¶‚ÌŠÖ”‚ÌXV
-				
 				// build the fail function
 				queue<Trie*> q2;
 				queue<int> q2_num;
-				int q2_n = 0;
+//				int q2_n = 0;
 
 				start = clock();
 
@@ -346,22 +305,20 @@ int main() {
 				}
 
 				Trie *temp = root;
-				for (int i = 0; i < size2; i++) {
+				for (int i = 0; i < curString2.size(); i++) {
 					tr[i] = temp;
 					temp = temp->edges[curString2[i] - ' '];
 
 				}
 
-
 				char curString3[50];
 
-				for (int i = 0; i < size2; i++) {
+				for (int i = 0; i < curString2.size(); i++) {
 					curString3[i] = curString2[i];
 				}
 
-
-				curString3[size2] = '*';
-				curString3[size2+1] = '\0';
+				curString3[curString2.size()] = '*';
+				curString3[curString2.size() + 1] = '\0';
 
 				Trie *r, *rnext;
 				Trie *nodepoint3;
@@ -379,7 +336,8 @@ int main() {
 						rnext = r->edges[curString3[i] - ' '];
 
 						rnext->fail = nodepoint3->edges[curString3[i] - ' '];
-						nodepoint3->edges[curString3[i] - ' ']->ine.push_back(rnext);
+						nodepoint3->edges[curString3[i] - ' ']->ine.push_back(
+								rnext);
 
 						r = rnext;
 
@@ -390,7 +348,7 @@ int main() {
 					}
 
 					c_start = clock();
-					if (size2 <= i) {
+					if (curString2.size() <= i) {
 
 						auto itr = r->out.find(curString2);
 						if (itr == r->out.end()) {
@@ -413,18 +371,18 @@ int main() {
 
 			}
 
-
 		}
 
 		total_end = clock();
-		std::cout << "total_time: " << (double)(total_end - total_start) / CLOCKS_PER_SEC << "sec.\n";
-		std::cout << "time1: " << (double)time1/ CLOCKS_PER_SEC << "sec.\n";
-		std::cout << "time2: " << (double)time2/ CLOCKS_PER_SEC << "sec.\n";
-		std::cout << "time3: " << (double)time3/ CLOCKS_PER_SEC << "sec.\n";
-		std::cout << "c_time: " << (double)c_time / CLOCKS_PER_SEC << "sec.\n";
+		std::cout << "total_time: "
+				<< (double) (total_end - total_start) / CLOCKS_PER_SEC
+				<< "sec.\n";
+		std::cout << "time1: " << (double) time1 / CLOCKS_PER_SEC << "sec.\n";
+		std::cout << "time2: " << (double) time2 / CLOCKS_PER_SEC << "sec.\n";
+		std::cout << "time3: " << (double) time3 / CLOCKS_PER_SEC << "sec.\n";
+		std::cout << "c_time: " << (double) c_time / CLOCKS_PER_SEC << "sec.\n";
 
 		cout << "out size " << out_size << endl;
-
 
 		// Read big string, in which we search for elements
 		string bigString2;
@@ -441,17 +399,15 @@ int main() {
 
 			int cur = bigString2[i] - ' ';
 
-			//‚±‚±‚Ü‚Åok
-			for (; node3->edges[cur] == NULL; node3 = node3->fail) 
-			{
-				cout << "failure now... node number " << node3->fail->nodenum << endl;
+			//ã“ã“ã¾ã§ok
+			for (; node3->edges[cur] == NULL; node3 = node3->fail) {
+				cout << "failure now... node number " << node3->fail->nodenum
+						<< endl;
 			}
-
 
 			node3 = node3->edges[cur];
 
 			cout << "current node number " << node3->nodenum << endl;
-
 
 			if (node3->out.size() != 0) {
 				cout << "At position " << i << " we found:\n";
@@ -463,7 +419,7 @@ int main() {
 
 		}
 
-	} 
+	}
 	//dynamic finish
 	return 0;
 }

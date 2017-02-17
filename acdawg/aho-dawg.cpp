@@ -64,7 +64,7 @@ public:
 		node_num++;
 	}
 	inline void addBranch(int ch) { return addBranch(*current, ch); }
-	void addString(const string &str);
+	int addString(const string &str);
 
 	void addPattern(const string & patt);
 
@@ -86,18 +86,20 @@ Trie * ACTrie::branch(Trie & node, int ch) const {
 	return entry.second;
 }
 
-void ACTrie::addString(const string & str) {
+int ACTrie::addString(const string & str) {
+	int extendLen = 0;
 	resetState();
 	for (unsigned int depth = 0; depth < str.size(); depth++) {
 		Trie * next = branch(str[depth]);
 		if ( next == NULL || isRoot(next) ) {
 			addBranch(str[depth]); //node->edges[next] = new Trie();
+			extendLen++;
 		}
 		transferState(str[depth]);
 	}
 	// assuming .out do not have the same string.
 	currentState().out.insert(str);
-	return;
+	return extendLen;
 }
 
 /*
@@ -195,8 +197,8 @@ void ACTrie::scan(string & text, vector<pair<int,string>> & occurrs) {
 
 }
 
-//#define USE_ORIGINAL
-#ifdef USE_ORIGINAL
+#define NAIVE_PATTERN_ADDITION
+#ifdef NAIVE_PATTERN_ADDITION
 /*
 int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
 
@@ -219,8 +221,8 @@ int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
  */
 void ACTrie::addPattern(const string & patt) {
 
-	int depth = 0;
-	string curString2;
+//	int depth = 0;
+//	string curString2;
 	Trie *node2 = root;
 	Trie *nodepoint;
 	Trie *nodepoint2 = root;
@@ -229,13 +231,18 @@ void ACTrie::addPattern(const string & patt) {
 	//int size2 = 0;
 	//size2 = curString2.size();
 
-	depth = addString2(root, curString2);
+	//depth = addString2(root, curString2);
 	// seems that depth == -1 means no new branch has spawned,
-	// string has been inserted to the out set of already existing node.
-	if (depth == -1) {
+	// i.e. string is existing or is a prefix of some already-added word.
 
-		cout << "depth = -1" << endl;
-		cout << curString2 << endl;
+	int extended = 0;
+	resetState();
+	extended = addString(patt);
+//	if (depth == -1) {
+	if ( extended == 0 )
+//		cout << "depth = -1" << endl;
+//		cout << curString2 << endl;
+		cout << patt << " is just a prefix of some other pattern." << endl;
 
 		if (count(node2->out.begin(), node2->out.end(), curString2) > 0) {
 			;
