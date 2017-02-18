@@ -16,7 +16,7 @@ INCLUDES = -I./
 #
 LIBOBJS = 
 
-all: aho
+all: aho-dawg
 
 aho-dawg:  aho-dawg.o $(LIBOBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg.exe aho-dawg.o $(LIBOBJS)

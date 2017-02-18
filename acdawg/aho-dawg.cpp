@@ -186,7 +186,7 @@ void ACTrie::scan(string & text, vector<pair<int,string>> & occurrs) {
 	resetState();
 //	Trie *node = &root();
 
-	for (int i = 0; i < text.size(); i++) {
+	for (unsigned int i = 0; i < text.size(); i++) {
 		transferState(text[i]);
 		if (currentState().out.size() != 0) {
 			for (const string & str : currentState().out) {
@@ -197,7 +197,7 @@ void ACTrie::scan(string & text, vector<pair<int,string>> & occurrs) {
 
 }
 
-#define NAIVE_PATTERN_ADDITION
+//#define NAIVE_PATTERN_ADDITION
 #ifdef NAIVE_PATTERN_ADDITION
 /*
 int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
@@ -220,13 +220,10 @@ int addString2(Trie *node, string &curString, int depth = 0, int depth2 = -1) {
 }
  */
 void ACTrie::addPattern(const string & patt) {
-
-//	int depth = 0;
-//	string curString2;
-	Trie *node2 = root;
-	Trie *nodepoint;
-	Trie *nodepoint2 = root;
-	int cur3 = 0;
+//	Trie *node2 = root;
+//	Trie *nodepoint;
+//	Trie *nodepoint2 = root;
+//	int cur3 = 0;
 
 	//int size2 = 0;
 	//size2 = curString2.size();
@@ -238,34 +235,25 @@ void ACTrie::addPattern(const string & patt) {
 	int extended = 0;
 	resetState();
 	extended = addString(patt);
+	queue<Trie &> trieq;
 //	if (depth == -1) {
-	if ( extended == 0 )
+	if ( extended == 0 ) {
 //		cout << "depth = -1" << endl;
 //		cout << curString2 << endl;
 		cout << patt << " is just a prefix of some other pattern." << endl;
 
-		if (count(node2->out.begin(), node2->out.end(), curString2) > 0) {
-			;
-		}
-		else {
-			queue<Trie*> q4;
-			Trie *rq;
+		//queue<Trie*> q4;
+		//Trie *rq;
 
-			for (int k = 0; k < size2; k++) {
-				cur3 = curString2[k] - ' ';
-				node2 = node2->edges[cur3];
+		trieq.push(currentState());
+
+		while ( !trieq.empty() ) {
+			Trie & node = trieq.front();
+			trieq.pop();
+			node.out.insert(patt);
+			for (auto s : node.front().inedges) {
+				trieq.push(s);
 			}
-
-			q4.push(node2);
-
-			while (!q4.empty()) {
-				rq = q4.front();
-				q4.pop();
-				rq->out.insert(curString2);
-				for (auto s : rq->ine)
-					q4.push(s);
-			}
-
 		}
 	}
 	else {
@@ -647,7 +635,7 @@ void DAWG::build(ACTrie & actrie, const vector<string>::iterator & start, const 
 
 	for (std::vector<string>::iterator iter = start; iter != end; ++iter) {
 		wordstr = *iter;
-		for (int j = 0; j < wordstr.length(); j++)
+		for (unsigned int j = 0; j < wordstr.length(); j++)
 			activenode = update(activenode, wordstr[j]);
 
 		activenode = &root(); //nroot;
@@ -656,7 +644,7 @@ void DAWG::build(ACTrie & actrie, const vector<string>::iterator & start, const 
 		activenode = activenode->edges[(int)wordstr[0] /* - ' ' */];
 		trienode = trienode->edges[(int)wordstr[0] /* - ' ' */];
 
-		for (int j = 1; j < wordstr.length(); j++) {
+		for (unsigned int j = 1; j < wordstr.length(); j++) {
 			if (activenode->isTrunk == 0) {
 				//if (activenode->torb == 1) {
 				activenode->isTrunk = DAWGTOAC_NUM;
