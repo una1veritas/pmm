@@ -14,12 +14,12 @@ INCLUDES = -I./
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $<
 
 #
-LIBOBJS = 
+LIBOBJS = actrie.o dawg.o
 
 all: aho-dawg
 
-aho-dawg:  aho-dawg.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg.exe aho-dawg.o $(LIBOBJS)
+aho-dawg:  main.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg.exe main.o $(LIBOBJS)
 	
 aho: aho.o $(LIBOBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho.exe aho.o $(LIBOBJS)
