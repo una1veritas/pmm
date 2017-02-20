@@ -104,7 +104,7 @@ int main(int argc, char * argv[]) {
 	for (int i = 0; i < word_build_num && !txfile.atEnd(); i++ ) {
 		string & word = txfile.word();
 		cout << i << ": " << word << endl;
-		actrie.addString(word); // Add goto transitions and transfer to there
+		actrie.addStringPath(word); // Add goto transitions and transfer to there
 		actrie.addOutput(word); // Add output string to the current state
 		txfile.next();
 	}
@@ -161,10 +161,6 @@ int main(int argc, char * argv[]) {
 		total_start = clock();
 
 		for (int i = 0; i < word_add_num && !txfile.atEnd(); i++, txfile.next() ) {
-//		for (int i7 = 0; i7 < key_num; i7++) {
-
-			//			Trie *node2 = troot;
-//			Trie *nodepoint2 = troot;
 			Trie * tactivenode;
 			Trie *newstates[50];
 //			int depth = 0;
@@ -182,16 +178,15 @@ int main(int argc, char * argv[]) {
 
 			//Algorithm1
 
-			tactivenode = &actrie.root();
-			int charnum = 0;
-			int trie_depth = 10000;
-
 			start = clock();
 
+			int trie_depth = 10000;
+/*
+			tactivenode = &actrie.root();
+			int charnum = 0;
 			for (int i = 0; i < size2; i++) {
 				newstates[i] = tactivenode;
-				charnum = curString2[i] /* - ' ' */;
-
+				charnum = curString2[i]; // - ' ';
 				if (tactivenode->edges[charnum] != NULL
 						&& tactivenode->edges[charnum] != &actrie.root()) {
 					tactivenode = tactivenode->edges[charnum];
@@ -203,12 +198,23 @@ int main(int argc, char * argv[]) {
 					//Trie *newstate = new Trie();
 					//tactivenode->edges[charnum] = newstate;
 					actrie.addBranch(*tactivenode, charnum);
-
 					tactivenode = tactivenode->edges[charnum];
 				}
 			}
-			newstates[size2] = tactivenode;
-			tactivenode->out.insert(curString2);
+			cout << "Arrived at " << *tactivenode << endl;
+
+			cout << "trie_depth = " << trie_depth << endl;
+	*/
+			actrie.resetState();
+			trie_depth = 1 + actrie.addStringPath(curString2);
+			cout << "trie_depth = " << trie_depth << endl;
+			//tactivenode = &actrie.currentState();
+			actrie.addOutput(curString2);
+			cout << "addStringPath arrived at " << actrie.currentState() << endl;
+			cout.flush();
+
+			newstates[size2] = &actrie.currentState(); //tactivenode;
+			//tactivenode->out.insert(curString2);
 
 			end = clock();
 			time1 += (end - start);
@@ -220,6 +226,7 @@ int main(int argc, char * argv[]) {
 			int fstatesize = failstates.size();
 
 			for (int i = fstatesize - 1; i >= 0; i--) {
+				cout << "failstates = " << failstates[i]->ine_num << endl;
 				failstates[i]->fail = newstates[failstates[i]->ine_num];
 			}
 

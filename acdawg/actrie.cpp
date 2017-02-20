@@ -44,14 +44,16 @@ std::ostream & ACTrie::printOn(std::ostream & os) const {
 				else
 					os << assoc.first << " ";
 				os << "-> " << assoc.second->nodenum << "; ";
-			} /*
-			else if ( !isRoot(assoc.second) ) {
-				if ( isprint(assoc.first) )
-					os << "'" << (char)assoc.first << "' -> NULL; ";
-				else
-					os << assoc.first << " -> NULL; ";
 			}
-			*/
+			else if ( !isRoot(assoc.second) ) {
+				os << "Error!!! ";
+				if ( isprint(assoc.first) )
+					os << "'" << (char)assoc.first;
+				else
+					os << assoc.first;
+				os << " -> NULL; ";
+			}
+
 		}
 		if ( top.fail != NULL ) {
 			os << "*-> " << top.fail->nodenum;
@@ -72,7 +74,7 @@ Trie * ACTrie::branch(Trie & node, int ch) const {
 	return entry.second;
 }
 
-int ACTrie::addString(const std::string & str) {
+int ACTrie::addStringPath(const std::string & str) {
 	int extendLen = 0;
 	resetState();
 	for (unsigned int depth = 0; depth < str.size(); depth++) {

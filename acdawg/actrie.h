@@ -71,12 +71,13 @@ public:
 	Trie * branch(Trie & node, int ch) const;
 	inline Trie * branch(int ch) const { return branch(*current, ch); }
 
-	void addBranch(Trie & node, int ch) {
+	Trie & addBranch(Trie & node, int ch) {
 		node.edges[ch] = new Trie(node_num);
 		node_num++;
+		return node;
 	}
-	inline void addBranch(int ch) { return addBranch(*current, ch); }
-	int addString(const std::string &str);
+	inline Trie & addBranch(int ch) { return addBranch(*current, ch); }
+	int addStringPath(const std::string &str);
 	bool addOutput(const std::string & str) { return current->addOutput(str); }
 
 	void addPattern(const std::string & patt);
