@@ -34,6 +34,12 @@ struct Trie {
 	bool addOutput(const std::string & str) {
 		return (out.insert(str)).second;
 	}
+
+	std::ostream & printOn(std::ostream &) const;
+
+	// friend operators
+	friend std::ostream & operator<<(std::ostream & os, const Trie & trie) { return trie.printOn(os); }
+
 };
 
 // AC Machine by Trie

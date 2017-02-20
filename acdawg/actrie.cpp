@@ -9,6 +9,17 @@
 
 #include "actrie.h"
 
+std::ostream & Trie::printOn(std::ostream & os) const {
+	os << '<' << nodenum << '>';
+	if ( !out.empty() ) {
+		os << "{";
+		for(const std::string & str : out ) {
+			os << "\"" << str << "\", ";
+		}
+		os << "}";
+	}
+	return os;
+}
 
 std::ostream & ACTrie::printOn(std::ostream & os) const {
 	std::queue<const Trie *> qt;
@@ -26,18 +37,26 @@ std::ostream & ACTrie::printOn(std::ostream & os) const {
 		}
 		os << "[";
 		for( std::pair<const int, Trie *> assoc : top.edges ) {
-			if ( assoc.second != &troot ) {
+			if ( assoc.second != NULL && !isRoot(assoc.second) ) {
+				qt.push(assoc.second);
 				if ( isprint(assoc.first) )
 					os << "'" << (char)assoc.first << "'";
 				else
-					os << assoc.first;
+					os << assoc.first << " ";
 				os << "-> " << assoc.second->nodenum << "; ";
-				qt.push(assoc.second);
+			} /*
+			else if ( !isRoot(assoc.second) ) {
+				if ( isprint(assoc.first) )
+					os << "'" << (char)assoc.first << "' -> NULL; ";
+				else
+					os << assoc.first << " -> NULL; ";
 			}
+			*/
 		}
 		if ( top.fail != NULL ) {
 			os << "*-> " << top.fail->nodenum;
 		}
+
 		os << "], " << std::endl;
 		qt.pop();
 	}
@@ -46,8 +65,8 @@ std::ostream & ACTrie::printOn(std::ostream & os) const {
 }
 
 Trie * ACTrie::branch(Trie & node, int ch) const {
-	std::map<int, Trie *>::iterator it = node.edges.find(ch);
-	std::pair<int,Trie*> entry = *it;
+	std::map<const int, Trie *>::iterator it = node.edges.find(ch);
+	std::pair<const int,Trie*> entry = *it;
 	if ( it == node.edges.end() )
 		return NULL;
 	return entry.second;
