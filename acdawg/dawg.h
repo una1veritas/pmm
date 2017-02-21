@@ -28,13 +28,20 @@ struct WGNode {
 	Trie *dtoc;
 
 	//ACのノードとdawgのノードの番号を一致させるための変数
-	int isTrunk;
+//	int dawgtoac;
+	int trunkid;
+private:
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
 	int torb;
 
-	WGNode(const int id) : nodenum(id), edges(), edge_num(), inedges(), suff(NULL), dtoc(NULL), isTrunk(0), torb(0) {
-//		nodenum = NODE_NUM_DAWG;
-//		NODE_NUM_DAWG++;
+public:
+	bool isTrunk() const { return torb == 1; }
+	void setTrunk() { torb = 1; }
+	void setBranch() { torb = 0; }
+	void setTrunkID(const int id) { trunkid = id; }
+
+	WGNode(const int id) :
+		nodenum(id), edges(), edge_num(), inedges(), suff(NULL), dtoc(NULL), trunkid(0), torb(0) {
 	}
 
 };
@@ -46,7 +53,10 @@ class DAWG {
 	int DAWGTOAC_NUM;
 
 public:
-	DAWG(void) : nroot(0), NODE_NUM_DAWG(1), DAWGTOAC_NUM(0) { }
+	DAWG(void) : nroot(0), NODE_NUM_DAWG(1), DAWGTOAC_NUM(0) {
+		nroot.setTrunk();
+		DAWGTOAC_NUM++;
+	}
 
 	WGNode & root() { return nroot; }
 	WGNode * split(WGNode *parentnode, WGNode *childnode, char a);
@@ -55,8 +65,12 @@ public:
 	std::vector<Trie *> getFailStates(std::string &str, int depth);
 	void addString(ACTrie & actrie, const std::string & patt);
 
-	int ac_num() { return DAWGTOAC_NUM; }
-	int inc_ac_num() { return ++DAWGTOAC_NUM; }
+	int setTrunkID(WGNode & node) {
+		node.setTrunkID(DAWGTOAC_NUM);
+		DAWGTOAC_NUM++;
+		return DAWGTOAC_NUM;
+	}
+//	int ac_num() { int t = DAWGTOAC_NUM; DAWGTOAC_NUM++; return t; }
 };
 
 

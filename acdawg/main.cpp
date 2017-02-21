@@ -319,10 +319,10 @@ int main(int argc, char * argv[]) {
 			trienode = trienode->edges[(int)curString2[0] /* - ' ' */];
 
 			for (int i = 1; i < size2; i++) {
-				if (activenode->isTrunk == 0) {
-					activenode->isTrunk = dawg.ac_num(); //DAWGTOAC_NUM;
-					activenode->torb = 1;
-					dawg.inc_ac_num(); //DAWGTOAC_NUM++;
+				if ( !activenode->isTrunk() ) { //trunk == 0) {
+					dawg.setTrunkID(*activenode); //->trunkid = dawg.ac_num(); //DAWGTOAC_NUM;
+					//dawg.inc_ac_num(); //DAWGTOAC_NUM++;
+					activenode->setTrunk(); //torb = 1;
 					activenode->dtoc = trienode;
 				}
 
@@ -332,10 +332,10 @@ int main(int argc, char * argv[]) {
 				trienode = tmptrie;
 			}
 
-			if (activenode->isTrunk == 0) {
-				activenode->isTrunk = dawg.ac_num(); //DAWGTOAC_NUM;
-				activenode->torb = 1;
-				dawg.inc_ac_num(); //DAWGTOAC_NUM++;
+			if (activenode->trunkid == 0) {
+				dawg.setTrunkID(*activenode); //->trunkid = dawg.ac_num(); //DAWGTOAC_NUM;
+				//dawg.inc_ac_num(); //DAWGTOAC_NUM++;
+				activenode->setTrunk(); //torb = 1;
 				activenode->dtoc = trienode;
 			}
 

@@ -119,7 +119,7 @@ std::vector<Trie *> DAWG::getoutstates(std::string &str) {
 		while (!queue.empty()) {
 			node = queue.front();
 			queue.pop();
-			if (node->torb == 1) {
+			if ( node->isTrunk() ) { //node->torb == 1) {
 				outstates.push_back(node->dtoc);
 			}
 
@@ -169,10 +169,11 @@ std::vector<Trie *> DAWG::getFailStates(std::string &str, int depth) {
 			enode = queue.front();
 			queue.pop();
 
-			auto itr = find(mark.begin(), mark.end(), enode);
+			std::vector<WGNode*>::iterator itr = find(mark.begin(), mark.end(), enode);
 			if (itr == mark.end()) {
 				mark.push_back(enode);
-				if (enode->torb == 1) {
+				//if (enode->torb == 1) {
+				if ( enode->isTrunk() ) {
 					enode->dtoc->ine_num = nodenum.second;
 					failstates.push_back(enode->dtoc);
 				} else {
@@ -191,9 +192,9 @@ void DAWG::addString(ACTrie & actrie, const std::string & wordstr) {
 	//dawgの構成
 	//
 
-	root().isTrunk = DAWGTOAC_NUM;
-	DAWGTOAC_NUM++;
-	root().torb = 1;
+//	root().trunkid = ac_num(); //DAWGTOAC_NUM;
+	//DAWGTOAC_NUM++;
+//	root().setTrunk(); //torb = 1;
 
 	WGNode *activenode;
 	activenode = & root();
@@ -212,11 +213,11 @@ void DAWG::addString(ACTrie & actrie, const std::string & wordstr) {
 	trienode = trienode->edges[(int)wordstr[0] /* - ' ' */];
 
 	for (unsigned int j = 1; j < wordstr.length(); j++) {
-		if (activenode->isTrunk == 0) {
+		if ( activenode->isTrunk() ) {
 			//if (activenode->torb == 1) {
-			activenode->isTrunk = DAWGTOAC_NUM;
-			activenode->torb = 1;
-			DAWGTOAC_NUM++;
+			setTrunkID(*activenode); //->trunkid = ac_num(); //DAWGTOAC_NUM;
+			//DAWGTOAC_NUM++;
+			activenode->setTrunk(); //torb = 1;
 			activenode->dtoc = trienode;
 		}
 
@@ -225,10 +226,10 @@ void DAWG::addString(ACTrie & actrie, const std::string & wordstr) {
 		activenode = tnode;
 		trienode = tmptrie;
 	}
-	if (activenode->isTrunk == 0) {
-		activenode->isTrunk = DAWGTOAC_NUM;
-		activenode->torb = 1;
-		DAWGTOAC_NUM++;
+	if ( !activenode->isTrunk() ) { //trunk == 0) {
+		setTrunkID(*activenode); //->trunkid = ac_num(); //DAWGTOAC_NUM;
+		//DAWGTOAC_NUM++;
+		activenode->setTrunk(); //torb = 1;
 		activenode->dtoc = trienode;
 	}
 	activenode = & root(); //nroot;
