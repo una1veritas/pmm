@@ -22,10 +22,10 @@ all: acdawg
 
 acdawg:  main.o $(LIBOBJS) $(INCLUDES)
 	$(CXX) $(CXXFLAGS) $(INCDIRS) -o acdawg.exe main.o $(LIBOBJS)
-	
+
 ac: aho.o $(LIBOBJS)
 	$(CXX) $(CXXFLAGS) $(INCDIRS) -o ac.exe aho.o $(LIBOBJS)
 
 
 clean: 
-	rm *.o *.exe #*# *~
+	rm -rf *.o *.exe *.dSYM #*# *~
