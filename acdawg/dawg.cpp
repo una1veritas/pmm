@@ -30,12 +30,12 @@ WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
 	//parentnode->hassecedgechar[childnode->nodenum] = 0;
 
 	newchildnode->suff = childnode->suff;
-	newchildnode->suff->ine.push_back(newchildnode);
+	newchildnode->suff->inedges.push_back(newchildnode);
 	std::vector<WGNode*>::iterator itr =
-			std::find(childnode->suff->ine.begin(), childnode->suff->ine.end(), childnode);
-	childnode->suff->ine.erase(itr);
+			std::find(childnode->suff->inedges.begin(), childnode->suff->inedges.end(), childnode);
+	childnode->suff->inedges.erase(itr);
 	childnode->suff = newchildnode;
-	newchildnode->ine.push_back(childnode);
+	newchildnode->inedges.push_back(childnode);
 
 	int m = 0;
 	while (currentnode != &nroot) {
@@ -81,12 +81,12 @@ WGNode * DAWG::update(WGNode *activenode, char a) {
 			if ((currentnode->edges[charnum] != NULL)
 					&& (currentnode->edge_num[charnum] == 1)) {
 				newactivenode->suff = currentnode->edges[charnum];
-				newactivenode->suff->ine.push_back(newactivenode);
+				newactivenode->suff->inedges.push_back(newactivenode);
 			} else if ((currentnode->edges[charnum] != NULL)
 					&& (currentnode->edge_num[charnum] == 2)) {
 				newactivenode->suff = split(currentnode,
 						currentnode->edges[charnum], a);
-				newactivenode->suff->ine.push_back(newactivenode);
+				newactivenode->suff->inedges.push_back(newactivenode);
 			} else {
 				currentnode->edges[charnum] = newactivenode;
 				currentnode->edge_num[charnum] = 2;
@@ -95,22 +95,21 @@ WGNode * DAWG::update(WGNode *activenode, char a) {
 
 		if (newactivenode->suff == NULL) {
 			newactivenode->suff = &nroot;
-			nroot.ine.push_back(newactivenode);
+			nroot.inedges.push_back(newactivenode);
 		}
 		return newactivenode;
 	}
 }
 
-std::vector<Trie *> DAWG::getoutstates(std::string &string) {
+std::vector<Trie *> DAWG::getoutstates(std::string &str) {
 	std::vector<Trie *> outstates;
 	WGNode *activenode = &nroot;
 	WGNode *node;
-	int stringsize = string.size();
 	std::stack<WGNode*> st;
 
-	for (int i = 0; (i < (stringsize)) && (activenode != NULL); i++) {
+	for (int i = 0; (i < str.length()) && (activenode != NULL); i++) {
 
-		activenode = activenode->edges[(int)string[i] /* - ' ' */];
+		activenode = activenode->edges[(int)str[i] /* - ' ' */];
 
 	}
 
@@ -124,8 +123,8 @@ std::vector<Trie *> DAWG::getoutstates(std::string &string) {
 				outstates.push_back(node->dtoc);
 			}
 
-			for (unsigned int i = 0; i < node->ine.size(); i++) {
-				queue.push(node->ine[i]);
+			for (unsigned int i = 0; i < node->inedges.size(); i++) {
+				queue.push(node->inedges[i]);
 			}
 
 		}
@@ -134,26 +133,25 @@ std::vector<Trie *> DAWG::getoutstates(std::string &string) {
 	return (outstates);
 }
 
-std::vector<Trie *> DAWG::getfailstates(std::string &string, int depth) {
+std::vector<Trie *> DAWG::getfailstates(std::string &str, int depth) {
 	std::vector<Trie *> failstates;
 	std::vector<int> tmp;
 	WGNode *activenode = &nroot;
 	WGNode *node;
 	WGNode *enode;
 	int num;
-	int stringsize = string.size();
 	std::stack<WGNode *> st;
 	std::stack<int> st_num;
 
-	for (int i = 0; (i <= stringsize) && (activenode != NULL); i++) {
+	for (int i = 0; (i <= str.length()) && (activenode != NULL); i++) {
 		if ((i >= (depth)) && (activenode != NULL)) {
 			st.push(activenode);
 			st_num.push(i);
 		}
-		if (i == stringsize)
+		if (i == str.length())
 			break;
 
-		activenode = activenode->edges[(int)string[i] /* - ' ' */];
+		activenode = activenode->edges[(int)str[i]];
 	}
 
 	std::queue<WGNode*> queue;
@@ -177,9 +175,8 @@ std::vector<Trie *> DAWG::getfailstates(std::string &string, int depth) {
 					enode->dtoc->ine_num = num;
 					failstates.push_back(enode->dtoc);
 				} else {
-
-					for (unsigned int i = 0; i < node->ine.size(); i++) {
-						queue.push(node->ine[i]);
+					for (unsigned int i = 0; i < node->inedges.size(); i++) {
+						queue.push(node->inedges[i]);
 					}
 				}
 			}

@@ -16,13 +16,13 @@ INCLUDES = -I./
 #
 LIBOBJS = actrie.o dawg.o
 
-all: aho-dawg
+all: acdawg
 
-aho-dawg:  main.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho-dawg.exe main.o $(LIBOBJS)
+acdawg:  main.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o acdawg.exe main.o $(LIBOBJS)
 	
-aho: aho.o $(LIBOBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o aho.exe aho.o $(LIBOBJS)
+ac: aho.o $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o ac.exe aho.o $(LIBOBJS)
 
 
 clean: 

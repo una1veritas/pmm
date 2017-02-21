@@ -20,12 +20,13 @@
 struct WGNode {
 	//dawgにおけるノードの番号
 	int nodenum;
-	WGNode *edges[SIGMA_SIZE];
+	std::map<int, WGNode *> edges;
 	//edge_num[i]  0 = edgeなし 1 = primary-edgeあり 2 = secondary-edgeあり
-	int edge_num[SIGMA_SIZE];
+	std::map<int,int> edge_num;
 	WGNode *suff;
 	Trie *dtoc;
-	std::vector<WGNode*> ine;
+	std::vector<WGNode*> inedges;
+
 	//ACのノードとdawgのノードの番号を一致させるための変数
 	int isTrunk;
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
@@ -34,13 +35,6 @@ struct WGNode {
 	WGNode(const int nm) : nodenum(nm), suff(NULL), dtoc(NULL), isTrunk(0), torb(0) {
 //		nodenum = NODE_NUM_DAWG;
 //		NODE_NUM_DAWG++;
-		for (int i = 0; i < SIGMA_SIZE; i++) {
-			edges[i] = NULL;
-		}
-		for (int i = 0; i < SIGMA_SIZE; i++) {
-			edge_num[i] = 0;
-		}
-
 	}
 
 };
