@@ -34,7 +34,7 @@ Trie *root = new Trie();
 Trie * current;
 
 void addString(Trie *node, string &curString, int depth = 0) {
-	if (depth == curString.size()) {
+	if ( (unsigned) depth == curString.size()) {
 		node->out.insert(curString);
 		return;
 	}

@@ -70,7 +70,11 @@ public:
 		DAWGTOAC_NUM++;
 		return DAWGTOAC_NUM;
 	}
-//	int ac_num() { int t = DAWGTOAC_NUM; DAWGTOAC_NUM++; return t; }
+
+	std::ostream & printOn(std::ostream &) const;
+
+	// friend operators
+	friend std::ostream & operator<<(std::ostream & os, const DAWG & dag) { return dag.printOn(os); }
 };
 
 

@@ -253,7 +253,7 @@ int main(int argc, char * argv[]) {
 						failurenode = tactivenode->fail;
 
 						int j = 0;
-						cerr << "failurenode " << (long)(failurenode) << endl;
+						cerr << "failurenode " << *failurenode << endl;
 						cerr.flush();
 						while ((failurenode->edges[charnum2] == NULL)
 								|| (failurenode->edges[charnum2] == tactivenode)

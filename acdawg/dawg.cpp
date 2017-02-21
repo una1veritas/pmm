@@ -11,6 +11,49 @@
 
 #include "dawg.h"
 
+std::ostream & DAWG::printOn(std::ostream & os ) const {
+	std::queue<const WGNode *> qt;
+	qt.push(&nroot);
+	os << "DAWG(";
+	while( !qt.empty() ) {
+		const WGNode & top = *qt.front();
+		os << '<' << top.nodenum;
+		if ( top.isTrunk() ) {
+			os << "(" << top.trunkid << ")";
+		}
+		os << '>';
+		/*
+		os << "[";
+		for( std::pair<const int, Trie *> assoc : top.edges ) {
+			if ( assoc.second != NULL && !isRoot(assoc.second) ) {
+				qt.push(assoc.second);
+				if ( isprint(assoc.first) )
+					os << "'" << (char)assoc.first << "'";
+				else
+					os << assoc.first << " ";
+				os << "-> " << assoc.second->nodenum << "; ";
+			}
+			else if ( !isRoot(assoc.second) ) {
+				os << "Error!!! ";
+				if ( isprint(assoc.first) )
+					os << "'" << (char)assoc.first;
+				else
+					os << assoc.first;
+				os << " -> NULL; ";
+			}
+
+		}
+		if ( top.fail != NULL ) {
+			os << "*-> " << top.fail->nodenum;
+		}
+		os << "], " << std::endl;
+		*/
+		qt.pop();
+	}
+	os << ") ";
+	return os;
+}
+
 
 WGNode * DAWG::split(WGNode *parentnode, WGNode *childnode, char a) {
 	WGNode *newchildnode = new WGNode(NODE_NUM_DAWG++);
@@ -107,10 +150,8 @@ std::vector<Trie *> DAWG::getoutstates(std::string &str) {
 	WGNode *node;
 	std::stack<WGNode*> st;
 
-	for (int i = 0; (i < str.length()) && (activenode != NULL); i++) {
-
+	for (unsigned int i = 0; (i < str.length()) && (activenode != NULL); i++) {
 		activenode = activenode->edges[(int)str[i] /* - ' ' */];
-
 	}
 
 	if (activenode != NULL) {
@@ -143,8 +184,8 @@ std::vector<Trie *> DAWG::getFailStates(std::string &str, int depth) {
 	std::stack<std::pair<WGNode*,int>> wgstack;
 	//std::stack<int> st_num;
 
-	for (int i = 0; (i <= str.length()) && (activenode != NULL); i++) {
-		if ((i >= (depth)) && (activenode != NULL)) {
+	for (unsigned int i = 0; (i <= str.length()) && (activenode != NULL); i++) {
+		if ( i >= (unsigned)depth && (activenode != NULL)) {
 			wgstack.push(std::pair<WGNode*,int>(activenode,i) );
 		}
 		if (i == str.length())
