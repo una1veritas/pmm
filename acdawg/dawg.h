@@ -23,16 +23,16 @@ struct WGNode {
 	std::map<int, WGNode *> edges;
 	//edge_num[i]  0 = edgeなし 1 = primary-edgeあり 2 = secondary-edgeあり
 	std::map<int,int> edge_num;
+	std::vector<WGNode*> inedges;
 	WGNode *suff;
 	Trie *dtoc;
-	std::vector<WGNode*> inedges;
 
 	//ACのノードとdawgのノードの番号を一致させるための変数
 	int isTrunk;
 	//trunkノードかbranchノードかの判定 1ならtrunk、0ならbranch 初期値は0
 	int torb;
 
-	WGNode(const int nm) : nodenum(nm), suff(NULL), dtoc(NULL), isTrunk(0), torb(0) {
+	WGNode(const int id) : nodenum(id), edges(), edge_num(), inedges(), suff(NULL), dtoc(NULL), isTrunk(0), torb(0) {
 //		nodenum = NODE_NUM_DAWG;
 //		NODE_NUM_DAWG++;
 	}
@@ -52,7 +52,7 @@ public:
 	WGNode * split(WGNode *parentnode, WGNode *childnode, char a);
 	WGNode * update(WGNode *activenode, char a);
 	std::vector<Trie *> getoutstates(std::string &str);
-	std::vector<Trie *> getfailstates(std::string &str, int depth);
+	std::vector<Trie *> getFailStates(std::string &str, int depth);
 	void addString(ACTrie & actrie, const std::string & patt);
 
 	int ac_num() { return DAWGTOAC_NUM; }

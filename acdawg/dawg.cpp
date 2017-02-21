@@ -133,20 +133,19 @@ std::vector<Trie *> DAWG::getoutstates(std::string &str) {
 	return (outstates);
 }
 
-std::vector<Trie *> DAWG::getfailstates(std::string &str, int depth) {
+std::vector<Trie *> DAWG::getFailStates(std::string &str, int depth) {
 	std::vector<Trie *> failstates;
 	std::vector<int> tmp;
 	WGNode *activenode = &nroot;
-	WGNode *node;
+//	WGNode *node;
 	WGNode *enode;
-	int num;
-	std::stack<WGNode *> st;
-	std::stack<int> st_num;
+//	int num;
+	std::stack<std::pair<WGNode*,int>> wgstack;
+	//std::stack<int> st_num;
 
 	for (int i = 0; (i <= str.length()) && (activenode != NULL); i++) {
 		if ((i >= (depth)) && (activenode != NULL)) {
-			st.push(activenode);
-			st_num.push(i);
+			wgstack.push(std::pair<WGNode*,int>(activenode,i) );
 		}
 		if (i == str.length())
 			break;
@@ -157,12 +156,14 @@ std::vector<Trie *> DAWG::getfailstates(std::string &str, int depth) {
 	std::queue<WGNode*> queue;
 	std::vector<WGNode*> mark;
 
-	while (!st.empty()) {
-		node = st.top();
-		st.pop();
-		num = st_num.top();
-		st_num.pop();
-		queue.push(node);
+	while (!wgstack.empty()) {
+		std::pair<WGNode*,int>  nodenum = wgstack.top();
+		wgstack.pop();
+//		node = wgstack.top();
+//		wgstack.pop();
+//		num = st_num.top();
+//		st_num.pop();
+		queue.push(nodenum.first);
 
 		while (!queue.empty()) {
 			enode = queue.front();
@@ -172,11 +173,11 @@ std::vector<Trie *> DAWG::getfailstates(std::string &str, int depth) {
 			if (itr == mark.end()) {
 				mark.push_back(enode);
 				if (enode->torb == 1) {
-					enode->dtoc->ine_num = num;
+					enode->dtoc->ine_num = nodenum.second;
 					failstates.push_back(enode->dtoc);
 				} else {
-					for (unsigned int i = 0; i < node->inedges.size(); i++) {
-						queue.push(node->inedges[i]);
+					for (unsigned int i = 0; i < nodenum.first->inedges.size(); i++) {
+						queue.push(nodenum.first->inedges[i]);
 					}
 				}
 			}

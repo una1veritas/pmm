@@ -222,7 +222,7 @@ int main(int argc, char * argv[]) {
 			start = clock();
 
 			vector<Trie*> failstates;
-			failstates = dawg.getfailstates(curString2, trie_depth);
+			failstates = dawg.getFailStates(curString2, trie_depth);
 			int fstatesize = failstates.size();
 
 			for (int i = fstatesize - 1; i >= 0; i--) {
@@ -241,6 +241,8 @@ int main(int argc, char * argv[]) {
 			int charnum2 = 0;
 
 			for (int i = 0; i < size2; i++) {
+				cerr << "i = " << i << endl;
+				cerr.flush();
 				charnum2 = curString2[i] /* - ' ' */;
 
 				if ((i + 1) >= trie_depth) {
@@ -251,6 +253,8 @@ int main(int argc, char * argv[]) {
 						failurenode = tactivenode->fail;
 
 						int j = 0;
+						cerr << "failurenode " << (long)(failurenode) << endl;
+						cerr.flush();
 						while ((failurenode->edges[charnum2] == NULL)
 								|| (failurenode->edges[charnum2] == tactivenode)
 								|| (failurenode == &actrie.root())) {
