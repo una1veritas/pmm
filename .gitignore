@@ -2,3 +2,6 @@
 *.o
 *.exe
 *.txt~
+
+.metadata
+RemoteSystemsTempFiles
