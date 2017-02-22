@@ -22,9 +22,8 @@ std::ostream & DAWG::printOn(std::ostream & os ) const {
 			os << "(" << top.trunkid << ")";
 		}
 		os << '>';
-		/*
 		os << "[";
-		for( std::pair<const int, Trie *> assoc : top.edges ) {
+		for( std::pair<const int, WGNode *> assoc : top.edges ) {
 			if ( assoc.second != NULL && !isRoot(assoc.second) ) {
 				qt.push(assoc.second);
 				if ( isprint(assoc.first) )
@@ -33,21 +32,11 @@ std::ostream & DAWG::printOn(std::ostream & os ) const {
 					os << assoc.first << " ";
 				os << "-> " << assoc.second->nodenum << "; ";
 			}
-			else if ( !isRoot(assoc.second) ) {
-				os << "Error!!! ";
-				if ( isprint(assoc.first) )
-					os << "'" << (char)assoc.first;
-				else
-					os << assoc.first;
-				os << " -> NULL; ";
+			else if (assoc.second == NULL) {
+				//os << "Error!!! ";
 			}
-
-		}
-		if ( top.fail != NULL ) {
-			os << "*-> " << top.fail->nodenum;
 		}
 		os << "], " << std::endl;
-		*/
 		qt.pop();
 	}
 	os << ") ";

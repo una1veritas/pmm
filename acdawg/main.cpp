@@ -118,8 +118,8 @@ int main(int argc, char * argv[]) {
 		string & word = txfile.word();
 		dawg.addString(actrie, word);
 	}
-	cout << "Construct DAWG finished." << endl;
-	cout << endl;
+	cout << "Construct DAWG finished." << endl << endl;
+	cout << dawg << endl << endl;
 
 	//（動作確認）
 	string text;

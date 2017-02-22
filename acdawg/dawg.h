@@ -59,6 +59,8 @@ public:
 	}
 
 	WGNode & root() { return nroot; }
+	bool isRoot(const WGNode & node) const { return &nroot == &node; }
+	bool isRoot(const WGNode * node) const { return &nroot == node; }
 	WGNode * split(WGNode *parentnode, WGNode *childnode, char a);
 	WGNode * update(WGNode *activenode, char a);
 	std::vector<Trie *> getoutstates(std::string &str);

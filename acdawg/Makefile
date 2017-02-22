@@ -7,23 +7,23 @@ CXX = g++ -std=c++11
 CXXFLAGS = -Wall -O2 -g3
 INCDIRS = -I./
 
-INCLUDES = dawg.h actrie.h
+HEADERS = dawg.h actrie.h
 
-%.o: %.c
-	$(CC) $(CCFLAGS) $(INCDIRS) -c $<
+%.o: %.c  $(HEADERS)
+	$(CC) $(CCFLAGS) $(HEADERS) -c $<
 
-%.o: %.cpp $(INCLUDES)
-	$(CXX) $(CXXFLAGS) $(INCDIRS) -c $<
+%.o: %.cpp  $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(HEADERS) -c $<
 
 #
 LIBOBJS = actrie.o dawg.o
 
 all: acdawg
 
-acdawg:  main.o $(LIBOBJS) $(INCLUDES)
+acdawg:  main.o $(LIBOBJS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(INCDIRS) -o acdawg.exe main.o $(LIBOBJS)
 
-ac: aho.o $(LIBOBJS)
+ac: aho.o $(LIBOBJS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(INCDIRS) -o ac.exe aho.o $(LIBOBJS)
 
 
