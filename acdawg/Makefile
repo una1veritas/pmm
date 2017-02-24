@@ -10,10 +10,10 @@ INCDIRS = -I./
 HEADERS = dawg.h actrie.h
 
 %.o: %.c  $(HEADERS)
-	$(CC) $(CCFLAGS) $(HEADERS) -c $<
+	$(CC) $(CCFLAGS) -c $<
 
 %.o: %.cpp  $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(HEADERS) -c $<
+	$(CXX) $(CXXFLAGS) -c $<
 
 #
 LIBOBJS = actrie.o dawg.o
