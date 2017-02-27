@@ -7,6 +7,7 @@
 //============================================================================
 
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -15,18 +16,23 @@ using namespace std;
 int main(const int argc, const char * argv[]) {
 	cout << "Hello World!!!" << endl; // prints Hello World!!!
 	cout << "arguments " << argc << ", values are " << endl;
-	for(int i = 1; i < argc; i++)
-		cout << "'" << argv[i] << "', ";
-	cout << endl;
-
+	if ( argc == 1 ) {
+		cout << "none." << endl;
+	} else {
+		for(int i = 1; i < argc; i++)
+			cout << "'" << argv[i] << "', ";
+		cout << endl;
+	}
 
 	ACMachine pmm;
-	pmm.addPath("keyword");
-	pmm.addOutput("keyword");
+	pmm.resetState();
+	pmm.addPath(string("papaya"));
+	pmm.addOutput(string("papaya"));
+	pmm.addFailures();
 
-	cout << "AC Machine: " << pmm << endl << endl;
-	for ( auto occurrence : pmm.search("The reason why you were there.") ) {
-		cout << occurrence.first << ", ";
+	cout << pmm << endl << endl;
+	for ( auto occurr : pmm.search(string("payapapaya")) ) {
+		cout << occurr.second << "@" << occurr.first << "," << endl;
 	}
 	cout << endl;
 

@@ -23,9 +23,8 @@ typedef uint16_t uint16;
 
 class ACMachine {
 public:
-	typedef int32 state;
+	typedef uint32 state;
 	typedef uint16 alphabet;
-	typedef uint32 occurrence;
 
 private:
 
@@ -34,7 +33,7 @@ private:
 private:
 	std::set<const std::string> patterns;
 	std::vector<std::map<alphabet,state>> transitions;
-	std::vector<state> failures;
+	std::vector<state> failure;
 	std::vector<std::set<const std::string *> > output;
 
 	state current;
@@ -44,13 +43,15 @@ public:
 
 	void setupInitialState(void);
 
-	uint32 size() { return transitions.size(); }
+	uint32 size() const { return transitions.size(); }
 
 	bool transfer(const alphabet & c);
 
+	void resetState() {	current = initialState; }
 	// add patt to the trie and output of the destination state.
 	state addPath(const std::string & patt);
 	bool addOutput(const std::string & patt);
+	void addFailures();
 
 	std::vector<std::pair<uint32,const std::string &> > search(const std::string & pattern);
 
