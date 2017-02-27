@@ -7,6 +7,7 @@
 //============================================================================
 
 #include <iostream>
+
 using namespace std;
 
 #include "ACMachine.h"
@@ -19,9 +20,13 @@ int main(const int argc, const char * argv[]) {
 	cout << endl;
 
 
-	ACMachine pmm("why");
-	for ( auto it : pmm.search("The reason why you were there.") ) {
-		cout << *it << ", ";
+	ACMachine pmm;
+	pmm.addPath("keyword");
+	pmm.addOutput("keyword");
+
+	cout << "AC Machine: " << pmm << endl << endl;
+	for ( auto occurrence : pmm.search("The reason why you were there.") ) {
+		cout << occurrence.first << ", ";
 	}
 	cout << endl;
 
