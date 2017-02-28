@@ -24,14 +24,16 @@ int main(const int argc, const char * argv[]) {
 		cout << endl;
 	}
 
+	string str("papaya");
+	string text("payapapaya");
 	ACMachine pmm;
 	pmm.resetState();
-	pmm.addPath(string("papaya"));
-	pmm.addOutput(string("papaya"));
+	pmm.addPath(str);
+	pmm.addOutput(str);
 	pmm.addFailures();
 
 	cout << pmm << endl << endl;
-	for ( auto occurr : pmm.search(string("payapapaya")) ) {
+	for ( auto occurr : pmm.search(text) ) {
 		cout << occurr.second << "@" << occurr.first << "," << endl;
 	}
 	cout << endl;

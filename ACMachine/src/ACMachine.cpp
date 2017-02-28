@@ -16,41 +16,42 @@
 	state current;
  *
  */
+
 ACMachine::ACMachine(void) {
-	setupInitialState();
-	current = initialState;
-	patterns.clear();
+	initialize();
+	pattern.clear();
 }
 
-void ACMachine::setupInitialState(void) {
-	transitions.clear();
-	transitions.push_back(std::map<alphabet,state>());
+void ACMachine::initialize(void) {
+	transition.clear();
+	transition.push_back(std::map<alphabet,state>());
+	resetState();
 	failure.clear();
-	failure.push_back(initialState);
+	failure.push_back(current);
 	// failure to initial state from initial state eats up one symbol at transition.
 	output.clear();
 	output.push_back(std::set<const std::string *>());
-	output[initialState].clear();
+	output[current].clear();
 }
 
 bool ACMachine::transfer(const alphabet & c) {
 	std::map<alphabet,state>::iterator itp;
-	itp = transitions[current].find(c);
-	if ( itp == transitions[current].end() )
+	itp = transition[current].find(c);
+	if ( itp == transition[current].end() )
 		return false;
 	current = itp->second;
 	return true;
 }
 
 ACMachine::state ACMachine::addPath(const std::string & patt) {
-	int pos;
+	uint32 pos;
 	state nwstate;
 
 	for(pos = 0; pos < patt.length(); ++pos) {
 		if ( !transfer(patt[pos]) ) {
-			nwstate = transitions.size();
-			transitions.push_back(std::map<alphabet,state>());
-			(transitions[current])[patt[pos]] = nwstate;
+			nwstate = transition.size();
+			transition.push_back(std::map<alphabet,state>());
+			(transition[current])[patt[pos]] = nwstate;
 			failure.push_back(0);
 			output.push_back(std::set<const std::string *>());
 			current = nwstate;
@@ -61,7 +62,7 @@ ACMachine::state ACMachine::addPath(const std::string & patt) {
 
 bool ACMachine::addOutput(const std::string & patt) {
 	std::pair<std::set<const std::string>::iterator, bool> result;
-	result = patterns.insert(patt);
+	result = pattern.insert(patt);
 	const std::string & orgstr = *result.first;
 	if ( result.second ) {
 		output[current].insert( &orgstr );
@@ -115,8 +116,8 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			out << "} ";
 		}
 		out << "[";
-		for(std::map<alphabet,state>::const_iterator it = transitions[i].begin();
-				it != transitions[i].end(); it++) {
+		for(std::map<alphabet,state>::const_iterator it = transition[i].begin();
+				it != transition[i].end(); it++) {
 			out << "'" << (char)it->first << "'-> " << it->second << ", ";
 		}
 		out << "~> " << failure[i];

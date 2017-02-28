@@ -13,7 +13,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <unordered_map>
 
 #include <cinttypes>
 
@@ -26,13 +25,11 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 
-private:
-
 	const static state initialState = 0;
 
 private:
-	std::set<const std::string> patterns;
-	std::vector<std::map<alphabet,state>> transitions;
+	std::set<const std::string> pattern;
+	std::vector<std::map<alphabet,state>> transition;
 	std::vector<state> failure;
 	std::vector<std::set<const std::string *> > output;
 
@@ -41,13 +38,13 @@ private:
 public:
 	ACMachine(void);
 
-	void setupInitialState(void);
+	void initialize(void);
 
-	uint32 size() const { return transitions.size(); }
+	uint32 size() const { return transition.size(); }
 
 	bool transfer(const alphabet & c);
 
-	void resetState() {	current = initialState; }
+	state resetState() { return current = initialState; }
 	// add patt to the trie and output of the destination state.
 	state addPath(const std::string & patt);
 	bool addOutput(const std::string & patt);
