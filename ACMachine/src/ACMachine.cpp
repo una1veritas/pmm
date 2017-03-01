@@ -47,11 +47,20 @@ bool ACMachine::transfer(const alphabet & c) {
 
 // trace or create the path on trie from the current state
 template <typename T>
-ACMachine::state ACMachine::addPath(T const & patt) {
+ACMachine::state ACMachine::addPath(const T * patt) {
+	uint32 len;
+	for(len = 0; patt[len] != 0; len++) {}
+	return addPath(patt, len);
+}
+
+template ACMachine::state ACMachine::addPath<char>(const char * patt);
+
+template <typename T>
+ACMachine::state ACMachine::addPath(T const & patt, const uint32 & length) {
 	uint32 pos;
 	state newstate;
 
-	for(pos = 0; pos < patt.length(); ++pos) {
+	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
 			newstate = transition.size();
 			transition.push_back(std::map<alphabet,state>());
@@ -63,6 +72,8 @@ ACMachine::state ACMachine::addPath(T const & patt) {
 	}
 	return current;
 }
+
+template ACMachine::state ACMachine::addPath<std::string>(const std::string & patt);
 
 bool ACMachine::addOutput(const std::string & patt) {
 	std::pair<std::set<std::string>::iterator, bool> result(pattern.insert(patt));

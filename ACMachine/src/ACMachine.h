@@ -55,7 +55,12 @@ public:
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>
+	state addPath(T const & patt, const uint32 & length);
+	template <typename T>
+	state addPath(const T * patt);
+	template <typename T>
 	state addPath(T const & patt);
+
 	bool addOutput(const std::string & patt);
 	void addFailures();
 
