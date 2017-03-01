@@ -1,11 +1,17 @@
 
-CC	= /usr/bin/gcc -std=c99
+CC	= gcc -std=c99
 CFLAGS = -Wall -g
 
-CXX = /usr/bin/g++ -std=c++11
+CXX = g++ -std=c++11
 CXXFLAGS = -Wall -g
 
 INCDIRS = -I./
+
+INCLUDES = ACMachine.h
+OBJS = ACMachine.o main.o
+LIBS = 
+TARGET = acm.exe
+
 
 %.o: %.c $(INCLUDES)
 	$(CC) $(CCFLAGS) $(INCDIRS) -c $<
@@ -13,10 +19,6 @@ INCDIRS = -I./
 %.o: %.cpp $(INCLUDES)
 	$(CXX) $(CXXFLAGS) $(INCDIRS) -c $<
 
-INCLUDES = ACMachine.h
-OBJS = ACMachine.o main.o
-LIBS = 
-TARGET = acm
 
 $(TARGET):	$(OBJS) $(INCLUDES)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
@@ -24,4 +26,4 @@ $(TARGET):	$(OBJS) $(INCLUDES)
 all: $(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) *~

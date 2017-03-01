@@ -1,5 +1,5 @@
 //============================================================================
-tr// Name        : ACMachine.cpp
+// Name        : ACMachine.cpp
 // Author      : Sin Shimozono
 // Version     :
 // Copyright   : Your copyright notice
@@ -24,19 +24,20 @@ int main(const int argc, const char * argv[]) {
 		cout << endl;
 	}
 
-	ACMachine pmm;
+	acm pmm;
+
 	pmm.resetState();
-	pmm.addPath("papaya");
+	pmm.addPath(string("papaya"));
 	pmm.addOutput("papaya");
 	pmm.addFailures();
 
-	/*
+
 	cout << pmm << endl << endl;
 	for ( auto occurr : pmm.search("pappapararirapapayapa") ) {
 		cout << occurr.second << "@" << occurr.first << "," << endl;
 	}
 	cout << endl;
-*/
+
 	cout << "bye." << endl << endl;
 	return 0;
 }

@@ -7,10 +7,8 @@
 
 #include "ACMachine.h"
 
-using namespace std;
-
 /*
-	std::set<const std::string> patterns;
+	std::set<std::string> patterns;
 	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failures;
 	std::vector<std::set<const std::string *> > output;
@@ -36,6 +34,7 @@ void ACMachine::setupInitialState(void) {
 	output[initialState()].clear();
 }
 
+
 bool ACMachine::transfer(const alphabet & c) {
 	std::map<alphabet,state>::iterator itp;
 	itp = transition[current].find(c);
@@ -45,27 +44,28 @@ bool ACMachine::transfer(const alphabet & c) {
 	return true;
 }
 
+
 // trace or create the path on trie from the current state
-ACMachine::state ACMachine::addPath(const std::string & patt) {
+template <typename T>
+ACMachine::state ACMachine::addPath(T const & patt) {
 	uint32 pos;
-	state nwstate;
+	state newstate;
 
 	for(pos = 0; pos < patt.length(); ++pos) {
 		if ( !transfer(patt[pos]) ) {
-			nwstate = transition.size();
+			newstate = transition.size();
 			transition.push_back(std::map<alphabet,state>());
-			(transition[current])[patt[pos]] = nwstate;
-			failure.push_back(0);
+			(transition[current])[patt[pos]] = newstate;
+			failure.push_back(initialState());
 			output.push_back(std::set<const std::string *>());
-			current = nwstate;
+			current = newstate;
 		}
 	}
 	return current;
 }
 
 bool ACMachine::addOutput(const std::string & patt) {
-	std::pair<std::set<const std::string>::iterator, bool> result;
-	result = pattern.insert(patt);
+	std::pair<std::set<std::string>::iterator, bool> result(pattern.insert(patt));
 	const std::string & orgstr = *result.first;
 	if ( result.second ) {
 		output[current].insert( &orgstr );
@@ -104,11 +104,15 @@ std::vector<std::pair<uint32, const std::string &> >
 	return occurrs;
 }
 
-/*
+
 std::ostream & ACMachine::printOn(std::ostream & out) const {
 	out << "ACMachine(";
 	for(state i = 0; i < size(); ++i ) {
-		out << "<" << i << ">";
+		if ( i == current ) {
+			out << "<" << i << ">";
+		} else {
+			out << i;
+		}
 		if ( output[i].size() > 0 ) {
 			out << "{";
 			for(std::set<const std::string *>::iterator it = output[i].begin();
@@ -130,4 +134,3 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 	out << ") ";
 	return out;
 }
-*/
