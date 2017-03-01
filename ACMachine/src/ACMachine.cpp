@@ -7,6 +7,8 @@
 
 #include "ACMachine.h"
 
+using namespace std;
+
 /*
 	std::set<const std::string> patterns;
 	std::vector<std::map<alphabet,state>> transitions;
@@ -18,20 +20,20 @@
  */
 
 ACMachine::ACMachine(void) {
-	initialize();
+	setupInitialState();
 	pattern.clear();
+	resetState();
 }
 
-void ACMachine::initialize(void) {
+void ACMachine::setupInitialState(void) {
 	transition.clear();
 	transition.push_back(std::map<alphabet,state>());
-	resetState();
 	failure.clear();
-	failure.push_back(current);
+	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
 	output.clear();
 	output.push_back(std::set<const std::string *>());
-	output[current].clear();
+	output[initialState()].clear();
 }
 
 bool ACMachine::transfer(const alphabet & c) {
@@ -43,6 +45,7 @@ bool ACMachine::transfer(const alphabet & c) {
 	return true;
 }
 
+// trace or create the path on trie from the current state
 ACMachine::state ACMachine::addPath(const std::string & patt) {
 	uint32 pos;
 	state nwstate;
@@ -90,17 +93,18 @@ std::vector<std::pair<uint32, const std::string &> >
 				}
 			}
 			pos++;
-			continue;
-		}
-		// failure loop
-		current = failure[current];
-		if ( current == initialState ) {
-			pos++;
+		} else {
+			// failure loop
+			current = failure[current];
+			if ( current == initialState() ) {
+				pos++;
+			}
 		}
 	}
 	return occurrs;
 }
 
+/*
 std::ostream & ACMachine::printOn(std::ostream & out) const {
 	out << "ACMachine(";
 	for(state i = 0; i < size(); ++i ) {
@@ -126,3 +130,4 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 	out << ") ";
 	return out;
 }
+*/

@@ -25,7 +25,7 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 
-	const static state initialState = 0;
+	const static state initial_state = 0;
 
 private:
 	std::set<const std::string> pattern;
@@ -38,13 +38,16 @@ private:
 public:
 	ACMachine(void);
 
-	void initialize(void);
+	void setupInitialState(void);
 
 	uint32 size() const { return transition.size(); }
 
 	bool transfer(const alphabet & c);
 
-	state resetState() { return current = initialState; }
+	state resetState() { return current = initial_state; }
+	state currentState() { return current; }
+	state initialState() { return initial_state; }
+
 	// add patt to the trie and output of the destination state.
 	state addPath(const std::string & patt);
 	bool addOutput(const std::string & patt);
@@ -52,11 +55,13 @@ public:
 
 	std::vector<std::pair<uint32,const std::string &> > search(const std::string & pattern);
 
+	/*
 	std::ostream & printOn(std::ostream & out) const;
 
 	friend std::ostream & operator<<(std::ostream & out, const ACMachine & acm) {
 		return acm.printOn(out);
 	}
+	*/
 };
 
 

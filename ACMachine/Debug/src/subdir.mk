@@ -7,10 +7,6 @@ CPP_SRCS += \
 ../src/ACMachine.cpp \
 ../src/main.cpp 
 
-O_SRCS += \
-../src/ACMachine.o \
-../src/main.o 
-
 OBJS += \
 ./src/ACMachine.o \
 ./src/main.o 

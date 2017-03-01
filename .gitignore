@@ -2,6 +2,7 @@
 *.o
 *.exe
 *.txt~
+Debug
 
 .metadata
 RemoteSystemsTempFiles
