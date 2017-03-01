@@ -29,11 +29,14 @@ int main(const int argc, const char * argv[]) {
 	pmm.resetState();
 	pmm.addPath(string("papaya"));
 	pmm.addOutput("papaya");
+	pmm.resetState();
+	pmm.addPath("pappy");
+	pmm.addOutput("pappy");
 	pmm.addFailures();
 
 
 	cout << pmm << endl << endl;
-	for ( auto occurr : pmm.search("pappapararirapapayapa") ) {
+	for ( auto occurr : pmm.search("pappapapayapapapappya") ) {
 		cout << occurr.second << "@" << occurr.first << "," << endl;
 	}
 	cout << endl;

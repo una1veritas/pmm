@@ -27,8 +27,10 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 
+	typedef char * c_str;
+
 private:
-	std::vector<std::map<alphabet,state>> transition;
+	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<const std::string *> > output;
 
@@ -45,9 +47,10 @@ public:
 
 	void setupInitialState(void);
 
-	uint32 size() const { return transition.size(); }
+	uint32 size() const { return transitions.size(); }
 
 	bool transfer(const alphabet & c);
+//	state transition(const state & s, const alphabet & c);
 
 	state resetState() { return current = initial_state; }
 	state currentState() { return current; }
@@ -55,11 +58,11 @@ public:
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>
-	state addPath(T const & patt, const uint32 & length);
+		state addPath(const T & patt, const uint32 & length);
 	template <typename T>
-	state addPath(const T * patt);
+		state addPath(const T patt[]);
 	template <typename T>
-	state addPath(T const & patt);
+		state addPath(T const & patt);
 
 	bool addOutput(const std::string & patt);
 	void addFailures();
