@@ -7,7 +7,7 @@
 
 #include "ACMachine.h"
 
-#include <queue>
+#include <deque>
 
 /*
 	std::set<std::string> patterns;
@@ -21,7 +21,6 @@
 
 ACMachine::ACMachine(void) {
 	setupInitialState();
-	pattern.clear();
 	resetState();
 }
 
@@ -32,7 +31,7 @@ void ACMachine::setupInitialState(void) {
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
 	output.clear();
-	output.push_back(std::set<const std::string *>());
+	output.push_back(std::set<position>());
 	output[initialState()].clear();
 }
 
@@ -79,7 +78,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 			transitions.push_back(std::map<alphabet,state>());
 			(transitions[current])[patt[pos]] = newstate;
 			failure.push_back(initialState());
-			output.push_back(std::set<const std::string *>());
+			output.push_back(std::set<position>());
 			current = newstate;
 		}
 	}
@@ -92,13 +91,8 @@ template ACMachine::state ACMachine::addPath<std::string>(const std::string & pa
 
 template <typename T>
 bool ACMachine::addOutput(const T & patt) {
-	const std::pair<std::set<std::string>::iterator, bool> & result = pattern.insert(patt);
-	const std::string & orgstr = *result.first;
-	if ( result.second ) {
-		output[current].insert( &orgstr );
-		return true;
-	}
-	return false;
+	std::pair<std::set<position>::iterator,bool> res = output[current].insert( patt.length() );
+	return res.second;
 }
 
 template <typename T>
@@ -111,7 +105,7 @@ template bool ACMachine::addOutput<char>(const char patt[]);
 template bool ACMachine::addOutput<std::string>(const std::string & patt);
 
 void ACMachine::addFailures() {
-	std::queue<state> q;
+	std::deque<state> q;
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
@@ -120,7 +114,7 @@ void ACMachine::addFailures() {
 		const state nxstate = assoc.second;
 		// if is neither an explicit failure, nor go-root-failure
 		failure[nxstate]  = initial_state;
-		q.push(nxstate);
+		q.push_back(nxstate);
 //		std::cout << nxstate << ", ";
 	}
 	std::cout << std::endl;
@@ -128,14 +122,14 @@ void ACMachine::addFailures() {
 	// for states whose distance from the initial state is more than one.
 	while ( !q.empty() ) {
 		const state cstate = q.front();
-		q.pop();
+		q.pop_front();
 //		std::cout << std::endl << "cstate " << cstate << std::endl;
 
 		// skips if == NULL
 		for(auto const & assoc : transitions[cstate] ) {
 			const alphabet c  = assoc.first;
 			const state nxstate = assoc.second;
-			q.push(nxstate);
+			q.push_back(nxstate);
 
 //			std::cout << cstate << " -" << (char) c << "-> " << nxstate << std::endl;
 
@@ -163,18 +157,26 @@ void ACMachine::addFailures() {
 	}
 }
 
-std::vector<std::pair<uint32, const std::string &> >
-	ACMachine::search(const std::string & pattern) {
-	std::vector<std::pair<uint32, const std::string &> > occurrs;
+std::vector<std::pair<position, const std::string> >
+	ACMachine::search(const std::string & text) {
+	std::vector<std::pair<position, const std::string> > occurrs;
+	std::deque<alphabet> uring;
 
 	uint32 pos = 0;
 	resetState();
-	while ( pos < pattern.size() ) {
-		if ( transfer(pattern[pos]) ) {
+	uring.clear();
+	while ( pos < text.size() ) {
+		uring.push_back(text[pos]);
+		if ( transfer(text[pos]) ) {
 			if ( !output[current].empty() ) {
-				for(std::set<const std::string *>::iterator it = output[current].begin();
+				for(std::set<position>::iterator it = output[current].begin();
 						it != output[current].end(); it++) {
-					occurrs.push_back(std::pair<uint32,const std::string&>(pos - (*it)->length() + 1,**it));
+					const position patlen = *it;
+					std::string patt(patlen, ' ');
+					for(int i = 0; i < patlen; i++) {
+						patt[i] = uring.at(uring.size() - patlen + i);
+					}
+					occurrs.push_back(std::pair<position,const std::string>(pos + *it + 1, patt));
 				}
 			}
 			pos++;
@@ -183,6 +185,9 @@ std::vector<std::pair<uint32, const std::string &> >
 			current = failure[current];
 			if ( current == initialState() ) {
 				pos++;
+				uring.clear();
+			} else {
+				uring.pop_front();
 			}
 		}
 	}
@@ -200,13 +205,13 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 		}
 		if ( output[i].size() > 0 ) {
 			out << "{";
-			for(std::set<const std::string *>::iterator it = output[i].begin();
+			for(std::set<position>::iterator it = output[i].begin();
 					it != output[i].end(); ) {
-				out << "'" << **it << "'";
+				out << *it;
 				if ( ++it != output[i].end() )
 					out << ", ";
 			}
-			out << "} ";
+			out << "}";
 		}
 		out << "[";
 		for(std::map<alphabet,state>::const_iterator it = transitions[i].begin();

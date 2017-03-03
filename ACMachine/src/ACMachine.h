@@ -19,8 +19,7 @@
 typedef int32_t int32;
 typedef uint32_t uint32;
 typedef uint16_t uint16;
-
-typedef char * c_str;
+typedef size_t position;
 
 class ACMachine {
 public:
@@ -32,11 +31,9 @@ public:
 private:
 	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
-	std::vector<std::set<const std::string *> > output;
+	std::vector<std::set<position> > output;
 
 	state current;
-
-	std::set<std::string> pattern; // set<const string> is not vaild for pure gcc (but ok for clang gcc)
 
 // class constants
 
@@ -81,7 +78,7 @@ public:
 		addFailures();
 	}
 
-	std::vector<std::pair<uint32,const std::string &> > search(const std::string & pattern);
+	std::vector<std::pair<position,const std::string> > search(const std::string & pattern);
 
 	std::ostream & printOn(std::ostream & out) const;
 
