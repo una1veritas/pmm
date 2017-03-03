@@ -27,7 +27,7 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 
-	typedef char * c_str;
+	typedef const std::vector<alphabet> ustring;
 
 private:
 	std::vector<std::map<alphabet,state>> transitions;
@@ -50,7 +50,7 @@ public:
 	uint32 size() const { return transitions.size(); }
 
 	bool transfer(const alphabet & c);
-//	state transition(const state & s, const alphabet & c);
+	state transition(const state s, const alphabet c);
 
 	state resetState() { return current = initial_state; }
 	state currentState() { return current; }
@@ -62,10 +62,24 @@ public:
 	template <typename T>
 		state addPath(const T patt[]);
 	template <typename T>
-		state addPath(T const & patt);
+		state addPath(const T & patt);
 
-	bool addOutput(const std::string & patt);
+	template <typename T>
+		bool addOutput(const T & patt);
+	template <typename T>
+		bool addOutput(const T patt[]);
+
 	void addFailures();
+
+	template <typename C>
+	void addPatterns(const C & strset) {
+		for(auto str : strset ) {
+			resetState();
+			addPath(str);
+			addOutput(str);
+		}
+		addFailures();
+	}
 
 	std::vector<std::pair<uint32,const std::string &> > search(const std::string & pattern);
 

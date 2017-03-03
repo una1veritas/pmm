@@ -8,35 +8,73 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
 #include "ACMachine.h"
+#include "commandargs.h"
+
+#include <time.h>
 
 int main(const int argc, const char * argv[]) {
+	ifstream ifs;
+	int wordcount_max = 10;
+	bool show_machine = false;
 	cout << "Hello World!!!" << endl; // prints Hello World!!!
-	cout << "arguments " << argc << ", values are " << endl;
-	if ( argc == 1 ) {
-		cout << "none." << endl;
-	} else {
-		for(int i = 1; i < argc; i++)
-			cout << "'" << argv[i] << "', ";
-		cout << endl;
+	commandargs args(argc, argv);
+
+	pair<bool,const char*> opt;
+	opt = args.getopt("-k");
+	if ( opt.first ) {
+		wordcount_max = atol(opt.second);
 	}
+	opt = args.getopt("-f");
+	if ( opt.first ) {
+		string fname = string(opt.second);
+		ifs.open(fname);
+	}
+	opt = args.getopt("-v");
+	show_machine = opt.first;
+
 
 	acm pmm;
 
-	pmm.resetState();
-	pmm.addPath(string("papaya"));
-	pmm.addOutput("papaya");
-	pmm.resetState();
-	pmm.addPath("pappy");
-	pmm.addOutput("pappy");
-	pmm.addFailures();
+	set<string> words;
+	istringstream line;
+	string tmp;
+	while ( !ifs.eof() ) {
+		std::getline(ifs, tmp);
+		if ( tmp.empty() )
+			break;
+		line.str(tmp);
+		line.clear();
+		while ( !line.eof() ) {
+			line >> tmp;
+			if ( words.size() < wordcount_max )
+				words.insert(tmp);
+		}
+	}
+	ifs.close();
+	cout << "Got " << words.size() << " words: " << endl;
+	if ( show_machine ) {
+		for(auto tmp : words) {
+			cout << tmp << ", ";
+		}
+		cout << endl << endl;
+	}
+	time_t sw = clock();
+	pmm.addPatterns(words);
+	sw = clock() -sw;
+	if ( show_machine )
+		cout << pmm << endl << endl;
+	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
 
+	cout << "proceed?" << endl;
+	std::getline(cin, tmp);
 
-	cout << pmm << endl << endl;
-	for ( auto occurr : pmm.search("pappapapayapapapappya") ) {
+	for ( auto occurr : pmm.search("bandman abandond") ) {
 		cout << occurr.second << "@" << occurr.first << "," << endl;
 	}
 	cout << endl;
