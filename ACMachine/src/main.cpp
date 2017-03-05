@@ -22,26 +22,29 @@ int main(const int argc, const char * argv[]) {
 	ifstream ifs;
 	int wordcount_max = 10;
 	bool show_machine = false;
+	bool show_words = false;
 	cout << "Hello World!!!" << endl; // prints Hello World!!!
 	commandargs args(argc, argv);
 
 	pair<bool,const char*> opt;
-	opt = args.getopt("-k");
+	opt = args.getopt("-n");
 	if ( opt.first ) {
 		wordcount_max = atol(opt.second);
 	}
-	opt = args.getopt("-f");
+	opt = args.getopt("-p");
 	if ( opt.first ) {
 		string fname = string(opt.second);
 		ifs.open(fname);
 	}
 	opt = args.getopt("-v");
 	show_machine = opt.first;
+	opt = args.getopt("-w");
+	show_words = opt.first;
 
 
 	acm pmm;
 
-	set<string> words;
+	vector<string> words;
 	istringstream line;
 	string tmp;
 	while ( !ifs.eof() ) {
@@ -53,20 +56,21 @@ int main(const int argc, const char * argv[]) {
 		while ( !line.eof() ) {
 			line >> tmp;
 			if ( words.size() < wordcount_max )
-				words.insert(tmp);
+				words.push_back(tmp);
 		}
 	}
 	ifs.close();
 	cout << "Got " << words.size() << " words: " << endl;
-	if ( show_machine ) {
-		for(auto tmp : words) {
+	if ( show_words ) {
+		for(auto tmp : words)
 			cout << tmp << ", ";
-		}
 		cout << endl << endl;
 	}
 	time_t sw = clock();
 	pmm.addPatterns(words);
-	sw = clock() -sw;
+	sw = clock() - sw;
+
+	words.clear();
 	if ( show_machine )
 		cout << pmm << endl << endl;
 	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
@@ -74,8 +78,18 @@ int main(const int argc, const char * argv[]) {
 	cout << "proceed?" << endl;
 	std::getline(cin, tmp);
 
-	for ( auto occurr : pmm.search("bandman abandond") ) {
-		cout << occurr.second << "@" << occurr.first << "," << endl;
+	string text("bandman abandond");
+	pmm.resetState();
+	position pos = 0;
+	for(auto c : text) {
+		vector<position> occurrences = pmm.scan(c);
+		if ( !occurrences.empty() ) {
+			for(auto occ : occurrences) {
+				cout << occ << ", ";
+			}
+			cout << "@ "<< pos << endl;
+		}
+		pos++;
 	}
 	cout << endl;
 

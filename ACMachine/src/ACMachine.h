@@ -40,7 +40,6 @@ private:
 
 private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
-	bool terminal(state s) const;
 
 public:
 	ACMachine(void);
@@ -81,7 +80,10 @@ public:
 		addFailures();
 	}
 
-	std::vector<std::pair<position,const std::string> > search(const std::string & pattern);
+	std::vector<std::pair<position,const std::string>>
+	search(const std::string & text);
+	std::vector<position>
+	scan(const alphabet & c);
 
 	std::ostream & printOn(std::ostream & out) const;
 

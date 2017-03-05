@@ -195,6 +195,30 @@ std::vector<std::pair<position, const std::string> >
 	return occurrs;
 }
 
+std::vector<position>
+	ACMachine::scan(const alphabet & c) {
+	std::vector<position> occurrs;
+
+	while ( true ) {
+		if ( transfer(c) ) {
+			if ( !output[current].empty() ) {
+				for(std::set<position>::iterator it = output[current].begin();
+						it != output[current].end(); it++) {
+					occurrs.push_back(*it);
+				}
+			}
+			break;
+		} else {
+			// failure loop
+			current = failure[current];
+			if ( current == initialState() )
+				break;
+		}
+	}
+	return occurrs;
+}
+
+
 
 std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::string & pathstr) const {
 	if ( i == current ) {
@@ -224,20 +248,17 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::s
 }
 
 
-bool ACMachine::terminal(state s) const {
-	return transitions[s].empty();
-}
-
 
 std::ostream & ACMachine::printOn(std::ostream & out) const {
 	std::deque<std::map<alphabet,state>::const_iterator> path;
 	state curr;
 	std::string str;
 
-	std::map<alphabet,state> root;
-	root[0] = initialState();
+	std::map<alphabet,state> dummy;
+	dummy[0] = initialState(); // dummy arc to the initial state.
+
 	out << "ACMachine(";
-	path.push_back(root.begin());
+	path.push_back(dummy.begin());
 	curr = initialState();
 	str = "";
 	printStateOn(out,curr,str);
@@ -249,7 +270,6 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 		curr = itr->second;
 	}
 
-	std::map<alphabet,state>::const_iterator itr;
 	while ( !path.empty() ) {
 		if ( curr == path.back()->second ) {
 			// I'm on top.
@@ -259,38 +279,26 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 				str[i] = path[i]->first;
 			}
 			printStateOn(out,curr, str);
-			itr = transitions[curr].begin();
-			if ( itr != transitions[curr].end() ) {
-				path.push_back(itr);
-				curr = itr->second;
-				continue;
-			} else {
-			// if curr has no children, step back by pop, set curr, push the same.
-				itr = path.back();
-				path.pop_back();
-				curr = path.back()->second;
-				path.push_back(itr);
-				continue;
-			}
+			itr = transitions[curr].begin(); // the first transition arc
 		} else {
 			// returned from the child that still on path top.
 			// find next to path.back()
 			itr = path.back();
 			path.pop_back(); // remove last edge
-			++itr;
-			if ( itr != transitions[curr].end()) {
-				path.push_back(itr); // replace with new edge
-				curr = itr->second;
+			++itr; // the next transition arc
+		}
+		if ( itr != transitions[curr].end()) {
+			path.push_back(itr); // replace with new edge
+			curr = itr->second;
+			continue;
+		} else {
+			itr = path.back();
+			path.pop_back();
+			if ( path.empty() ) // popped the dummy path to the initial state.
 				continue;
-			} else {
-				itr = path.back();
-				path.pop_back();
-				if ( path.empty() )
-					continue;
-				curr = path.back()->second;
-				path.push_back(itr);
-				continue;
-			}
+			curr = path.back()->second;
+			path.push_back(itr);
+			continue;
 		}
 	}
 
