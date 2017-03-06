@@ -36,8 +36,10 @@ private:
 	state current;
 
 // class constants
-
 	const static state initial_state = 0;
+
+private:
+	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
 
 public:
 	ACMachine(void);
@@ -47,11 +49,11 @@ public:
 	uint32 size() const { return transitions.size(); }
 
 	bool transfer(const alphabet & c);
-	state transition(const state s, const alphabet c);
+//	state transition(const state s, const alphabet c);
 
 	state resetState() { return current = initial_state; }
-	state currentState() { return current; }
-	state initialState() { return initial_state; }
+	state currentState() const { return current; }
+	state initialState() const { return initial_state; }
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>
@@ -78,7 +80,10 @@ public:
 		addFailures();
 	}
 
-	std::vector<std::pair<position,const std::string> > search(const std::string & pattern);
+	std::vector<std::pair<position,const std::string>>
+	search(const std::string & text);
+	std::vector<position>
+	scan(const alphabet & c);
 
 	std::ostream & printOn(std::ostream & out) const;
 

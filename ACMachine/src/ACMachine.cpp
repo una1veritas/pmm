@@ -35,7 +35,7 @@ void ACMachine::setupInitialState(void) {
 	output[initialState()].clear();
 }
 
-
+/*
 ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 	state dst = failure[src];
 	const std::map<alphabet,state>::iterator & itr = transitions[src].find(c);
@@ -43,6 +43,7 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 		dst = itr->second;
 	return dst;
 }
+*/
 
 bool ACMachine::transfer(const alphabet & c) {
 	std::map<alphabet,state>::iterator itr = transitions[current].find(c);
@@ -194,33 +195,113 @@ std::vector<std::pair<position, const std::string> >
 	return occurrs;
 }
 
+std::vector<position>
+	ACMachine::scan(const alphabet & c) {
+	std::vector<position> occurrs;
+
+	while ( true ) {
+		if ( transfer(c) ) {
+			if ( !output[current].empty() ) {
+				for(std::set<position>::iterator it = output[current].begin();
+						it != output[current].end(); it++) {
+					occurrs.push_back(*it);
+				}
+			}
+			break;
+		} else {
+			// failure loop
+			current = failure[current];
+			if ( current == initialState() )
+				break;
+		}
+	}
+	return occurrs;
+}
+
+
+
+std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::string & pathstr) const {
+	if ( i == current ) {
+		out << "<" << i << ">";
+	} else {
+		out << i;
+	}
+	if ( output[i].size() > 0 ) {
+		out << "{";
+		for(std::set<position>::iterator it = output[i].begin();
+				it != output[i].end(); ) {
+			out << pathstr.substr(pathstr.length() - *it, *it);
+			if ( ++it != output[i].end() )
+				out << ", ";
+		}
+		out << "}";
+	}
+	out << "[";
+	for(std::map<alphabet,state>::const_iterator it = transitions[i].begin();
+			it != transitions[i].end(); it++) {
+		out << "'" << (char)it->first << "'-> " << it->second << ", ";
+	}
+	out << "~> " << failure[i];
+	out << "], ";
+
+	return out;
+}
+
+
 
 std::ostream & ACMachine::printOn(std::ostream & out) const {
+	std::deque<std::map<alphabet,state>::const_iterator> path;
+	state curr;
+	std::string str;
+
+	std::map<alphabet,state> dummy;
+	dummy[0] = initialState(); // dummy arc to the initial state.
+
 	out << "ACMachine(";
-	for(state i = 0; i < size(); ++i ) {
-		if ( i == current ) {
-			out << "<" << i << ">";
-		} else {
-			out << i;
-		}
-		if ( output[i].size() > 0 ) {
-			out << "{";
-			for(std::set<position>::iterator it = output[i].begin();
-					it != output[i].end(); ) {
-				out << *it;
-				if ( ++it != output[i].end() )
-					out << ", ";
-			}
-			out << "}";
-		}
-		out << "[";
-		for(std::map<alphabet,state>::const_iterator it = transitions[i].begin();
-				it != transitions[i].end(); it++) {
-			out << "'" << (char)it->first << "'-> " << it->second << ", ";
-		}
-		out << "~> " << failure[i];
-		out << "], ";
+	path.push_back(dummy.begin());
+	curr = initialState();
+	str = "";
+	printStateOn(out,curr,str);
+
+	std::map<alphabet,state>::const_iterator itr;
+	itr = transitions[curr].begin();
+	if ( itr != transitions[curr].end() ) {
+		path.push_back(itr);
+		curr = itr->second;
 	}
+
+	while ( !path.empty() ) {
+		if ( curr == path.back()->second ) {
+			// I'm on top.
+			// print curr, then go to the first child if exist
+			str.resize(path.size());
+			for(int i = 0; i < path.size(); i++) {
+				str[i] = path[i]->first;
+			}
+			printStateOn(out,curr, str);
+			itr = transitions[curr].begin(); // the first transition arc
+		} else {
+			// returned from the child that still on path top.
+			// find next to path.back()
+			itr = path.back();
+			path.pop_back(); // remove last edge
+			++itr; // the next transition arc
+		}
+		if ( itr != transitions[curr].end()) {
+			path.push_back(itr); // replace with new edge
+			curr = itr->second;
+			continue;
+		} else {
+			itr = path.back();
+			path.pop_back();
+			if ( path.empty() ) // popped the dummy path to the initial state.
+				continue;
+			curr = path.back()->second;
+			path.push_back(itr);
+			continue;
+		}
+	}
+
 	out << ") ";
 	return out;
 }
