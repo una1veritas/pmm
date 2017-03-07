@@ -167,14 +167,14 @@ std::vector<std::pair<position, const std::string> >
 	resetState();
 	uring.clear();
 	while ( pos < text.size() ) {
-		uring.push_back(text[pos]);
 		if ( transfer(text[pos]) ) {
+			uring.push_back(text[pos]);
 			if ( !output[current].empty() ) {
 				for(std::set<position>::iterator it = output[current].begin();
 						it != output[current].end(); it++) {
 					const position patlen = *it;
 					std::string patt(patlen, ' ');
-					for(int i = 0; i < patlen; i++) {
+					for(position i = 0; i < patlen; i++) {
 						patt[i] = uring.at(uring.size() - patlen + i);
 					}
 					occurrs.push_back(std::pair<position,const std::string>(pos + *it + 1, patt));
@@ -186,6 +186,7 @@ std::vector<std::pair<position, const std::string> >
 			current = failure[current];
 			if ( current == initialState() ) {
 				pos++;
+				//uring.push_back(text[pos]);
 				uring.clear();
 			} else {
 				uring.pop_front();
@@ -195,27 +196,13 @@ std::vector<std::pair<position, const std::string> >
 	return occurrs;
 }
 
-std::vector<position>
-	ACMachine::scan(const alphabet & c) {
-	std::vector<position> occurrs;
-
-	while ( true ) {
-		if ( transfer(c) ) {
-			if ( !output[current].empty() ) {
-				for(std::set<position>::iterator it = output[current].begin();
-						it != output[current].end(); it++) {
-					occurrs.push_back(*it);
-				}
-			}
-			break;
-		} else {
-			// failure loop
-			current = failure[current];
-			if ( current == initialState() )
-				break;
-		}
-	}
-	return occurrs;
+bool ACMachine::read(const alphabet & c) {
+	do {
+		if ( transfer(c) )
+			return true;
+		current = failure[current];
+	} while ( current != initialState() );
+	return false;
 }
 
 
@@ -275,7 +262,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			// I'm on top.
 			// print curr, then go to the first child if exist
 			str.resize(path.size());
-			for(int i = 0; i < path.size(); i++) {
+			for(position i = 0; i < path.size(); i++) {
 				str[i] = path[i]->first;
 			}
 			printStateOn(out,curr, str);

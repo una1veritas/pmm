@@ -75,19 +75,26 @@ int main(const int argc, const char * argv[]) {
 		cout << pmm << endl << endl;
 	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
 
-	cout << "proceed?" << endl;
-	std::getline(cin, tmp);
+	//cout << "proceed?" << endl;
+	//std::getline(cin, tmp);
 
 	string text("bandman abandond");
 	pmm.resetState();
 	position pos = 0;
+	string strwd = "";
 	for(auto c : text) {
-		vector<position> occurrences = pmm.scan(c);
-		if ( !occurrences.empty() ) {
-			for(auto occ : occurrences) {
-				cout << occ << ", ";
+		strwd.push_back(c);
+		if ( pmm.read(c) ) {
+			//cout << strwd << endl;
+			if ( !pmm.currentOutput().empty() ) {
+				for(auto pattlen : pmm.currentOutput()) {
+					cout << strwd.substr(strwd.length() - pattlen , pattlen) << " @ " << (pos - pattlen + 1) << ", ";
+				}
+				cout << endl;
 			}
-			cout << "@ "<< pos << endl;
+		} else {
+			//cout << "initial state" << endl;
+			strwd.clear();
 		}
 		pos++;
 	}

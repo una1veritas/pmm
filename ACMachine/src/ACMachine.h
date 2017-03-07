@@ -55,6 +55,10 @@ public:
 	state currentState() const { return current; }
 	state initialState() const { return initial_state; }
 
+	bool atInitialState() const { return current == initial_state; }
+
+	const std::set<position> & currentOutput() const { return output[current]; }
+
 	// add patt to the trie and output of the destination state.
 	template <typename T>
 		state addPath(const T & patt, const uint32 & length);
@@ -82,8 +86,7 @@ public:
 
 	std::vector<std::pair<position,const std::string>>
 	search(const std::string & text);
-	std::vector<position>
-	scan(const alphabet & c);
+	bool read(const alphabet & c);
 
 	std::ostream & printOn(std::ostream & out) const;
 
