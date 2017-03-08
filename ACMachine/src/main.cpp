@@ -18,28 +18,55 @@ using namespace std;
 
 #include <time.h>
 
-int main(const int argc, const char * argv[]) {
+int main(const int argc, char * const * argv) {
 	ifstream ifs;
 	int wordcount_max = 10;
 	bool show_machine = false;
 	bool show_words = false;
+	bool ignore_case = false;
+	string target;
+	ifstream targetfile;
+	istream * targetinput;
+
 	cout << "Hello World!!!" << endl; // prints Hello World!!!
-	commandargs args(argc, argv);
+	commandargs optargs(argc, argv, "n:p:Cvw");
 
 	pair<bool,const char*> opt;
-	opt = args.getopt("-n");
+	opt = optargs.getopt('n');
 	if ( opt.first ) {
 		wordcount_max = atol(opt.second);
+		cout << "wordcount_max = " << wordcount_max << endl;
 	}
-	opt = args.getopt("-p");
+	opt = optargs.getopt('p');
 	if ( opt.first ) {
 		string fname = string(opt.second);
+		cout << "fname = " << fname << endl;
 		ifs.open(fname);
 	}
-	opt = args.getopt("-v");
+	opt = optargs.getopt('C');
+	ignore_case = opt.first;
+	cout << "ignore case = " << ignore_case << endl;
+	opt = optargs.getopt('v');
 	show_machine = opt.first;
-	opt = args.getopt("-w");
+	cout << "show_machine = " << show_machine << endl;
+	opt = optargs.getopt('w');
 	show_words = opt.first;
+	cout << "show_words = " << show_words << endl;
+	opt = optargs.getopt( static_cast<const char>(NULL), 0);
+	if ( opt.first ) {
+		target = opt.second;
+		cout << "target = " << target << endl;
+		targetfile.open(target);
+		if ( !targetfile ) {
+			cerr << "open file " << target << " failed." << endl;
+			if ( ifs ) ifs.close();
+			return EXIT_FAILURE;
+		}
+		targetinput = &targetfile;
+	} else {
+		cout << "treats standard input as target." << endl;
+		targetinput = &cin;
+	}
 
 
 	acm pmm;
@@ -78,13 +105,14 @@ int main(const int argc, const char * argv[]) {
 	//cout << "proceed?" << endl;
 	//std::getline(cin, tmp);
 
-	string text("bandman abandond");
 	pmm.resetState();
 	position pos = 0;
 	string strwd = "";
-	for(auto c : text) {
+	ACMachine::alphabet c;
+	while ( !targetinput->eof() ) {
+		c = targetinput->get();
 		strwd.push_back(c);
-		if ( pmm.read(c) ) {
+		if ( pmm.read(c, ignore_case) ) {
 			//cout << strwd << endl;
 			if ( !pmm.currentOutput().empty() ) {
 				for(auto pattlen : pmm.currentOutput()) {
@@ -99,6 +127,8 @@ int main(const int argc, const char * argv[]) {
 		pos++;
 	}
 	cout << endl;
+
+	if ( targetfile ) targetfile.close();
 
 	cout << "bye." << endl << endl;
 	return 0;

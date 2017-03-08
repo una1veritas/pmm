@@ -41,19 +41,22 @@ private:
 private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
 
+	void setupInitialState(void);
+
+	bool transfer(const alphabet & c, const bool ignore_case = false);
+//	state transition(const state s, const alphabet c);
+
+	state initialState() const { return initial_state; }
+
 public:
 	ACMachine(void);
 
-	void setupInitialState(void);
 
 	uint32 size() const { return transitions.size(); }
 
-	bool transfer(const alphabet & c);
-//	state transition(const state s, const alphabet c);
 
 	state resetState() { return current = initial_state; }
 	state currentState() const { return current; }
-	state initialState() const { return initial_state; }
 
 	bool atInitialState() const { return current == initial_state; }
 
@@ -86,7 +89,7 @@ public:
 
 	std::vector<std::pair<position,const std::string>>
 	search(const std::string & text);
-	bool read(const alphabet & c);
+	bool read(const alphabet & c, const bool ignore_case = false);
 
 	std::ostream & printOn(std::ostream & out) const;
 

@@ -9,6 +9,8 @@
 
 #include <deque>
 
+#include <cctype>
+
 /*
 	std::set<std::string> patterns;
 	std::vector<std::map<alphabet,state>> transitions;
@@ -45,8 +47,15 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 }
 */
 
-bool ACMachine::transfer(const alphabet & c) {
-	std::map<alphabet,state>::iterator itr = transitions[current].find(c);
+bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
+	std::map<alphabet,state>::iterator itr;
+	if ( ignore_case ) {
+		itr = transitions[current].find(toupper(c));
+		if ( itr == transitions[current].end() )
+			itr = transitions[current].find(tolower(c));
+	} else {
+		itr = transitions[current].find(c);
+	}
 	if ( itr == transitions[current].end() ) {
 		return false;
 	}
@@ -196,9 +205,9 @@ std::vector<std::pair<position, const std::string> >
 	return occurrs;
 }
 
-bool ACMachine::read(const alphabet & c) {
+bool ACMachine::read(const alphabet & c, const bool ignore_case) {
 	do {
-		if ( transfer(c) )
+		if ( transfer(c, ignore_case) )
 			return true;
 		current = failure[current];
 	} while ( current != initialState() );
