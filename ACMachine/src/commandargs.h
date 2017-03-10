@@ -8,46 +8,30 @@
 #ifndef COMMANDARGS_H_
 #define COMMANDARGS_H_
 
+#include <vector>
+#include <map>
 
 #include <cstdlib>
 #include <cstring>
 
-#include <unistd.h>
-
-using namespace std;
-
-
 struct commandargs {
-	char * const *argv;
-	const int argc;
-	const char * optformat;
+public:
+	std::map<const char, const char *> opts;
+	std::vector<const char *> args;
 
-	commandargs(const int argc, char * const * argv, const char * formstr)
-	: argv(argv), argc(argc), optformat(formstr) { }
-
-	int count() const { return argc - 1; }
-	const char * arg(const unsigned int i) const {
-		if ( i < count() )
-			return argv[i+1];
-		return NULL;
+	commandargs(const int argc, char * const * argv, const char * optstr)
+			: opts(), args() {
+		getopt(argc, argv, optstr);
 	}
 
-	std::pair<bool,const char*> getopt(const char opt, const unsigned int item = 0) {
-		char c;
-	    opterr = 0; //getopt()のエラーメッセージを無効にする。
-	    optind = 1;
-	    while ((c = ::getopt(argc, argv, optformat)) != -1) {
-	        //コマンドライン引数のオプションがなくなるまで繰り返す
-	    	if ( c == opt ) {
-	    		return std::pair<bool,const char*>(true,optarg);
-	    	}
-	    }
-	    for(unsigned int i = 0; optind + i < argc; ++i) {
-	    	if ( i == item )
-	    		return std::pair<bool,const char*>(true,argv[optind+i]);
-	    }
-		return std::pair<bool,const char*>(false,NULL);
-	}
+private:
+	void getopt(const int argc, char * const * argv, const char * optstr);
+
+public:
+	int arg_count() const { return args.size(); }
+	int opt_count() const { return opts.size(); }
+	std::pair<bool,const char*> opt(const char c) const;
+	const char * arg(const int i) const { return args[i]; }
 };
 
 #endif /* COMMANDARGS_H_ */

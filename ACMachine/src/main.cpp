@@ -20,7 +20,7 @@ using namespace std;
 
 int main(const int argc, char * const * argv) {
 	ifstream ifs;
-	int wordcount_max = 10;
+	int wordcount_max = 0;
 	bool show_machine = false;
 	bool show_words = false;
 	bool ignore_case = false;
@@ -28,46 +28,45 @@ int main(const int argc, char * const * argv) {
 	ifstream targetfile;
 	istream * targetinput;
 
-	cout << "Hello World!!!" << endl; // prints Hello World!!!
-	commandargs optargs(argc, argv, "n:p:Cvw");
+	commandargs optargs(argc, argv, "n:p:ivw");
 
 	pair<bool,const char*> opt;
-	opt = optargs.getopt('n');
+	opt = optargs.opt('n');
 	if ( opt.first ) {
 		wordcount_max = atol(opt.second);
-		cout << "wordcount_max = " << wordcount_max << endl;
+		cout << "wordcount_max = " << wordcount_max << ", ";
 	}
-	opt = optargs.getopt('p');
+	opt = optargs.opt('p');
 	if ( opt.first ) {
 		string fname = string(opt.second);
-		cout << "fname = " << fname << endl;
+		cout << "fname (pattern file) = " << fname << ", ";
 		ifs.open(fname);
 	}
-	opt = optargs.getopt('C');
+	opt = optargs.opt('i');
 	ignore_case = opt.first;
-	cout << "ignore case = " << ignore_case << endl;
-	opt = optargs.getopt('v');
+	cout << "ignore case = " << ignore_case << ", ";
+	opt = optargs.opt('v');
 	show_machine = opt.first;
-	cout << "show_machine = " << show_machine << endl;
-	opt = optargs.getopt('w');
+	cout << "show_machine = " << show_machine << ", ";
+	opt = optargs.opt('w');
 	show_words = opt.first;
-	cout << "show_words = " << show_words << endl;
-	opt = optargs.getopt( static_cast<const char>(NULL), 0);
-	if ( opt.first ) {
-		target = opt.second;
-		cout << "target = " << target << endl;
+	cout << "show_words = " << show_words << ", ";
+	if ( optargs.arg_count() == 0 ) {
+		cout << "targetinput = cin" << ", ";
+		targetinput = &cin;
+	} else {
+		target = optargs.arg(0);
+		cout << "targetinput (file name) = " << target;
 		targetfile.open(target);
 		if ( !targetfile ) {
-			cerr << "open file " << target << " failed." << endl;
+			cerr << "open file " << target << " failed!" << endl;
 			if ( ifs ) ifs.close();
 			return EXIT_FAILURE;
 		}
+		cout << ", ";
 		targetinput = &targetfile;
-	} else {
-		cout << "treats standard input as target." << endl;
-		targetinput = &cin;
 	}
-
+	cout << endl;
 
 	acm pmm;
 
@@ -82,7 +81,7 @@ int main(const int argc, char * const * argv) {
 		line.clear();
 		while ( !line.eof() ) {
 			line >> tmp;
-			if ( words.size() < wordcount_max )
+			if ( wordcount_max == 0 || words.size() < wordcount_max )
 				words.push_back(tmp);
 		}
 	}
@@ -107,22 +106,22 @@ int main(const int argc, char * const * argv) {
 
 	pmm.resetState();
 	position pos = 0;
-	string strwd = "";
+	string swindow = "";
 	ACMachine::alphabet c;
 	while ( !targetinput->eof() ) {
 		c = targetinput->get();
-		strwd.push_back(c);
+		swindow.push_back(c);
 		if ( pmm.read(c, ignore_case) ) {
 			//cout << strwd << endl;
 			if ( !pmm.currentOutput().empty() ) {
 				for(auto pattlen : pmm.currentOutput()) {
-					cout << strwd.substr(strwd.length() - pattlen , pattlen) << " @ " << (pos - pattlen + 1) << ", ";
+					cout << swindow.substr(swindow.length() - pattlen , pattlen) << " @ " << (pos - pattlen + 1) << ", ";
 				}
 				cout << endl;
 			}
 		} else {
 			//cout << "initial state" << endl;
-			strwd.clear();
+			swindow.clear();
 		}
 		pos++;
 	}

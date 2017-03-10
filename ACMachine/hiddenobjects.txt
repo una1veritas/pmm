@@ -1,5 +1,6 @@
 ace
 adhesive
+alarm clock
 anchor
 army
 arrow
@@ -9,11 +10,13 @@ ball
 baloon
 bat
 beads
+beetle
 bear
 bell
 bells
 billard
 binoculars
+blue flower
 bone
 book
 boot
@@ -43,6 +46,7 @@ doll
 dollar
 dumbbell
 elephant
+epee
 eyepatch eye patch
 feather
 figure
@@ -65,6 +69,7 @@ hammer
 hand
 handbag
 handcuffs
+handprint
 hanger
 hare
 harp
@@ -87,6 +92,7 @@ magnet
 medal
 microscope
 mirror
+manhole
 moon
 mortar and pestle
 mouse
@@ -102,8 +108,10 @@ pipe
 poison
 prize
 purse
+purple diamond
 rat
 record
+rhombus
 ribbon
 ring
 rod
@@ -127,6 +135,7 @@ tambourine
 tape
 thread
 tiara
+ticket
 timer
 trumpet
 tray
