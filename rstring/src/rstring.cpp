@@ -16,16 +16,24 @@
 
 unsigned int get_alphabet(unsigned char alphabet[], const int argc, char * ptr[]);
 int get_int(const int argc, char *argv[], const char * opt, const int defval) ;
+double get_fp(const int argc, char *argv[], const char * opt, const double defval) ;
 
 int main(const int argc, char * argv[]) {
 	unsigned char alphabet[256+1];
 	unsigned int alph_size;
-	unsigned int max_length, mode_length, outnum, distwidth;
+	unsigned int max_length, mode_length, outnum;
+	double distwidth;
+
+	if ( argc == 1 ) {
+		std::cout << "usage: rstring -a alphabet -n number_of_strings -l max_length -m median_length -w distribution_width"
+				<< std::endl << std::endl;
+		return 0;
+	}
 	alph_size = get_alphabet(alphabet, argc, argv);
 	max_length = get_int(argc, argv, "-l", 32);
 	mode_length = get_int(argc, argv, "-m", max_length*3/5);
 	outnum = get_int(argc, argv, "-n", 1000);
-	distwidth = get_int(argc, argv, "-w", 4);
+	distwidth = get_fp(argc, argv, "-w", 4);
 
 	std::random_device rdev;
 	std::mt19937 mt(rdev()), mt_len(rdev()), mt_rand(rdev());
@@ -76,7 +84,7 @@ unsigned int get_alphabet(unsigned char alph[], const int argc, char *argv[]) {
 }
 
 int get_int(const int argc, char *argv[], const char * opt, const int defval) {
-	int length = defval;
+	int value = defval;
 	char * argptr = NULL;
 	unsigned int argpos;
 	for(argpos = 1; argpos < argc; argpos++) {
@@ -91,6 +99,26 @@ int get_int(const int argc, char *argv[], const char * opt, const int defval) {
 		break;
 	}
 	if ( argptr != NULL )
-		length = atoi(argptr);
-	return length;
+		value = atoi(argptr);
+	return value;
+}
+
+double get_fp(const int argc, char *argv[], const char * opt, const double defval) {
+	int value = defval;
+	char * argptr = NULL;
+	unsigned int argpos;
+	for(argpos = 1; argpos < argc; argpos++) {
+		if ( strncmp(argv[argpos], opt, 2) )
+			continue;
+		if ( strlen(argv[argpos]+2) == 0 ) {
+			if ( (argpos+1 < argc) && (argv[argpos+1] != NULL) )
+				argptr = argv[++argpos];
+		} else {
+			argptr = argv[argpos]+2;
+		}
+		break;
+	}
+	if ( argptr != NULL )
+		value = atof(argptr);
+	return value;
 }
