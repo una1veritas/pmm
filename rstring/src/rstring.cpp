@@ -38,7 +38,7 @@ int main(const int argc, char * argv[]) {
 	std::random_device rdev;
 	std::mt19937 mt(rdev()), mt_len(rdev()), mt_rand(rdev());
 	std::uniform_int_distribution<unsigned char> ralph(0,alph_size);
-	std::uniform_int_distribution<unsigned int> rlength(1,32);
+	std::uniform_int_distribution<unsigned int> rlength(1,max_length);
 	std::uniform_real_distribution<double> random(0,1.0);
 
 	for(int i = 0; i < outnum; ) {
@@ -46,9 +46,13 @@ int main(const int argc, char * argv[]) {
 		double pr = 1/(2.5f*distwidth)*exp(-pow((double)rlen - (double)mode_length,2)/pow(2*distwidth,2));
 		if ( random(mt_rand) > pr )
 			continue;
+		if ( rlen == 1 )
+			std::cout << "!";
+		std::cout << "'";
 		for(int l = 0; l < rlen; l++) {
 			std::cout << alphabet[ralph(mt)];
 		}
+		std::cout << "'";
 		++i;
 		std::cout << std::endl;
 	}
