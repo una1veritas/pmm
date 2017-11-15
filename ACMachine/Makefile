@@ -8,10 +8,9 @@ CXXFLAGS = -Wall -g
 INCDIRS = -I./
 
 INCLUDES = ACMachine.h
-OBJS = ACMachine.o main.o
+OBJS = ACMachine.o cmdargs.o main.o
 LIBS = 
 TARGET = acm.exe
-
 
 %.o: %.c $(INCLUDES)
 	$(CC) $(CCFLAGS) $(INCDIRS) -c $<

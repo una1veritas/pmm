@@ -5,15 +5,16 @@
  *      Author: sin
  */
 
+#include "cmdargs.h"
+
 #include <unistd.h>
 /*
  * int getopt(int argc, char * const argv[], const char *optstring);
  * extern char *optarg;
  * extern int optind, opterr, optopt;
  */
-#include "commandargs.h"
 
-void commandargs::getopt(const int argc, char * const * argv, const char * optstr) {
+void cmdargs::getopt(const int argc, char * const * argv, const char * optstr) {
 	char c;
 	opterr = 0; //getopt()のエラーメッセージを無効にする。
 	while ((c = ::getopt(argc, argv, optstr)) != -1) {
@@ -25,7 +26,7 @@ void commandargs::getopt(const int argc, char * const * argv, const char * optst
 	}
 }
 
-std::pair<bool,const char*> commandargs::opt(const char c) const {
+std::pair<bool,const char*> cmdargs::opt(const char c) const {
 	std::map<const char, const char *>::const_iterator itr = opts.find(c);
 	if ( itr == opts.end() )
 		return std::pair<bool,const char*>(false,NULL);
