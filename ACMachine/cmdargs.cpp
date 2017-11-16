@@ -11,7 +11,8 @@
  * extern char *optarg;
  * extern int optind, opterr, optopt;
  */
-#include "commandargs.h"
+
+#include "cmdargs.h"
 
 void commandargs::getopt(const int argc, char * const * argv, const char * optstr) {
 	char c;

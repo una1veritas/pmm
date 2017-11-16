@@ -5,8 +5,8 @@
  *      Author: sin
  */
 
-#ifndef COMMANDARGS_H_
-#define COMMANDARGS_H_
+#ifndef CMDARGS_H_
+#define CMDARGS_H_
 
 #include <vector>
 #include <map>
@@ -34,4 +34,4 @@ public:
 	const char * arg(const int i) const { return args[i]; }
 };
 
-#endif /* COMMANDARGS_H_ */
+#endif /* CMDARGS_H_ */

@@ -14,7 +14,7 @@
 using namespace std;
 
 #include "ACMachine.h"
-#include "commandargs.h"
+#include <cmdargs.h>
 
 #include <time.h>
 
