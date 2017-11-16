@@ -14,7 +14,7 @@
 using namespace std;
 
 #include "ACMachine.h"
-#include <cmdargs.h>
+#include "commandargs.h"
 
 #include <time.h>
 
@@ -28,7 +28,7 @@ int main(const int argc, char * const * argv) {
 	ifstream targetfile;
 	istream * targetinput;
 
-	cmdargs optargs(argc, argv, "n:p:ivw");
+	commandargs optargs(argc, argv, "n:p:ivw");
 
 	pair<bool,const char*> opt;
 	opt = optargs.opt('n');

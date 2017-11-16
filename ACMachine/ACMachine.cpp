@@ -28,7 +28,7 @@ ACMachine::ACMachine(void) {
 
 void ACMachine::setupInitialState(void) {
 	transitions.clear();
-	transitions.push_back(transtable);
+	transitions.push_back(std::map<alphabet,state>());
 	failure.clear();
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.

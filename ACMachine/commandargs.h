@@ -5,8 +5,8 @@
  *      Author: sin
  */
 
-#ifndef CMDARGS_H_
-#define CMDARGS_H_
+#ifndef COMMANDARGS_H_
+#define COMMANDARGS_H_
 
 #include <vector>
 #include <map>
@@ -14,12 +14,12 @@
 #include <cstdlib>
 #include <cstring>
 
-struct cmdargs {
+struct commandargs {
 public:
 	std::map<const char, const char *> opts;
 	std::vector<const char *> args;
 
-	cmdargs(const int argc, char * const * argv, const char * optstr)
+	commandargs(const int argc, char * const * argv, const char * optstr)
 			: opts(), args() {
 		getopt(argc, argv, optstr);
 	}
@@ -34,4 +34,4 @@ public:
 	const char * arg(const int i) const { return args[i]; }
 };
 
-#endif /* CMDARGS_H_ */
+#endif /* COMMANDARGS_H_ */

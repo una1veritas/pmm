@@ -16,21 +16,20 @@
 
 #include <cinttypes>
 
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
 typedef int32_t int32;
+typedef uint32_t uint32;
+typedef uint16_t uint16;
 typedef size_t position;
 
 class ACMachine {
 public:
 	typedef uint32 state;
-	typedef uint8 alphabet;
+	typedef uint16 alphabet;
 
 	typedef const std::vector<alphabet> ustring;
-	typedef state transtable[sizeof(alphabet)];
+
 private:
-	std::vector<transtable> transitions;
+	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
