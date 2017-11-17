@@ -23,67 +23,52 @@ typedef size_t position;
 
 class ACMachine {
 public:
-	typedef uint32 stateIndex;
+	typedef uint32 state;
 	typedef uint16 alphabet;
 
 	typedef const std::vector<alphabet> ustring;
 
 private:
-	struct MachineState {
-		stateIndex id;
-		std::map<alphabet,stateIndex> transitions;
-		stateIndex failure;
-		std::set<position> output;
-
-		MachineState(void) {
-			id = 0;
-			transitions.clear();
-			failure = initial_state;
-			output.clear();
-		}
-	};
-	std::vector<MachineState> states;
-	/*
 	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
-	*/
-	stateIndex current;
+
+	state current;
 
 // class constants
-	const static stateIndex initial_state = 0;
+	const static state initial_state = 0;
 
 private:
-	std::ostream & printStateOn(std::ostream & out, stateIndex i, const std::string & pathstr) const;
+	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
 
 	void setupInitialState(void);
 
 	bool transfer(const alphabet & c, const bool ignore_case = false);
 //	state transition(const state s, const alphabet c);
 
-	stateIndex initialState() const { return initial_state; }
+	state initialState() const { return initial_state; }
 
 public:
 	ACMachine(void);
 
 
-	uint32 size() const { return states.size(); }
+	uint32 size() const { return transitions.size(); }
 
 
-	stateIndex resetState() { return current = initial_state; }
-	stateIndex currentState() const { return current; }
+	state resetState() { return current = initial_state; }
+	state currentState() const { return current; }
 
 	bool atInitialState() const { return current == initial_state; }
 
-	const std::set<position> & currentOutput() const { return states[current].output; }
+	const std::set<position> & currentOutput() const { return output[current]; }
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>
-		stateIndex addPath(const T & patt, const uint32 & length);
+		state addPath(const T & patt, const uint32 & length);
 	template <typename T>
-		stateIndex addPath(const T patt[]);
+		state addPath(const T patt[]);
 	template <typename T>
-		stateIndex addPath(const T & patt);
+		state addPath(const T & patt);
 
 	template <typename T>
 		bool addOutput(const T & patt);
