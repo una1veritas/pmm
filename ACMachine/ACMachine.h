@@ -16,6 +16,7 @@
 
 #include <cinttypes>
 
+typedef uint8_t uint8;
 typedef int32_t int32;
 typedef uint32_t uint32;
 typedef uint16_t uint16;
@@ -28,16 +29,22 @@ public:
 
 	typedef const std::vector<alphabet> ustring;
 
+	// class constants
+		const static stateIndex initial_state = 0;
+
 private:
 	struct MachineState {
 		stateIndex id;
-		std::map<alphabet,stateIndex> transitions;
+		stateIndex transitions[ 1<<8 ];
 		stateIndex failure;
 		std::set<position> output;
 
-		MachineState(void) {
-			id = 0;
-			transitions.clear();
+		static const stateIndex trans_fail = initial_state;
+		static const alphabet alph_limit = (1<<8) - 1;
+		MachineState(const stateIndex sindex) {
+			id = sindex;
+			for(alphabet c = 0; c < alph_limit; ++c)
+				transitions[c] = trans_fail;
 			failure = initial_state;
 			output.clear();
 		}
@@ -49,9 +56,6 @@ private:
 	std::vector<std::set<position> > output;
 	*/
 	stateIndex current;
-
-// class constants
-	const static stateIndex initial_state = 0;
 
 private:
 	std::ostream & printStateOn(std::ostream & out, stateIndex i, const std::string & pathstr) const;
