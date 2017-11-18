@@ -109,7 +109,7 @@ int get_int(const int argc, char *argv[], const char * opt, const int defval) {
 }
 
 double get_fp(const int argc, char *argv[], const char * opt, const double defval) {
-	int value = defval;
+	double value = defval;
 	char * argptr = NULL;
 	unsigned int argpos;
 	for(argpos = 1; argpos < argc; argpos++) {

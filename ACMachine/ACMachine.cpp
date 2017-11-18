@@ -244,57 +244,61 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::s
 }
 
 
-
 std::ostream & ACMachine::printOn(std::ostream & out) const {
-	std::deque<std::map<alphabet,state>::const_iterator> path;
+	std::deque<std::pair<alphabet,state> > path;
 	state curr;
 	std::string str;
 
-	std::map<alphabet,state> dummy;
-	dummy[0] = initialState(); // dummy arc to the initial state.
-
+	// dummy arc to the initial state (from nothing).
+	std::pair<alphabet,state> dummy(alph_end,initial_state);
 	out << "ACMachine(";
-	path.push_back(dummy.begin());
-	curr = initialState();
+	path.push_back(dummy);
+	curr = initial_state;
 	str = "";
-	printStateOn(out,curr,str);
+	//printStateOn(out,curr,str);
 
-	std::map<alphabet,state>::const_iterator itr;
-	itr = transitions[curr].begin();
-	if ( itr != transitions[curr].end() ) {
-		path.push_back(itr);
-		curr = itr->second;
-	}
-
+	alphabet nextlabel;
 	while ( !path.empty() ) {
-		if ( curr == path.back()->second ) {
+		if ( curr == path.back().second ) {
 			// I'm on top.
 			// print curr, then go to the first child if exist
 			str.resize(path.size());
 			for(position i = 0; i < path.size(); i++) {
-				str[i] = path[i]->first;
+				str[i] = path[i].first;
 			}
 			printStateOn(out,curr, str);
-			itr = transitions[curr].begin(); // the first transition arc
+			; // the first transition arc
+			if ( transitions[curr].begin() != transitions[curr].end() ) {
+				nextlabel = transitions[curr].begin()->first;
+			} else {
+				nextlabel = alph_end;
+			}
 		} else {
 			// returned from the child that still on path top.
 			// find next to path.back()
-			itr = path.back();
+			nextlabel = path.back().first;
 			path.pop_back(); // remove last edge
-			++itr; // the next transition arc
+			curr = path.back().second;
+			std::map<alphabet,state>::const_iterator it = transitions[curr].find(nextlabel);
+			++it;
+			// the next transition arc
+			if ( it != transitions[curr].end() ) {
+				nextlabel = it->first;
+			} else {
+				nextlabel = alph_end;
+			}
 		}
-		if ( itr != transitions[curr].end()) {
-			path.push_back(itr); // replace with new edge
-			curr = itr->second;
-			continue;
+		if ( nextlabel != alph_end ) {
+			state nexstate = transitions[curr].find(nextlabel)->second;
+			path.push_back(std::pair<alphabet,state>(nextlabel,nexstate)); // replace with new edge
+			curr = nexstate;
 		} else {
-			itr = path.back();
+			std::pair<alphabet,state> aspair = path.back();
 			path.pop_back();
 			if ( path.empty() ) // popped the dummy path to the initial state.
-				continue;
-			curr = path.back()->second;
-			path.push_back(itr);
-			continue;
+				break;
+			curr = path.back().second;
+			path.push_back(aspair);
 		}
 	}
 

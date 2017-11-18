@@ -100,7 +100,7 @@ int main(const int argc, char * const * argv) {
 	if ( show_machine )
 		cout << pmm << endl << endl;
 	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
-
+	cout << "acmachine " << pmm.size() << " states." << endl;
 	//cout << "proceed?" << endl;
 	//std::getline(cin, tmp);
 

@@ -36,7 +36,14 @@ private:
 	state current;
 
 // class constants
-	const static state initial_state = 0;
+	enum {
+		alph_start = 0,
+		alph_end = 0xffff,
+	};
+	enum {
+		initial_state = 0,
+		failure_state = initial_state,
+	};
 
 private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
