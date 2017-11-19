@@ -63,6 +63,14 @@ bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
 	return true;
 }
 
+std::pair<ACMachine::alphabet,ACMachine::state> ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
+	std::map<alphabet,state>::const_iterator citr = transitions[s].find(c);
+	if ( citr == transitions[s].end() ) {
+		return std::pair<alphabet,state>(alph_end,failure_state);
+	}
+	return std::pair<alphabet,state>(citr->first,citr->second);
+}
+
 
 // trace or create the path on trie from the current state
 template <typename T>

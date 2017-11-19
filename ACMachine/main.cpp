@@ -76,7 +76,7 @@ int main(const int argc, char * const * argv) {
 	while ( !ifs.eof() ) {
 		std::getline(ifs, tmp);
 		if ( tmp.empty() )
-			break;
+			continue; //break;
 		line.str(tmp);
 		line.clear();
 		while ( !line.eof() ) {

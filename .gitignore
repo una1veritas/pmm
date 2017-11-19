@@ -3,6 +3,7 @@
 *.exe
 *.txt~
 Debug
+*ignore.txt
 
 .metadata
 RemoteSystemsTempFiles

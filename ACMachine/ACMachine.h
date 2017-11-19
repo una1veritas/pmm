@@ -49,11 +49,10 @@ private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
 
 	void setupInitialState(void);
-
-	bool transfer(const alphabet & c, const bool ignore_case = false);
-//	state transition(const state s, const alphabet c);
-
 	state initialState() const { return initial_state; }
+	bool transfer(const alphabet & c, const bool ignore_case = false);
+	std::pair<alphabet,state> transition(const state s, const alphabet c) const;
+
 
 public:
 	ACMachine(void);
