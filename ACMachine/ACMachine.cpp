@@ -47,29 +47,30 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 }
 */
 
-bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
-	std::map<alphabet,state>::iterator itr;
-	if ( ignore_case ) {
-		itr = transitions[current].find(toupper(c));
-		if ( itr == transitions[current].end() )
-			itr = transitions[current].find(tolower(c));
-	} else {
-		itr = transitions[current].find(c);
+ACMachine::alphastate ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
+	std::map<alphabet,state>::const_iterator citr = transitions[s].find(c);
+	if ( citr == transitions[s].end() ) {
+		return alphastate(alph_end,failure_state);
 	}
-	if ( itr == transitions[current].end() ) {
+	return alphastate(citr->first,citr->second);
+}
+
+bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
+	alphastate aspair;
+	if ( ignore_case ) {
+		aspair = transition(current,toupper(c));
+		if ( aspair.second == failure_state )
+			aspair = transition(current,tolower(c));
+	} else {
+		aspair = transition(current,c);
+	}
+	if ( aspair.second == failure_state ) {
 		return false;
 	}
-	current = itr->second;
+	current = aspair.second;
 	return true;
 }
 
-std::pair<ACMachine::alphabet,ACMachine::state> ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
-	std::map<alphabet,state>::const_iterator citr = transitions[s].find(c);
-	if ( citr == transitions[s].end() ) {
-		return std::pair<alphabet,state>(alph_end,failure_state);
-	}
-	return std::pair<alphabet,state>(citr->first,citr->second);
-}
 
 
 // trace or create the path on trie from the current state
@@ -92,7 +93,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
-			newstate = transitions.size(); //the next state of the existing last state
+			newstate = size(); //the next state of the existing last state
 			transitions.push_back(std::map<alphabet,state>());
 			(transitions[current])[patt[pos]] = newstate;
 			failure.push_back(initialState());
@@ -135,7 +136,7 @@ void ACMachine::addFailures() {
 		q.push_back(nxstate);
 //		std::cout << nxstate << ", ";
 	}
-	std::cout << std::endl;
+//	std::cout << std::endl;
 
 	// for states whose distance from the initial state is more than one.
 	while ( !q.empty() ) {
@@ -153,20 +154,20 @@ void ACMachine::addFailures() {
 
 			state fstate = failure[cstate];
 //			std::cout << cstate << " ~~> " << fstate << " ";
-			std::map<alphabet,state>::iterator itp;
+			alphastate aspair;
 			while (1) {
-				itp = transitions[fstate].find(c);
-				if ( itp == transitions[fstate].end() && fstate != initial_state ) {
+				aspair = transition(fstate,c);
+				if ( aspair.second == failure_state && fstate != initial_state ) {
 					fstate = failure[fstate];
+					continue;
 //					std::cout << " ~~> " << fstate << " ";
-				} else {
-					break;
 				}
+				break;
 			}
-			if ( itp == transitions[fstate].end() ) {
+			if ( aspair.second == failure_state ) {
 				failure[nxstate] = initial_state;
 			} else {
-				failure[nxstate] = itp->second;
+				failure[nxstate] = aspair.second;
 				output[nxstate].insert(output[failure[nxstate]].begin(),output[failure[nxstate]].end());
 			}
 //			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];

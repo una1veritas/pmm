@@ -28,6 +28,8 @@ public:
 
 	typedef const std::vector<alphabet> ustring;
 
+	typedef std::pair<alphabet,state> alphastate;
+
 private:
 	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
@@ -51,7 +53,7 @@ private:
 	void setupInitialState(void);
 	state initialState() const { return initial_state; }
 	bool transfer(const alphabet & c, const bool ignore_case = false);
-	std::pair<alphabet,state> transition(const state s, const alphabet c) const;
+	alphastate transition(const state s, const alphabet c) const;
 
 
 public:

@@ -8,3 +8,10 @@ Debug
 .metadata
 RemoteSystemsTempFiles
 .settings
+ACMachine/words_shuf.txt
+
+ACMachine/test.log.gz
+
+rstring/.settings/language.settings.xml
+
+ACMachine/.settings/language.settings.xml

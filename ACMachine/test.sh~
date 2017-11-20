@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "starting tests..."
+
+
+for t in 0 1 2 3 4 
+do 
+    echo $t
+    unzip -c words.txt.zip | gshuf > words_shuf.$t.txt
+    for wc in 20000 50000 100000 200000 500000
+    do 
+	head -$wc words_shuf.$t.txt | ./acm.exe -p - smalltext.txt
+    done
+done

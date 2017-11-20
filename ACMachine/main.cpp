@@ -19,62 +19,80 @@ using namespace std;
 #include <time.h>
 
 int main(const int argc, char * const * argv) {
-	ifstream ifs;
 	int wordcount_max = 0;
 	bool show_machine = false;
 	bool show_words = false;
 	bool ignore_case = false;
+	bool verboseout = false;
 	string target;
+	ifstream patternfile;
+	istream * patterninput;
 	ifstream targetfile;
 	istream * targetinput;
 
-	commandargs optargs(argc, argv, "n:p:ivw");
+	commandargs optargs(argc, argv, "n:p:isvw");
 
 	pair<bool,const char*> opt;
+	opt = optargs.opt('v');
+	if ( opt.first ) {
+		verboseout = true;
+	}
 	opt = optargs.opt('n');
 	if ( opt.first ) {
 		wordcount_max = atol(opt.second);
-		cout << "wordcount_max = " << wordcount_max << ", ";
 	}
 	opt = optargs.opt('p');
 	if ( opt.first ) {
 		string fname = string(opt.second);
-		cout << "fname (pattern file) = " << fname << ", ";
-		ifs.open(fname);
+		if ( fname == "-" ) {
+			if ( verboseout ) cout << "read patterns from std::cin " << fname << ", ";
+			patterninput = &cin;
+		} else {
+			patternfile.open(fname);
+			if ( verboseout ) cout << "read patterns from " << fname ;
+			if ( !patternfile ) {
+				cerr << ": open failed!" << endl;
+				return EXIT_FAILURE;
+			}
+			patterninput = &patternfile;
+			if ( verboseout ) cout << ", ";
+		}
 	}
 	opt = optargs.opt('i');
 	ignore_case = opt.first;
-	cout << "ignore case = " << ignore_case << ", ";
-	opt = optargs.opt('v');
+	opt = optargs.opt('s');
 	show_machine = opt.first;
-	cout << "show_machine = " << show_machine << ", ";
 	opt = optargs.opt('w');
 	show_words = opt.first;
-	cout << "show_words = " << show_words << ", ";
 	if ( optargs.arg_count() == 0 ) {
-		cout << "targetinput = cin" << ", ";
+		if ( verboseout ) cout << "search in = cin" ;
 		targetinput = &cin;
 	} else {
 		target = optargs.arg(0);
-		cout << "targetinput (file name) = " << target;
+		if ( verboseout ) cout << "search in file = " << target;
 		targetfile.open(target);
 		if ( !targetfile ) {
 			cerr << "open file " << target << " failed!" << endl;
-			if ( ifs ) ifs.close();
+			if ( patternfile ) patternfile.close();
 			return EXIT_FAILURE;
 		}
-		cout << ", ";
 		targetinput = &targetfile;
 	}
-	cout << endl;
+	if ( verboseout ) {
+		cout << "wordcount_max = " << wordcount_max << ", ";
+		cout << "ignore case = " << ignore_case << ", ";
+		cout << "show_machine = " << show_machine << ", ";
+		cout << "show_words = " << show_words << ", ";
+		cout << endl;
+	}
 
 	acm pmm;
 
 	vector<string> words;
 	istringstream line;
 	string tmp;
-	while ( !ifs.eof() ) {
-		std::getline(ifs, tmp);
+	while ( !patterninput->eof() ) {
+		std::getline(*patterninput, tmp);
 		if ( tmp.empty() )
 			continue; //break;
 		line.str(tmp);
@@ -85,9 +103,11 @@ int main(const int argc, char * const * argv) {
 				words.push_back(tmp);
 		}
 	}
-	ifs.close();
-	cout << "Got " << words.size() << " words: " << endl;
+	if ( patternfile.is_open() ) patternfile.close();
+	cout << "got " << words.size() << " words, ";
+	//cout << std::flush;
 	if ( show_words ) {
+		cout << endl;
 		for(auto tmp : words)
 			cout << tmp << ", ";
 		cout << endl << endl;
@@ -97,10 +117,10 @@ int main(const int argc, char * const * argv) {
 	sw = clock() - sw;
 
 	words.clear();
-	if ( show_machine )
-		cout << pmm << endl << endl;
-	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
-	cout << "acmachine " << pmm.size() << " states." << endl;
+	if ( show_machine ){
+		cout << endl << pmm << endl << endl;
+	}
+	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec. for " << pmm.size() << " states." << endl;
 	//cout << "proceed?" << endl;
 	//std::getline(cin, tmp);
 
@@ -125,10 +145,10 @@ int main(const int argc, char * const * argv) {
 		}
 		pos++;
 	}
-	cout << endl;
+	//cout << endl;
 
 	if ( targetfile ) targetfile.close();
 
-	cout << "bye." << endl << endl;
+	if ( verboseout ) cout << "bye." << endl;
 	return 0;
 }
