@@ -28,7 +28,8 @@ ACMachine::ACMachine(void) {
 
 void ACMachine::setupInitialState(void) {
 	transitions.clear();
-	transitions.push_back(std::map<alphabet,state>());
+	//transitions.push_back(std::map<alphabet,state>());
+	transitions.push_back(TransTable());
 	failure.clear();
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
@@ -48,11 +49,14 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::alphastate ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
+/*
 	std::map<alphabet,state>::const_iterator citr = transitions[s].find(c);
 	if ( citr == transitions[s].end() ) {
 		return alphastate(alph_end,failure_state);
 	}
 	return alphastate(citr->first,citr->second);
+	*/
+	return transitions[s][c];
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
@@ -94,8 +98,10 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
 			newstate = size(); //the next state of the existing last state
-			transitions.push_back(std::map<alphabet,state>());
-			(transitions[current])[patt[pos]] = newstate;
+			//transitions.push_back(std::map<alphabet,state>());
+			transitions.push_back(TransTable());
+			//(transitions[current])[patt[pos]] = newstate;
+			transitions[current].define(patt[pos],newstate);
 			failure.push_back(initialState());
 			output.push_back(std::set<position>());
 			current = newstate;

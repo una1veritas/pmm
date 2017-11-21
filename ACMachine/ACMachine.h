@@ -25,27 +25,56 @@ class ACMachine {
 public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
-
 	typedef const std::vector<alphabet> ustring;
-
 	typedef std::pair<alphabet,state> alphastate;
 
+	// class constants
+		enum {
+			alph_start = 0,
+			alph_end = 0xffff,
+		};
+		enum {
+			initial_state = 0,
+			failure_state = initial_state,
+		};
+
+	struct TransTable {
+		static const alphabet table_limit = 127;
+		state table[table_limit+1];
+		std::map<alphabet,state> map;
+
+		TransTable(void) {
+			for(alphabet c = 0; c <= table_limit; ++c) {
+				table[c] = failure_state;
+			}
+			map.clear();
+		}
+
+		alphastate operator[](const alphabet c) const {
+			if ( c <= table_limit )
+				return alphastate(c,table[c]);
+			std::map<alphabet,state>::const_iterator it = map.find(c);
+			if ( it == map.end() )
+				return alphastate(c,failure_state);
+			return *it;
+		}
+
+		state define(const alphabet c, const state s) {
+			if ( c <= table_limit )
+				table[c] = s;
+			else
+				map[c] = s;
+			return s;
+		}
+
+	};
 private:
-	std::vector<std::map<alphabet,state>> transitions;
+	//std::vector<std::map<alphabet,state>> transitions;
+	std::vector<TransTable> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
 	state current;
-
-// class constants
-	enum {
-		alph_start = 0,
-		alph_end = 0xffff,
-	};
-	enum {
-		initial_state = 0,
-		failure_state = initial_state,
-	};
 
 private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
