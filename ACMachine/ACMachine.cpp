@@ -134,7 +134,7 @@ void ACMachine::addFailures() {
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
-	for(auto const & assoc : transitions[initial_state] ) {
+	for(alphastate const & assoc : transitions[initial_state] ) {
 		//const alphabet c = assoc.first;
 		const state nxstate = assoc.second;
 		// if is neither an explicit failure, nor go-root-failure

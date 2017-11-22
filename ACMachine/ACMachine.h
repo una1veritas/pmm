@@ -43,6 +43,14 @@ public:
 		state table[table_limit+1];
 		std::map<alphabet,state> map;
 
+		class const_iterator {
+			std::map<alphabet,state>::const_iterator mapitr;
+			alphabet c;
+
+		public:
+			const_iterator() { c = alph_start; }
+		};
+
 		TransTable(void) {
 			for(alphabet c = 0; c <= table_limit; ++c) {
 				table[c] = failure_state;
@@ -66,6 +74,8 @@ public:
 				map[c] = s;
 			return s;
 		}
+
+		const_iterator begin() const { return const_iterator(); }
 
 	};
 private:
