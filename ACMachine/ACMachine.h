@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <array>
 #include <set>
 #include <map>
 
@@ -26,7 +27,7 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 	typedef const std::vector<alphabet> ustring;
-	typedef std::pair<alphabet,state> alphastate;
+	typedef std::pair<alphabet,state> aspair;
 
 	// class constants
 		enum {
@@ -38,60 +39,8 @@ public:
 			failure_state = initial_state,
 		};
 
-	struct TransTable {
-		static const alphabet table_limit = 127;
-		state table[table_limit+1];
-		std::map<alphabet,state> map;
-
-		class const_iterator {
-			std::map<alphabet,state>::const_iterator mapitr;
-			alphabet alph;
-
-		public:
-			const_iterator(const alphabet c, std::map<alphabet,state>::const_iterator itr) :
-				alph(c), mapitr(itr) {}
-
-			const_iterator & operator++() {
-				if ( alph < alph_end ) {
-					alph++;
-				} else {
-					mapitr++;
-				}
-				return this;
-			}
-
-		};
-
-		TransTable(void) {
-			for(alphabet c = 0; c <= table_limit; ++c) {
-				table[c] = failure_state;
-			}
-			map.clear();
-		}
-
-		alphastate operator[](const alphabet c) const {
-			if ( c <= table_limit )
-				return alphastate(c,table[c]);
-			std::map<alphabet,state>::const_iterator it = map.find(c);
-			if ( it == map.end() )
-				return alphastate(c,failure_state);
-			return *it;
-		}
-
-		state define(const alphabet c, const state s) {
-			if ( c <= table_limit )
-				table[c] = s;
-			else
-				map[c] = s;
-			return s;
-		}
-
-		const_iterator begin() const { return const_iterator(alph_start,map.begin()); }
-		const_iterator end() const { return const_iterator(alph_end, map.end()); }
-	};
 private:
-	//std::vector<std::map<alphabet,state>> transitions;
-	std::vector<TransTable> transitions;
+	std::vector<std::map<alphabet,state>> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
@@ -103,7 +52,7 @@ private:
 	void setupInitialState(void);
 	state initialState() const { return initial_state; }
 	bool transfer(const alphabet & c, const bool ignore_case = false);
-	alphastate transition(const state s, const alphabet c) const;
+	aspair transition(const state s, const alphabet c) const;
 
 
 public:
