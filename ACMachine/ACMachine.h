@@ -45,10 +45,21 @@ public:
 
 		class const_iterator {
 			std::map<alphabet,state>::const_iterator mapitr;
-			alphabet c;
+			alphabet alph;
 
 		public:
-			const_iterator() { c = alph_start; }
+			const_iterator(const alphabet c, std::map<alphabet,state>::const_iterator itr) :
+				alph(c), mapitr(itr) {}
+
+			const_iterator & operator++() {
+				if ( alph < alph_end ) {
+					alph++;
+				} else {
+					mapitr++;
+				}
+				return this;
+			}
+
 		};
 
 		TransTable(void) {
@@ -75,8 +86,8 @@ public:
 			return s;
 		}
 
-		const_iterator begin() const { return const_iterator(); }
-
+		const_iterator begin() const { return const_iterator(alph_start,map.begin()); }
+		const_iterator end() const { return const_iterator(alph_end, map.end()); }
 	};
 private:
 	//std::vector<std::map<alphabet,state>> transitions;
