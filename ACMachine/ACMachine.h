@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <array>
 #include <set>
 #include <map>
 
@@ -25,10 +26,18 @@ class ACMachine {
 public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
-
 	typedef const std::vector<alphabet> ustring;
+	typedef std::pair<alphabet,state> aspair;
 
-	typedef std::pair<alphabet,state> alphastate;
+	// class constants
+		enum {
+			alph_start = 0,
+			alph_end = 0xffff,
+		};
+		enum {
+			initial_state = 0,
+			failure_state = initial_state,
+		};
 
 private:
 	std::vector<std::map<alphabet,state>> transitions;
@@ -37,23 +46,13 @@ private:
 
 	state current;
 
-// class constants
-	enum {
-		alph_start = 0,
-		alph_end = 0xffff,
-	};
-	enum {
-		initial_state = 0,
-		failure_state = initial_state,
-	};
-
 private:
 	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
 
 	void setupInitialState(void);
 	state initialState() const { return initial_state; }
 	bool transfer(const alphabet & c, const bool ignore_case = false);
-	alphastate transition(const state s, const alphabet c) const;
+	aspair transition(const state s, const alphabet c) const;
 
 
 public:

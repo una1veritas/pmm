@@ -29,6 +29,7 @@ ACMachine::ACMachine(void) {
 void ACMachine::setupInitialState(void) {
 	transitions.clear();
 	transitions.push_back(std::map<alphabet,state>());
+	//transitions.push_back(TransTable());
 	failure.clear();
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
@@ -47,16 +48,17 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 }
 */
 
-ACMachine::alphastate ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
-	std::map<alphabet,state>::const_iterator citr = transitions[s].find(c);
-	if ( citr == transitions[s].end() ) {
-		return alphastate(alph_end,failure_state);
+ACMachine::aspair ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
+
+	std::map<alphabet,state>::const_iterator c_itr = transitions[s].find(c);
+	if ( c_itr == transitions[s].end() ) {
+		return aspair(alph_end,failure_state);
 	}
-	return alphastate(citr->first,citr->second);
+	return *c_itr;
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
-	alphastate aspair;
+	aspair aspair;
 	if ( ignore_case ) {
 		aspair = transition(current,toupper(c));
 		if ( aspair.second == failure_state )
@@ -96,6 +98,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 			newstate = size(); //the next state of the existing last state
 			transitions.push_back(std::map<alphabet,state>());
 			(transitions[current])[patt[pos]] = newstate;
+			//transitions[current].define(patt[pos],newstate);
 			failure.push_back(initialState());
 			output.push_back(std::set<position>());
 			current = newstate;
@@ -128,7 +131,7 @@ void ACMachine::addFailures() {
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
-	for(auto const & assoc : transitions[initial_state] ) {
+	for(aspair const & assoc : transitions[initial_state] ) {
 		//const alphabet c = assoc.first;
 		const state nxstate = assoc.second;
 		// if is neither an explicit failure, nor go-root-failure
@@ -154,7 +157,7 @@ void ACMachine::addFailures() {
 
 			state fstate = failure[cstate];
 //			std::cout << cstate << " ~~> " << fstate << " ";
-			alphastate aspair;
+			aspair aspair;
 			while (1) {
 				aspair = transition(fstate,c);
 				if ( aspair.second == failure_state && fstate != initial_state ) {
