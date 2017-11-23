@@ -40,7 +40,7 @@ public:
 		};
 
 private:
-	std::vector<std::map<alphabet,state>> transitions;
+	std::vector<std::map<alphabet,state> > transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
