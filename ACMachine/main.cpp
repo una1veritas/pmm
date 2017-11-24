@@ -19,7 +19,8 @@ using namespace std;
 #include <time.h>
 
 int main(const int argc, char * const * argv) {
-	int wordcount_max = 0;
+	long wordcount_max = 0;
+	long additionalcount_max = 0;
 	bool show_machine = false;
 	bool show_words = false;
 	bool ignore_case = false;
@@ -30,7 +31,7 @@ int main(const int argc, char * const * argv) {
 	ifstream targetfile;
 	istream * targetinput;
 
-	commandargs optargs(argc, argv, "n:p:isvw");
+	commandargs optargs(argc, argv, "n:p:x:isvw");
 
 	pair<bool,const char*> opt;
 	opt = optargs.opt('v');
@@ -40,6 +41,10 @@ int main(const int argc, char * const * argv) {
 	opt = optargs.opt('n');
 	if ( opt.first ) {
 		wordcount_max = atol(opt.second);
+	}
+	opt = optargs.opt('x');
+	if ( opt.first ) {
+		additionalcount_max = atol(opt.second);
 	}
 	opt = optargs.opt('p');
 	if ( opt.first ) {
@@ -80,6 +85,7 @@ int main(const int argc, char * const * argv) {
 	}
 	if ( verboseout ) {
 		cout << "wordcount_max = " << wordcount_max << ", ";
+		cout << "additionalcount_max = " << additionalcount_max << ", ";
 		cout << "ignore case = " << ignore_case << ", ";
 		cout << "show_machine = " << show_machine << ", ";
 		cout << "show_words = " << show_words << ", ";

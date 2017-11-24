@@ -1,0 +1,25 @@
+starting tests...
+1
+file 1, 10000 words, add 2000 words, iteration 1, got 10000 words, took 0.015303 sec. for 56516 states.
+file 1, 10000 words, add 2000 words, iteration 2, got 10000 words, took 0.015565 sec. for 56516 states.
+file 1, 10000 words, add 2000 words, iteration 3, got 10000 words, took 0.015376 sec. for 56516 states.
+file 1, 15000 words, add 2000 words, iteration 1, got 15000 words, took 0.025963 sec. for 80516 states.
+file 1, 15000 words, add 2000 words, iteration 2, got 15000 words, took 0.027737 sec. for 80516 states.
+file 1, 15000 words, add 2000 words, iteration 3, got 15000 words, took 0.026568 sec. for 80516 states.
+file 1, 25000 words, add 2000 words, iteration 1, got 25000 words, took 0.04251 sec. for 125370 states.
+file 1, 25000 words, add 2000 words, iteration 2, got 25000 words, took 0.042566 sec. for 125370 states.
+file 1, 25000 words, add 2000 words, iteration 3, got 25000 words, took 0.041463 sec. for 125370 states.
+file 1, 40000 words, add 2000 words, iteration 1, got 40000 words, took 0.079382 sec. for 185889 states.
+file 1, 40000 words, add 2000 words, iteration 2, got 40000 words, took 0.08097 sec. for 185889 states.
+file 1, 40000 words, add 2000 words, iteration 3, got 40000 words, took 0.078424 sec. for 185889 states.
+file 1, 65000 words, add 2000 words, iteration 1, got 65000 words, took 0.150188 sec. for 276506 states.
+file 1, 65000 words, add 2000 words, iteration 2, got 65000 words, took 0.167857 sec. for 276506 states.
+file 1, 65000 words, add 2000 words, iteration 3, got 65000 words, took 0.151582 sec. for 276506 states.
+file 1, 100000 words, add 2000 words, iteration 1, got 100000 words, took 0.249482 sec. for 389147 states.
+file 1, 100000 words, add 2000 words, iteration 2, got 100000 words, took 0.241362 sec. for 389147 states.
+file 1, 100000 words, add 2000 words, iteration 3, got 100000 words, took 0.241065 sec. for 389147 states.
+file 1, 150000 words, add 2000 words, iteration 1, got 150000 words, took 0.419373 sec. for 529452 states.
+file 1, 150000 words, add 2000 words, iteration 2, got 150000 words, took 0.410579 sec. for 529452 states.
+file 1, 150000 words, add 2000 words, iteration 3, got 150000 words, took 0.402243 sec. for 529452 states.
+file 1, 250000 words, add 2000 words, iteration 1, got 250000 words, took 0.710014 sec. for 769584 states.
+file 1, 250000 words, add 2000 words, iteration 2, got 250000 words, took 0.707605 sec. for 769584 states.
