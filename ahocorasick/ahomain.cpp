@@ -10,6 +10,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -25,21 +26,18 @@ typedef uint16 alphabet;
 
 int main(const int argc, char * const * argv) {
 	ifstream ifs, addifs;
-	int wordcount_max = 0;
-	bool show_machine = false;
-	bool show_words = false;
+	int init_word_num = 0;
+	int state_width = 10000;
+	int state_max = 450000;
 	bool ignore_case = false;
-	string target;
-	ifstream targetfile;
-	istream * targetinput;
 
-	commandargs optargs(argc, argv, "n:f:a:ivw");
+	commandargs optargs(argc, argv, "n:f:a:im:w:");
 
 	pair<bool, const char*> opt;
 	opt = optargs.opt('n');
 	if (opt.first) {
-		wordcount_max = atol(opt.second);
-		cout << "wordcount_max = " << wordcount_max << ", ";
+		init_word_num = atol(opt.second);
+		cout << "init_word_num = " << init_word_num << ", ";
 	}
 	opt = optargs.opt('f');
 	if (opt.first) {
@@ -56,27 +54,15 @@ int main(const int argc, char * const * argv) {
 	opt = optargs.opt('i');
 	ignore_case = opt.first;
 	cout << "ignore case = " << ignore_case << ", ";
-	opt = optargs.opt('v');
-	show_machine = opt.first;
-	cout << "show_machine = " << show_machine << ", ";
-	opt = optargs.opt('w');
-	show_words = opt.first;
-	cout << "show_words = " << show_words << ", ";
-	if (optargs.arg_count() == 0) {
-		cout << "targetinput = cin" << ", ";
-		targetinput = &cin;
+	opt = optargs.opt('m');
+	if (opt.first) {
+		state_max = atol(opt.second);
+		cout << "state_max = " << state_max << ", ";
 	}
-	else {
-		target = optargs.arg(0);
-		cout << "targetinput (file name) = " << target;
-		targetfile.open(target);
-		if (!targetfile) {
-			cerr << "open file " << target << " failed!" << endl;
-			if (ifs) ifs.close();
-			return EXIT_FAILURE;
-		}
-		cout << ", ";
-		targetinput = &targetfile;
+	opt = optargs.opt('w');
+	if (opt.first) {
+		state_width = atol(opt.second);
+		cout << "state_width = " << state_width << ", ";
 	}
 	cout << endl;
 
@@ -93,20 +79,17 @@ int main(const int argc, char * const * argv) {
 		line.clear();
 		while (!line.eof()) {
 			line >> tmp;
-			if (wordcount_max == 0 || words.size() < wordcount_max)
+			if ( words.size() < init_word_num)
 				words.push_back(tmp);
 		}
-		if (words.size() == wordcount_max)
+		if (words.size() == init_word_num)
 			break;
 	}
 	cout << "Got " << words.size() << " words: " << endl;
-	if (show_words) {
-		for (auto tmp : words)
-			cout << tmp << ", ";
-		cout << endl << endl;
-	}
+
 	pmm.addPatterns(words);
 
+	ifs.close();
 	words.clear();
 	cout << "build end" << endl;
 
@@ -122,9 +105,7 @@ int main(const int argc, char * const * argv) {
 	istringstream addline;
 	string addtmp;
 
-	int state_width = 10000;
-
-	int counter_max = 450000 / state_width;
+	int counter_max = state_max / state_width;
 
 	int nextstatescount = 1;
 
@@ -147,11 +128,6 @@ int main(const int argc, char * const * argv) {
 
 	}
 	cout << "Got " << addwords.size() << " add words: " << endl;
-	if (show_words) {
-		for (auto tmp : addwords)
-			cout << tmp << ", ";
-		cout << endl << endl;
-	}
 
 	int time = 0;
 	struct timeval start, end;
@@ -160,13 +136,13 @@ int main(const int argc, char * const * argv) {
 
 		pmm.dynamicaddPatterns(addwords[i]);
 
-		if (ad.statesize() >= (nextstatescount * state_width)) {
+		if (pmm.statesize() >= (nextstatescount * state_width)) {
 			gettimeofday(&end, NULL);
 			time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
 			time_vec.push_back(time);
 			wordnum_vec.push_back(i);
-			statesize_vec.push_back(ad.statesize());
-			//cout << nextstatescount << endl;
+			statesize_vec.push_back(pmm.statesize());
+			cout << nextstatescount << endl;
 
 			nextstatescount++;
 		}
@@ -179,31 +155,27 @@ int main(const int argc, char * const * argv) {
 
 	for (int i = 0; i < (nextstatescount - 1); i++) {
 		cout << setw(3) << i + 1 << ",";
-		coutv << setw(6) << statesize_size[i] << ",";
-		cout << setw(6) << wordnum_size[i] << ",";
-		cout << setw(5) << time_size[i] << ",";
+		cout << setw(6) << statesize_vec[i] << ",";
+		cout << setw(6) << wordnum_vec[i] << ",";
+		cout << setw(5) << time_vec[i] << ",";
 		if (i == 0) {
-			cout << setw(6) << statesize_size[i] << ",";
-			cout << setw(6) << wordnum_size[i] << ",";
-			cout << setw(5) << time_size[i] << ",";
-			cout << setw(6) << (double)time_size[i] / wordnum_size[i];
+			cout << setw(6) << statesize_vec[i] << ",";
+			cout << setw(6) << wordnum_vec[i] << ",";
+			cout << setw(5) << time_vec[i] << ",";
+			cout << setw(6) << (double)time_vec[i] / wordnum_vec[i];
 		}
 		if (i != 0) {
-			cout << setw(6) << statesize_size[i] - statesize_size[i - 1] << ",";
-			cout << setw(5) << wordnum_size[i] - wordnum_size[i - 1] << ",";
-			cout << setw(5) << time_size[i] - time_size[i - 1] << ",";
-			cout << setw(6) << (double)(time_size[i] - time_size[i - 1]) / (wordnum_size[i] - wordnum_size[i - 1]);
+			cout << setw(6) << statesize_vec[i] - statesize_vec[i - 1] << ",";
+			cout << setw(5) << wordnum_vec[i] - wordnum_vec[i - 1] << ",";
+			cout << setw(5) << time_vec[i] - time_vec[i - 1] << ",";
+			cout << setw(6) << (double)(time_vec[i] - time_vec[i - 1]) / (wordnum_vec[i] - wordnum_vec[i - 1]);
 		}
 		cout << endl;
 	}
 	
+	addifs.close();
+	addwords.clear();
 
-
-		//if (targetfile) targetfile.close();
-		//if (targetinput2) targetinput2.close();
-	
-
-		cout << "bye." << endl << endl;
 		return 0;
 	
 }

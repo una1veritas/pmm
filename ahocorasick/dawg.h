@@ -36,7 +36,7 @@ public:
 private:
 	std::vector<std::map<alphabet, state_edgelabel>> transitions;
 	std::vector<state> spointer;
-	std::vector<std::vector<state>> inv_sp;
+	std::vector<std::set<state>> inv_sp;
 	//trunk: true / branch: false
 	std::vector<bool> torb;
 	std::vector<int> datoac;
@@ -72,14 +72,14 @@ public:
 
 	state update(state sink, char c);
 	state split(state parentstate, state childstate, char c);
-	  
+
+	/*
 	template <typename T>
 	void builddawg(const T str[]){
 	  const std::string s(str);
 	  return builddawg(s);
 	}
 
-	//void builddawg(std::string str) {
 	template <typename T>
 	void builddawg(const T & str){
 	  state sink;
@@ -88,23 +88,45 @@ public:
 	    sink = update(sink, str[i]);
 	  }
 	}
+	*/
 
+	
+	template <typename T>
+	  void builddawg(const T str[]);
+
+	template <typename T>
+	  void builddawg(const T & str);
+
+	template <typename T>
+	  void builddawg(const T & str, const int length);
+		
+	/*
+	template <typename T>
+	  void buildingdawg(const T & str);
+
+	template <typename T>
+	  void buildingdawg(const T str[]);
+	  */
+
+	
 	template <typename C>
 	void buildingdawg(const C & strset) {
 		for (auto str : strset) {
 			builddawg(str);
 		}
 	}
+	
 
 
-	//std::vector<fstates> getFailStates(int position, std::string str);
 	template <typename T>
 	  std::vector<fstates> getFailStates(int position, const T & patt);
+
 	template <typename T>
 	  std::vector<fstates> getFailStates(int position, const T patt[]);
-	//std::vector<state> getOutStates(std::string str);
+
 	template <typename T>
 	  std::vector<state> getOutStates(const T & patt);
+
 	template <typename T>
 	  std::vector<state> getOutStates(const T patt[]);
 

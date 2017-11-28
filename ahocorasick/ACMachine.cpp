@@ -4,7 +4,9 @@
 
 #include "ACMachine.h"
 #include <deque>
+#include <algorithm>
 #include <cctype>
+#include <unistd.h>
 
 
 
@@ -18,6 +20,9 @@ void ACMachine::setupInitialState(void) {
 	transitions.push_back(std::map<alphabet, state>());
 	failure.clear();
 	failure.push_back(initialState());
+	inv_failure.clear();
+	inv_failure.push_back(std::set<state>());
+	inv_failure[initialState()].clear();
 	// failure to initial state from initial state eats up one symbol at transition.
 	output.clear();
 	output.push_back(std::set<position>());
@@ -56,6 +61,12 @@ ACMachine::state ACMachine::addPath(const T & patt) {
 	return addPath(patt, patt.length());
 }
 
+template <>
+ACMachine::state ACMachine::addPath<char>(const char & patt) {
+	std::string p{ patt };
+	return addPath(p, 1);
+}
+
 template <typename T>
 ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 	uint32 pos;
@@ -67,6 +78,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 			transitions.push_back(std::map<alphabet, state>());
 			(transitions[current])[patt[pos]] = newstate;
 			failure.push_back(initialState());
+			inv_failure.push_back(std::set<state>());
 			output.push_back(std::set<position>());
 			current = newstate;
 		}
@@ -78,6 +90,12 @@ template ACMachine::state ACMachine::addPath<char>(const char patt[]);
 template ACMachine::state ACMachine::addPath<ACMachine::alphabet>(const ACMachine::alphabet patt[]);
 template ACMachine::state ACMachine::addPath<std::string>(const std::string & patt);
 
+
+//template void ACMachine::addfailurestates<char>(failurestates fst, const char patt[]);
+//template void ACMachine::addfailurestates<ACMachine::alphabet>(failurestates fst, const ACMachine::alphabet patt[]);
+//template void ACMachine::addfailurestates<std::string>(failurestates fst, const std::string & patt);
+
+
 template <typename T>
 bool ACMachine::addOutput(const T & patt) {
 	std::pair<std::set<position>::iterator, bool> res = output[current].insert(patt.length());
@@ -87,6 +105,12 @@ bool ACMachine::addOutput(const T & patt) {
 template <typename T>
 bool ACMachine::addOutput(const T patt[]) {
 	const std::string p(patt);
+	return addOutput(p);
+}
+
+template <>
+bool ACMachine::addOutput<char>(const char & patt) {
+	const std::string p{ patt };
 	return addOutput(p);
 }
 
@@ -103,7 +127,7 @@ void ACMachine::addFailures() {
 		const state nxstate = assoc.second;
 		// if is neither an explicit failure, nor go-root-failure
 		failure[nxstate] = initial_state;
-		inv_failure[initial_state].push_back(nxstate);
+		inv_failure[initial_state].insert(nxstate);
 		q.push_back(nxstate);
 		//		std::cout << nxstate << ", ";
 	}
@@ -138,17 +162,23 @@ void ACMachine::addFailures() {
 			}
 			if (itp == transitions[fstate].end()) {
 				failure[nxstate] = initial_state;
-				inv_failure[initial_state].push_back(nxstate);
+				inv_failure[initial_state].insert(nxstate);
 			}
 			else {
 				failure[nxstate] = itp->second;
-				inv_failure[itp->second].push_back(nxstate);
+				inv_failure[itp->second].insert(nxstate);
 				output[nxstate].insert(output[failure[nxstate]].begin(), output[failure[nxstate]].end());
 			}
 			//			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];
 			//			std::cout << std::endl;
 		}
 	}
+}
+
+template<>
+int ACMachine::searchstateposition<char>(const char & patt) {
+	const std::string p{ patt };
+	return searchstateposition(p);
 }
 
 template <typename T>
@@ -182,8 +212,19 @@ void ACMachine::addFailure(const int position, const T patt[]) {
   return addFailure(position, p);
 }
 
+template <>
+void ACMachine::addFailure<char>(const int position, const char & patt) {
+	const std::string p{ patt };
+	//std::cout << "char " << p << std::endl;
+	return addFailure(position, p);
+}
+
+
 template <typename T>
 void ACMachine::addFailure(const int position, const T & patt) {
+
+  //std::cout << "addFailure check" << std::endl;
+  //std::cout << "position " << position << std::endl;
 
   state s;
 
@@ -193,18 +234,20 @@ void ACMachine::addFailure(const int position, const T & patt) {
   for(int p = 0; p < position; p++){
     transfer(patt[p]);
   }
-  
+  //std::cout << "check a" << std::endl;
+
   state cstate = currentState();
 
   state nxstate, fstate;
   for(int p = position; p < patt.size(); p++){
+	//std::cout << "check a" << std::endl;
     itp = transitions[cstate].find(patt[p]);
     nxstate = itp->second;
     fstate = failure[cstate];
     
     if(cstate == initial_state){
       failure[nxstate] = initial_state;
-      inv_failure[initial_state].push_back(nxstate);
+      inv_failure[initial_state].insert(nxstate);
     }
     else{
       while (1) {
@@ -218,15 +261,16 @@ void ACMachine::addFailure(const int position, const T & patt) {
       }
       if (itp == transitions[fstate].end()) {
 		failure[nxstate] = initial_state;
-		inv_failure[initial_state].push_back(nxstate);
+		inv_failure[initial_state].insert(nxstate);
       }
       else {
 		failure[nxstate] = itp->second;
-		inv_failure[itp->second].push_back(nxstate);
+		inv_failure[itp->second].insert(nxstate);
 		output[nxstate].insert(output[failure[nxstate]].begin(), output[failure[nxstate]].end());
       }
     }
     cstate = nxstate;
+	//std::cout << "check b" << std::endl;
   
   } 
 
@@ -258,6 +302,7 @@ void ACMachine::renewfunction(int position, const T & patt) {
   std::deque<int> pos_que;
 
   std::map<alphabet, state>::iterator itp;
+  std::vector<state>::iterator itp_fail;
   /*
   for(int i = 1; i < (int)failure.size(); i++)
     if(failure[i] == s){
@@ -296,8 +341,11 @@ void ACMachine::renewfunction(int position, const T & patt) {
     itp = transitions[fstate].find(patt[pos]);
     while(itp != transitions[fstate].end()){
       fnxstate = itp->second;
+      //itp_fail = std::find(inv_failure[failure[fnxstate]].begin(), inv_failure[failure[fnxstate]].end(), fnxstate);
+      //inv_failure[failure[fnxstate]].erase(itp_fail);
+      inv_failure[failure[fnxstate]].erase(fnxstate);
       failure[fnxstate] = nxstate;
-      inv_failure[nxstate].push_back(fnxstate);
+      inv_failure[nxstate].insert(fnxstate);
 
       pos++;
       cstate = nxstate;
@@ -330,6 +378,72 @@ void ACMachine::renewfunction(int position, const T & patt) {
 template void ACMachine::renewfunction<char>(int position, const char patt[]);
 template void ACMachine::renewfunction<std::string>(int position, const std::string & patt);
 
+
+template <typename T>
+void ACMachine::addfailurestates(ACMachine::failurestates & fst, const T patt[]){
+  const std::string s(patt);
+  return addfailurestates(fst, s);
+}
+
+template <>
+void ACMachine::addfailurestates<char>(ACMachine::failurestates & fst, const char & patt) {
+	const std::string s{ patt };
+	return addfailurestates(fst, s);
+}
+
+	
+template <typename T>
+void ACMachine::addfailurestates(ACMachine::failurestates & fst, const T & patt){
+  //sleep(3);
+  std::vector<state> tmp;
+  resetState();
+  //std::vector<state>::iterator itp_fail;
+  tmp.push_back(current);
+  if (!fst.empty()){
+    for (int i = 0; i < patt.length(); i++){
+      transfer(patt[i]);
+      tmp.push_back(current);
+    }
+    for (auto st : fst) {
+      //sleep(3);
+      //itp_fail = std::find(inv_failure[failure[st.first]].begin(), inv_failure[failure[st.first]].end(), failure[st.first]);
+      //inv_failure[failure[st.first]].erase(itp_fail);
+      inv_failure[failure[st.first]].erase(st.first);
+      //std::cout << "failure[st.first] " << failure[st.first] << std::endl;
+      //sleep(3);
+      failure[st.first] = tmp[st.second];
+      inv_failure[tmp[st.second]].insert(st.first);
+    }
+  }
+		
+}
+
+template void ACMachine::addfailurestates<char>(ACMachine::failurestates & fst, const char patt[]);
+template void ACMachine::addfailurestates<std::string>(ACMachine::failurestates & fst, const std::string & patt);
+
+template <typename T>
+void ACMachine::addoutstates(ACMachine::outstates & ost, const T patt[]){
+  const std::string p(patt);
+  return addoutstates(ost, p);
+}
+
+template <>
+void ACMachine::addoutstates<char>(ACMachine::outstates & ost, const char & patt) {
+	const std::string p{ patt };
+	return addoutstates(ost, p);
+}
+
+template <typename T>
+void ACMachine::addoutstates(ACMachine::outstates & ost, const T & patt){
+  if (!ost.empty()){
+    for (auto st : ost){
+      output[st].insert(patt.size());
+    }
+  }
+}
+
+template void ACMachine::addoutstates<char>(ACMachine::outstates & ost, const char patt[]);
+template void ACMachine::addoutstates<std::string>(ACMachine::outstates & ost, const std::string & patt);
 
 std::vector<std::pair<position, const std::string> >
 ACMachine::search(const std::string & text) {

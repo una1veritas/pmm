@@ -28,7 +28,7 @@ int main(const int argc, char * const * argv) {
 	int state_max = 450000;
 	bool ignore_case = false;
 
-	commandargs optargs(argc, argv, "n:f:a:imw");
+	commandargs optargs(argc, argv, "n:f:a:im:w:");
 
 	pair<bool, const char*> opt;
 	opt = optargs.opt('n');
@@ -56,7 +56,6 @@ int main(const int argc, char * const * argv) {
 		state_max = atol(opt.second);
 		cout << "state_max = " << state_max << ", ";
 	}
-	cout << endl;
 	opt = optargs.opt('w');
         if (opt.first) {
 		state_width = atol(opt.second);
@@ -133,7 +132,7 @@ int main(const int argc, char * const * argv) {
 	for(int i = 0; i < addwords.size(); i++){
 
 		ad.DynamicBAD(addwords[i]);
-		cout << "check" << endl;
+		//cout << i << endl;
 
 		if(ad.statesize() >= (nextstatescount * state_width)){
 			gettimeofday(&end, NULL);
@@ -141,6 +140,7 @@ int main(const int argc, char * const * argv) {
 			time_vec.push_back(time);
 			wordnum_vec.push_back(i);
 			statesize_vec.push_back(ad.statesize());
+			//cout << "nextstatescount" << nextstatescount << endl;
 			cout << nextstatescount << endl;
 
 			nextstatescount++;

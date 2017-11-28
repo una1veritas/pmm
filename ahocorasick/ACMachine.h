@@ -10,7 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <cctype>
+//#include <cctype>
 #include <vector>
 #include <set>
 #include <map>
@@ -42,7 +42,7 @@ private:
 	std::vector<std::map<alphabet, state>> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
-	std::vector<std::vector<state>> inv_failure;
+	std::vector<std::set<state>> inv_failure;
 
 	state current;
 
@@ -117,7 +117,6 @@ public:
 
 	template <typename C>
 	void dynamicaddPatterns(const C & str) {
-	//void dynamicaddPatterns(std::string & str) {
 	
 		  int position;
 
@@ -136,46 +135,18 @@ public:
 		
 	}
 
-	template <typename T>
-	void addfailurestates(failurestates fst, const T str[]){
-	  const std::string s(str);
-	  return addfailurestates(fst, s);
-	}
 
 	template <typename T>
-	void addfailurestates(failurestates fst, const T & str){
-		std::vector<state> tmp;
-		resetState();
-		tmp.push_back(current);
-		if (!fst.empty()){
-		  for (int i = 0; i < str.length(); i++){
-				transfer(str[i]);
-				tmp.push_back(current);
-			}
-			for (auto st : fst) {
-				failure[st.first] = tmp[st.second];
-				inv_failure[tmp[st.second]].push_back(st.first);
-			}
-		}
-		
-	}
-
+	  void addfailurestates(failurestates & fst, const T patt[]);
 
 	template <typename T>
-	void addoutstates(outstates ost, const T str[]){
-	  const std::string s(str);
-	  return addoutstates(ost, s);
-	}
+	  void addfailurestates(failurestates & fst, const T & patt);
 
-	//void addoutstates(outstates ost, std::string str){
 	template <typename T>
-	void addoutstates(outstates ost, const T & str){
-		if (!ost.empty()){
-			for (auto st : ost){
-				output[st].insert(str.size());
-			}
-		}
-	}
+	  void addoutstates(outstates & ost, const T patt[]);
+
+	template <typename T>
+	  void addoutstates(outstates & ost, const T & patt);
 
 
 	int statesize() {
@@ -194,6 +165,7 @@ public:
 	}
 
 };
+
 
 typedef ACMachine acm;
 

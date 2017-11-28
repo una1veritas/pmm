@@ -12,8 +12,8 @@
 #include <set>
 #include <map>
 #include <deque>
-#include <time.h>
-#include <chrono>
+//#include <time.h>
+//#include <chrono>
 
 #include <cinttypes>
 
@@ -33,44 +33,75 @@ public:
 	typedef uint32 state;
 	typedef uint16 alphabet;
 
+	
 	template <typename C>
 	void BuildAhoandDawg(const C & strset){
 		ac.addPatterns(strset);
 		da.buildingdawg(strset);
 	}
+	
+
+	//template <typename T>
+	  //void BuildAhoandDawg(const T strset[]);
+
+	//template <typename T>
+	  //void BuildAhoandDawg(const T & strset);
+
 
 	int statesize() {
 		return ac.statesize();
 	}
 
 
+	//template <typename T>
+	  //void DynamicBAD(const T & strset);
+
+	//template <typename T>
+	  //void DynamicBAD(const T strset[]);
+
+	
 	template <typename C>
-	  //void DynamicBAD(const C & strset, int &totalstatesize, int addcount, std::ofstream & ofs, int words_size){
-	  void DynamicBAD(const C & strset){
-	//void DynamicBAD(std::string  & str) {
-	  for(auto str : strset){
-	    std::cout << "dynamic bad" << std::endl;
+	  //void DynamicBAD(const C & strset){
+	void DynamicBAD(const C & str) {
+		  //std::cout << strset << std::endl;
+	  //for(auto str : strset){
+	    //std::cout << "dynamic bad" << std::endl;
+	    //std::cout << str << std::endl;
 
-		int position;
-		position = ac.searchstateposition(str);
+	    int position;
+	    position = ac.searchstateposition(str);
 
-		ac.addPath(str);
-		ac.addOutput(str);
+	    //std::cout << "check1" << std::endl;
 
-		std::vector<DAWG::fstates> failstates;
-		//firststate: from /secondstate: to
-		failstates = da.getFailStates(position, str);
-		ac.addfailurestates(failstates, str);
+	    ac.addPath(str);
+	    ac.addOutput(str);
 
-		ac.addFailure(position, str);
+	    //std::cout << "check2" << std::endl;
+		
+	    std::vector<DAWG::fstates> failstates;
+	    //firststate: from /secondstate: to
+	    failstates = da.getFailStates(position, str);
+	    //std::cout << "check2.5" << std::endl;
+	    ac.addfailurestates(failstates, str);
 
-		std::vector<DAWG::state> outstates;
-		outstates = da.getOutStates(str);
-		ac.addoutstates(outstates, str);
+	    //std::cout << "check3" << std::endl;
 
-		da.builddawg(str);
-	  }
+	    ac.addFailure(position, str);
+
+	    //std::cout << "check4" << std::endl;
+
+	    std::vector<DAWG::state> outstates;
+	    outstates = da.getOutStates(str);
+	    ac.addoutstates(outstates, str);
+
+	    //std::cout << "check5" << std::endl;
+
+	    da.builddawg(str);
+
+	    //std::cout << "check6" << std::endl;
+	  //}
 	}
+	
 
 };
 
