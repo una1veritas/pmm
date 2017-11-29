@@ -48,28 +48,28 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 }
 */
 
-ACMachine::aspair ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
+ACMachine::state ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
 
 	std::map<alphabet,state>::const_iterator c_itr = transitions[s].find(c);
 	if ( c_itr == transitions[s].end() ) {
-		return aspair(alph_end,failure_state);
+		return undef_state;
 	}
-	return *c_itr;
+	return c_itr->second;
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
-	aspair aspair;
+	state nexstate;
 	if ( ignore_case ) {
-		aspair = transition(current,toupper(c));
-		if ( aspair.second == failure_state )
-			aspair = transition(current,tolower(c));
+		nexstate = transition(current,toupper(c));
+		if (nexstate == undef_state )
+			nexstate = transition(current,tolower(c));
 	} else {
-		aspair = transition(current,c);
+		nexstate = transition(current,c);
 	}
-	if ( aspair.second == failure_state ) {
+	if ( nexstate == undef_state ) {
 		return false;
 	}
-	current = aspair.second;
+	current = nexstate;
 	return true;
 }
 
@@ -131,7 +131,7 @@ void ACMachine::addFailures() {
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
-	for(aspair const & assoc : transitions[initial_state] ) {
+	for(std::pair<alphabet,state> const & assoc : transitions[initial_state] ) {
 		//const alphabet c = assoc.first;
 		const state nxstate = assoc.second;
 		// if is neither an explicit failure, nor go-root-failure
@@ -157,20 +157,20 @@ void ACMachine::addFailures() {
 
 			state fstate = failure[cstate];
 //			std::cout << cstate << " ~~> " << fstate << " ";
-			aspair aspair;
+			state tsta;
 			while (1) {
-				aspair = transition(fstate,c);
-				if ( aspair.second == failure_state && fstate != initial_state ) {
+				tsta = transition(fstate,c);
+				if ( tsta == undef_state && fstate != initial_state ) {
 					fstate = failure[fstate];
 					continue;
 //					std::cout << " ~~> " << fstate << " ";
 				}
 				break;
 			}
-			if ( aspair.second == failure_state ) {
+			if ( tsta == undef_state ) {
 				failure[nxstate] = initial_state;
 			} else {
-				failure[nxstate] = aspair.second;
+				failure[nxstate] = tsta;
 				output[nxstate].insert(output[failure[nxstate]].begin(),output[failure[nxstate]].end());
 			}
 //			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];

@@ -92,7 +92,7 @@ int main(const int argc, char * const * argv) {
 		cout << endl;
 	}
 
-	acm pmm;
+	ACMachine pmm;
 
 	vector<string> words;
 	istringstream line;

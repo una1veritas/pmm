@@ -24,19 +24,17 @@ typedef size_t position;
 
 class ACMachine {
 public:
-	typedef uint32 state;
+	typedef int32 state;
 	typedef uint16 alphabet;
 	typedef const std::vector<alphabet> ustring;
-	typedef std::pair<alphabet,state> aspair;
 
 	// class constants
-		enum {
-			alph_start = 0,
-			alph_end = 0xffff,
-		};
+	enum {
+		alph_end = (alphabet) - 1,
+	};
 		enum {
 			initial_state = 0,
-			failure_state = initial_state,
+			undef_state = (state) -1,
 		};
 
 private:
@@ -52,8 +50,8 @@ private:
 	void setupInitialState(void);
 	state initialState() const { return initial_state; }
 	bool transfer(const alphabet & c, const bool ignore_case = false);
-	aspair transition(const state s, const alphabet c) const;
 
+	state transition(const state s, const alphabet c) const;
 
 public:
 	ACMachine(void);
@@ -105,8 +103,5 @@ public:
 	}
 
 };
-
-typedef ACMachine acm;
-
 
 #endif /* ACMACHINE_H_ */
