@@ -28,7 +28,7 @@ ACMachine::ACMachine(void) {
 
 void ACMachine::setupInitialState(void) {
 	transitions.clear();
-	transitions.push_back(std::map<alphabet,state>());
+	transitions.push_back(TransTable());
 	//transitions.push_back(TransTable());
 	failure.clear();
 	failure.push_back(initialState());
@@ -49,12 +49,7 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::state ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
-
-	std::map<alphabet,state>::const_iterator c_itr = transitions[s].find(c);
-	if ( c_itr == transitions[s].end() ) {
-		return undef_state;
-	}
-	return c_itr->second;
+	return transitions[s][c];
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
@@ -96,7 +91,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
 			newstate = size(); //the next state of the existing last state
-			transitions.push_back(std::map<alphabet,state>());
+			transitions.push_back(TransTable());
 			(transitions[current])[patt[pos]] = newstate;
 			//transitions[current].define(patt[pos],newstate);
 			failure.push_back(initialState());
@@ -131,6 +126,7 @@ void ACMachine::addFailures() {
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
+
 	for(std::pair<alphabet,state> const & assoc : transitions[initial_state] ) {
 		//const alphabet c = assoc.first;
 		const state nxstate = assoc.second;
@@ -245,9 +241,9 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::s
 		out << "}";
 	}
 	out << "[";
-	for(std::map<alphabet,state>::const_iterator it = transitions[i].begin();
-			it != transitions[i].end(); it++) {
-		out << "'" << (char)it->first << "'-> " << it->second << ", ";
+	for(TransTable::const_iterator itr = transitions[i].begin();
+			itr != transitions[i].end(); ++itr) {
+		out << "'" << (*itr).first << "'-> " << (*itr).second << ", ";
 	}
 	out << "~> " << failure[i];
 	out << "], ";
@@ -280,28 +276,20 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 			printStateOn(out,curr, str);
 			; // the first transition arc
-			if ( transitions[curr].begin() != transitions[curr].end() ) {
-				nextlabel = transitions[curr].begin()->first;
-			} else {
-				nextlabel = alph_end;
-			}
+			nextlabel = (*transitions[curr].begin()).first;
 		} else {
 			// returned from the child that still on path top.
 			// find next to path.back()
 			nextlabel = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			std::map<alphabet,state>::const_iterator it = transitions[curr].find(nextlabel);
+			TransTable::const_iterator it = transitions[curr].find(nextlabel);
 			++it;
 			// the next transition arc
-			if ( it != transitions[curr].end() ) {
-				nextlabel = it->first;
-			} else {
-				nextlabel = alph_end;
-			}
+			nextlabel = (*it).first;
 		}
 		if ( nextlabel != alph_end ) {
-			state nexstate = transitions[curr].find(nextlabel)->second;
+			state nexstate = (*transitions[curr].find(nextlabel)).second;
 			path.push_back(std::pair<alphabet,state>(nextlabel,nexstate)); // replace with new edge
 			curr = nexstate;
 		} else {
