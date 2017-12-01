@@ -28,8 +28,7 @@ ACMachine::ACMachine(void) {
 
 void ACMachine::setupInitialState(void) {
 	transitions.clear();
-	transitions.push_back(std::map<alphabet,state>());
-	//transitions.push_back(TransTable());
+	transitions.push_back(TransitionTable());
 	failure.clear();
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
@@ -49,9 +48,8 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::state ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
-
-	std::map<alphabet,state>::const_iterator c_itr = transitions[s].find(c);
-	if ( c_itr == transitions[s].end() ) {
+	TransitionTable::const_iterator c_itr;
+	if ( (c_itr = transitions[s].find(c)) == transitions[s].end() ) {
 		return undef_state;
 	}
 	return c_itr->second;
@@ -59,13 +57,7 @@ ACMachine::state ACMachine::transition(const ACMachine::state s, const ACMachine
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
 	state nexstate;
-	if ( ignore_case ) {
-		nexstate = transition(current,toupper(c));
-		if (nexstate == undef_state )
-			nexstate = transition(current,tolower(c));
-	} else {
-		nexstate = transition(current,c);
-	}
+	nexstate = transition(current, (ignore_case ? toupper(c) : c));
 	if ( nexstate == undef_state ) {
 		return false;
 	}
@@ -96,7 +88,7 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
 			newstate = size(); //the next state of the existing last state
-			transitions.push_back(std::map<alphabet,state>());
+			transitions.push_back(TransitionTable());
 			(transitions[current])[patt[pos]] = newstate;
 			//transitions[current].define(patt[pos],newstate);
 			failure.push_back(initialState());
@@ -131,12 +123,10 @@ void ACMachine::addFailures() {
 
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
-	for(std::pair<alphabet,state> const & assoc : transitions[initial_state] ) {
-		//const alphabet c = assoc.first;
-		const state nxstate = assoc.second;
+	for(std::pair<alphabet,state> const & nxpair : transitions[initial_state] ) {
 		// if is neither an explicit failure, nor go-root-failure
-		failure[nxstate]  = initial_state;
-		q.push_back(nxstate);
+		failure[nxpair.second]  = initial_state;
+		q.push_back(nxpair.second);
 //		std::cout << nxstate << ", ";
 	}
 //	std::cout << std::endl;
@@ -148,10 +138,10 @@ void ACMachine::addFailures() {
 //		std::cout << std::endl << "cstate " << cstate << std::endl;
 
 		// skips if == NULL
-		for(auto const & assoc : transitions[cstate] ) {
-			const alphabet c  = assoc.first;
-			const state nxstate = assoc.second;
-			q.push_back(nxstate);
+		for(auto const & nxpair : transitions[cstate] ) {
+			//const alphabet c  = assoc.first;
+			//const state nxstate = assoc.second;
+			q.push_back(nxpair.second);
 
 //			std::cout << cstate << " -" << (char) c << "-> " << nxstate << std::endl;
 
@@ -159,7 +149,7 @@ void ACMachine::addFailures() {
 //			std::cout << cstate << " ~~> " << fstate << " ";
 			state tsta;
 			while (1) {
-				tsta = transition(fstate,c);
+				tsta = transition(fstate, nxpair.first);
 				if ( tsta == undef_state && fstate != initial_state ) {
 					fstate = failure[fstate];
 					continue;
@@ -168,10 +158,10 @@ void ACMachine::addFailures() {
 				break;
 			}
 			if ( tsta == undef_state ) {
-				failure[nxstate] = initial_state;
+				failure[nxpair.second] = initial_state;
 			} else {
-				failure[nxstate] = tsta;
-				output[nxstate].insert(output[failure[nxstate]].begin(),output[failure[nxstate]].end());
+				failure[nxpair.second] = tsta;
+				output[nxpair.second].insert(output[failure[nxpair.second]].begin(),output[failure[nxpair.second]].end());
 			}
 //			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];
 //			std::cout << std::endl;
@@ -291,7 +281,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			nextlabel = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			std::map<alphabet,state>::const_iterator it = transitions[curr].find(nextlabel);
+			TransitionTable::const_iterator it = transitions[curr].find(nextlabel);
 			++it;
 			// the next transition arc
 			if ( it != transitions[curr].end() ) {

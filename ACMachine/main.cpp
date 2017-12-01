@@ -19,8 +19,8 @@ using namespace std;
 #include <time.h>
 
 int main(const int argc, char * const * argv) {
-	long wordcount_max = 0;
-	long additionalcount_max = 0;
+	unsigned long wordcount_max = 0;
+	unsigned long additionalcount_max = 0;
 	bool show_machine = false;
 	bool show_words = false;
 	bool ignore_case = false;

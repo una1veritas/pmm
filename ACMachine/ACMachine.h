@@ -28,6 +28,8 @@ public:
 	typedef uint16 alphabet;
 	typedef const std::vector<alphabet> ustring;
 
+	typedef std::map<alphabet,state> TransitionTable;
+
 	// class constants
 	enum {
 		alph_end = (alphabet) - 1,
@@ -38,7 +40,7 @@ public:
 		};
 
 private:
-	std::vector<std::map<alphabet,state> > transitions;
+	std::vector<TransitionTable> transitions;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
