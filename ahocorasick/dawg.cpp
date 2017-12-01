@@ -19,6 +19,9 @@ void DAWG::setupInitialState(void) {
 	transitions.push_back(std::map<alphabet, state_edgelabel>());
 	spointer.clear();
 	spointer.push_back(initialState());
+	inv_sp.clear();
+	inv_sp.push_back(std::set<state>());
+	inv_sp[initialState()].clear();
 	torb.clear();
 	torb.push_back(true);
 	datoac.clear();
@@ -87,6 +90,7 @@ DAWG::state DAWG::update(state sink, char c) {
       dawgtoacm(true);
 
       spointer.push_back(initialState());
+      inv_sp.push_back(std::set<state>());
 
       state currentstate = currentsink;
       int sfstate = -1;
@@ -118,6 +122,7 @@ DAWG::state DAWG::update(state sink, char c) {
 		sfstate = initialState();
 
       spointer[newsink] = sfstate;
+	  inv_sp[sfstate].insert(newsink);
       return newsink;
     }
 }
@@ -126,6 +131,7 @@ DAWG::state DAWG::split(state parentstate, state childstate, char c) {
   
   state newchildstate;
   std::map<alphabet, state_edgelabel>::iterator itr;
+  std::vector<state>::iterator itr_sp;
   newchildstate = transitions.size();
   transitions.push_back(std::map<alphabet, state_edgelabel>());
   state_edgelabel  tmp;
@@ -139,7 +145,14 @@ DAWG::state DAWG::split(state parentstate, state childstate, char c) {
     assoc.second.second = false;
 
   spointer.push_back(spointer[childstate]);
+  inv_sp.push_back(std::set<state>());
+  inv_sp[spointer[childstate]].insert((spointer.size() - 1));
   spointer[childstate] = newchildstate;
+  inv_sp[newchildstate].insert(childstate);
+  //itr_sp = std::find(inv_sp[spointer[childstate]].begin(), inv_sp[spointer[childstate]].end(), childstate);
+  //inv_sp[spointer[childstate]].erase(itr_sp);
+  inv_sp[spointer[newchildstate]].erase(childstate);
+
 
   state currentstate;
   currentstate = parentstate;
@@ -165,9 +178,76 @@ DAWG::state DAWG::split(state parentstate, state childstate, char c) {
 
 
 template <typename T>
+void DAWG::builddawg(const T str[]){
+  const std::string s(str);
+  int len;
+  for(len = 0; str[len] != 0; len++){}
+  builddawg(str, len);
+}
+	
+
+template <typename T>
+void DAWG::builddawg(const T & str){
+  builddawg(str, str.length());
+}
+
+template <>
+void DAWG::builddawg<char>(const char & str){
+  std::string s{ str };
+  builddawg(s, 1);
+}
+
+
+template <typename T>
+void DAWG::builddawg(const T & str, const int length){
+  state sink;
+  sink = initialState();
+  for(int i =0; i < length; i++) {
+    sink = update(sink, str[i]);
+  }
+}
+
+
+template <>
+void DAWG::builddawg<char>(const char & str, const int length){
+  state sink;
+  sink = initialState();
+  sink = update(sink, str);
+}
+
+
+template void DAWG::builddawg<char>(const char str[]);
+template void DAWG::builddawg<std::string>(const std::string & str);
+template void DAWG::builddawg<char>(const char & str);
+
+/*
+template <typename T>
+void DAWG::buildingdawg(const T strset[]){
+  const std::string s(strset);
+  buildingdawg(s);
+}
+
+template <typename T>
+void DAWG::buildingdawg(const T & strset){
+  for (auto str : strset) {
+    builddawg(str);
+  }
+}
+
+template void DAWG::buildingdawg<std::string>(const std::string & strset);
+template void DAWG::buildingdawg<char>(const char strset[]);
+*/
+
+template <typename T>
 std::vector<DAWG::fstates> DAWG::getFailStates(int position, const T patt[]) {
   const std::string p(patt);
   return getFailStates(position, p);
+}
+
+template <>
+std::vector<DAWG::fstates> DAWG::getFailStates<char>(int position, const char & patt) {
+	const std::string p{ patt };
+	return getFailStates(position, p);
 }
 
 //std::vector<DAWG::fstates> DAWG::getFailStates(int position, std::string patt) {
@@ -247,6 +327,12 @@ template <typename T>
 std::vector<DAWG::state> DAWG::getOutStates(const T patt[]) {
   const std::string p(patt);
   return getOutStates(p);
+}
+
+template <>
+std::vector<DAWG::state> DAWG::getOutStates<char>(const char & patt) {
+	const std::string p{ patt };
+	return getOutStates(p);
 }
 
 
