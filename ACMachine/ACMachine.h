@@ -35,18 +35,18 @@ public:
 	};
 	enum {
 		initial_state = 0,
-		undef_state = (state) -1,
+		undef_state = -1,
 	};
 
 	struct TransTable {
 	private:
-		const static alphabet TRANSFER_SIZE = 128;
+		const static alphabet TRANSTABLE_ARRAY_LIMIT = 128;
 
 	public:
-		state transfer[TRANSFER_SIZE];
+		state transfer[TRANSTABLE_ARRAY_LIMIT];
 
 		TransTable(void) {
-			for(alphabet i = 0; i < TRANSFER_SIZE; ++i)
+			for(alphabet i = 0; i < TRANSTABLE_ARRAY_LIMIT; ++i)
 				transfer[i] = undef_state;
 		}
 
@@ -60,39 +60,42 @@ public:
 
 		struct const_iterator {
 			const state * transfer;
-			std::pair<alphabet,state> translink;
+			alphabet label;
+			state dststate;
 
 			const_iterator(const state * transf, const alphabet c, const state s) {
 				transfer = transf;
-				translink.first = c;
-				translink.second = s;
+				label = c;
+				dststate = s;
 			}
 
-			const std::pair<alphabet,state> & operator *() const {
-				return translink;
+			const alphabet & operator *() {
+				return label;
 			}
 
-			const_iterator & findFirstOrNext(const alphabet c) {
-				alphabet i;
-				for(i = c; i < TRANSFER_SIZE && transfer[i] == undef_state; ++i);
-				if ( c < TRANSFER_SIZE ) {
-					translink.first = i;
-					translink.second = transfer[i];
+			const alphabet operator *() const {
+				return label;
+			}
+
+			const_iterator & findOrNext(const alphabet c) {
+				for(label = c; label < TRANSTABLE_ARRAY_LIMIT && transfer[label] == undef_state; ++label);
+				if ( label < TRANSTABLE_ARRAY_LIMIT ) {
+					dststate = transfer[label];
 					return *this;
 				}
-				translink.first = TRANSFER_SIZE;
-				translink.second = undef_state;
+				label = alph_end;
+				dststate = undef_state;
 				return *this;
 
 			}
 
 			const_iterator & operator++() {
-				findFirstOrNext(translink.first+1);
+				findOrNext(label + 1);
 				return *this;
 			}
 
 			bool notequals(const const_iterator & j) const {
-				return translink.first != j.translink.first;
+				return label != j.label;
 			}
 
 			bool friend operator!=(const const_iterator & a, const const_iterator & b) {
@@ -103,15 +106,15 @@ public:
 		};
 
 		const_iterator begin() const {
-			return const_iterator(transfer, alph_start, undef_state).findFirstOrNext(alph_start);
+			return const_iterator(transfer, alph_start, undef_state).findOrNext(alph_start);
 		}
 
 		const_iterator end() const {
-			return const_iterator(transfer, TRANSFER_SIZE, undef_state);
+			return const_iterator(transfer, alph_end, undef_state);
 		}
 
 		const_iterator find(const alphabet c) const {
-			return const_iterator(transfer, alph_start, undef_state).findFirstOrNext(c);
+			return const_iterator(transfer, alph_start, undef_state).findOrNext(c);
 		}
 
 	};

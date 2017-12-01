@@ -127,9 +127,8 @@ void ACMachine::addFailures() {
 	// for states whose distance from the initial state is one.
 //	std::cout << "states within distance one: ";
 
-	for(std::pair<alphabet,state> const & assoc : transitions[initial_state] ) {
-		//const alphabet c = assoc.first;
-		const state nxstate = assoc.second;
+	for(alphabet const & c : transitions[initial_state] ) {
+		const state nxstate = transitions[initial_state][c];
 		// if is neither an explicit failure, nor go-root-failure
 		failure[nxstate]  = initial_state;
 		q.push_back(nxstate);
@@ -144,9 +143,8 @@ void ACMachine::addFailures() {
 //		std::cout << std::endl << "cstate " << cstate << std::endl;
 
 		// skips if == NULL
-		for(auto const & assoc : transitions[cstate] ) {
-			const alphabet c  = assoc.first;
-			const state nxstate = assoc.second;
+		for(auto const & c : transitions[cstate] ) {
+			const state nxstate = transitions[cstate][c];
 			q.push_back(nxstate);
 
 //			std::cout << cstate << " -" << (char) c << "-> " << nxstate << std::endl;
@@ -243,7 +241,7 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::s
 	out << "[";
 	for(TransTable::const_iterator itr = transitions[i].begin();
 			itr != transitions[i].end(); ++itr) {
-		out << "'" << (*itr).first << "'-> " << (*itr).second << ", ";
+		out << "'" << *itr << "'-> " << transitions[i][*itr] << ", ";
 	}
 	out << "~> " << failure[i];
 	out << "], ";
@@ -276,7 +274,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 			printStateOn(out,curr, str);
 			; // the first transition arc
-			nextlabel = (*transitions[curr].begin()).first;
+			nextlabel = *transitions[curr].begin();
 		} else {
 			// returned from the child that still on path top.
 			// find next to path.back()
@@ -286,10 +284,10 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			TransTable::const_iterator it = transitions[curr].find(nextlabel);
 			++it;
 			// the next transition arc
-			nextlabel = (*it).first;
+			nextlabel = *it;
 		}
 		if ( nextlabel != alph_end ) {
-			state nexstate = (*transitions[curr].find(nextlabel)).second;
+			state nexstate = transitions[curr][nextlabel];
 			path.push_back(std::pair<alphabet,state>(nextlabel,nexstate)); // replace with new edge
 			curr = nexstate;
 		} else {
