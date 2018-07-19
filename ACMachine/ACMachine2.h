@@ -13,7 +13,7 @@
 #include <vector>
 #include <array>
 #include <set>
-//#include <map>
+#include <map>
 
 #include <cinttypes>
 
@@ -26,27 +26,25 @@ typedef size_t position;
 class ACMachine {
 public:
 	typedef int32 state;
-	typedef uint8 alphabet;
-//	typedef const std::vector<alphabet> ustring;
+	typedef uint16 alphabet;
+	typedef const std::vector<alphabet> ustring;
 
-	static const uint32 alphabet_size = 1<<(sizeof(alphabet)*8);
-	static const uint32 failure_index = alphabet_size;
-	struct TrieNode {
-		state table[alphabet_size+1];
-		std::vector< position > output;
-	};
+	typedef std::map<alphabet,state> TransitionTable;
 
 	// class constants
 	enum {
 		alph_end = (alphabet) - 1,
 	};
-	enum {
-		initial_state = 0,
-		undef_state = (state) -1,
-	};
+		enum {
+			initial_state = 0,
+			undef_state = (state) -1,
+		};
 
 private:
-	std::vector<ACMachine::TrieNode> transitions;
+	std::vector<TransitionTable> transitions;
+	std::vector<state> failure;
+	std::vector<std::set<position> > output;
+
 	state current;
 
 private:
@@ -61,14 +59,16 @@ private:
 public:
 	ACMachine(void);
 
+
 	uint32 size() const { return transitions.size(); }
+
 
 	state resetState() { return current = initial_state; }
 	state currentState() const { return current; }
 
 	bool atInitialState() const { return current == initial_state; }
 
-	const std::vector<position> & currentOutput() const { return transitions[current].output; }
+	const std::set<position> & currentOutput() const { return output[current]; }
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>

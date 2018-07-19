@@ -27,13 +27,14 @@ ACMachine::ACMachine(void) {
 }
 
 void ACMachine::setupInitialState(void) {
-	TrieNode root;
-	memset(root.table, undef_state, alphabet_size);
-	root.table[failure_index] = initialState();
-	// failure to initial state from initial state eats up one symbol at transition.
-	root.output.clear();
 	transitions.clear();
-	transitions.push_back(root);
+	transitions.push_back(TransitionTable());
+	failure.clear();
+	failure.push_back(initialState());
+	// failure to initial state from initial state eats up one symbol at transition.
+	output.clear();
+	output.push_back(std::set<position>());
+	output[initialState()].clear();
 }
 
 /*
@@ -47,7 +48,11 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::state ACMachine::transition(const ACMachine::state s, const ACMachine::alphabet c) const {
-	return transitions[s].table[c];
+	TransitionTable::const_iterator c_itr;
+	if ( (c_itr = transitions[s].find(c)) == transitions[s].end() ) {
+		return undef_state;
+	}
+	return c_itr->second;
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
@@ -83,11 +88,11 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
 			newstate = size(); //the next state of the existing last state
-			transitions.push_back(TrieNode());
-			transitions[current].table[patt[pos]] = newstate;
+			transitions.push_back(TransitionTable());
+			(transitions[current])[patt[pos]] = newstate;
 			//transitions[current].define(patt[pos],newstate);
-			transitions[current].table[failure_index] = initialState();
-			transitions[current].output.clear();
+			failure.push_back(initialState());
+			output.push_back(std::set<position>());
 			current = newstate;
 		}
 	}
