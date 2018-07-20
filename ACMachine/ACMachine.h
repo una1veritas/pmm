@@ -30,11 +30,6 @@ public:
 //	typedef const std::vector<alphabet> ustring;
 
 	static const uint32 alphabet_size = 1<<(sizeof(alphabet)*8);
-	static const uint32 failure_index = alphabet_size;
-	struct TrieNode {
-		state table[alphabet_size+1];
-		std::vector< position > output;
-	};
 
 	// class constants
 	enum {
@@ -46,7 +41,12 @@ public:
 	};
 
 private:
-	std::vector<ACMachine::TrieNode> transitions;
+	struct TrieNode {
+		state table[alphabet_size];
+		state failure;
+		std::vector< position > output;
+	};
+	std::vector<TrieNode> transitions;
 	state current;
 
 private:
