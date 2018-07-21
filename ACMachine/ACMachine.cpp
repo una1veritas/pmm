@@ -134,7 +134,7 @@ void ACMachine::addFailures() {
 //		std::cout << std::endl << "cstate " << cstate << std::endl;
 
 		// skips if == NULL
-		for( alphabet c = 0; c < alphabet_size; ++c ) {
+		for ( uint16 c = 0; c < alphabet_size; ++c) {
 			const state & nxstate = transitions[cstate].table[c];
 			//const alphabet c  = assoc.first;
 			//const state nxstate = assoc.second;
@@ -164,6 +164,7 @@ void ACMachine::addFailures() {
 			}
 //			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];
 //			std::cout << std::endl;
+			c++;
 		}
 	}
 }
