@@ -25,7 +25,7 @@ typedef size_t position;
 
 class ACMachine {
 public:
-	typedef int32 state;
+	typedef int32 state_index;
 	typedef uint8 alphabet;
 //	typedef const std::vector<alphabet> ustring;
 
@@ -35,48 +35,55 @@ public:
 	enum {
 		alph_end = (alphabet) - 1,
 	};
-	enum {
-		initial_state = 0,
-		undef_state = (state) -1,
-	};
 
 private:
-	struct TrieNode {
-		state table[alphabet_size];
-		state failure;
+	struct State {
+		state_index trans[alphabet_size];
+		state_index failure;
 		std::vector< position > output;
+
+		enum {
+			initial = 0,
+			undefined = (state_index) -1,
+		};
+
+		State() {
+			memset(trans, State::undefined, alphabet_size);
+			failure = initial;
+			output.clear();
+		}
 	};
-	std::vector<TrieNode> transitions;
-	state current;
+	std::vector<State> states;
+	state_index current;
 
 private:
-	std::ostream & printStateOn(std::ostream & out, state i, const std::string & pathstr) const;
+	std::ostream & printStateOn(std::ostream & out, state_index i, const std::string & pathstr) const;
 
 	void setupInitialState(void);
-	state initialState() const { return initial_state; }
+	state_index initialState() const { return State::initial; }
 	bool transfer(const alphabet & c, const bool ignore_case = false);
 
-	state transition(const state s, const alphabet c) const;
+	state_index transition(const state_index s, const alphabet c) const;
 
 public:
 	ACMachine(void);
 
-	uint32 size() const { return transitions.size(); }
+	uint32 size() const { return states.size(); }
 
-	state resetState() { return current = initial_state; }
-	state currentState() const { return current; }
+	state_index resetState() { return current = State::initial; }
+	state_index currentState() const { return current; }
 
-	bool atInitialState() const { return current == initial_state; }
+	bool atInitialState() const { return current == State::initial; }
 
-	const std::vector<position> & currentOutput() const { return transitions[current].output; }
+	const std::vector<position> & currentOutput() const { return states[current].output; }
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>
-		state addPath(const T & patt, const uint32 & length);
+		state_index addPath(const T & patt, const uint32 & length);
 	template <typename T>
-		state addPath(const T patt[]);
+		state_index addPath(const T patt[]);
 	template <typename T>
-		state addPath(const T & patt);
+		state_index addPath(const T & patt);
 
 	template <typename T>
 		bool addOutput(const T & patt);

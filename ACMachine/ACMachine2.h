@@ -41,7 +41,7 @@ public:
 		};
 
 private:
-	std::vector<TransitionTable> transitions;
+	std::vector<TransitionTable> states;
 	std::vector<state> failure;
 	std::vector<std::set<position> > output;
 
@@ -60,7 +60,7 @@ public:
 	ACMachine(void);
 
 
-	uint32 size() const { return transitions.size(); }
+	uint32 size() const { return states.size(); }
 
 
 	state resetState() { return current = initial_state; }
