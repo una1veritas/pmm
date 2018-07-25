@@ -27,8 +27,7 @@ ACMachine::ACMachine(void) {
 }
 
 void ACMachine::setupInitialState(void) {
-	State root;
-	states.push_back(root);
+	states.push_back(State());
 }
 
 /*
@@ -241,15 +240,15 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state_index i, const 
 
 
 std::ostream & ACMachine::printOn(std::ostream & out) const {
-	std::deque<std::pair<alphabet,state> > path;
-	state curr;
+	std::deque<std::pair<alphabet,state_index> > path;
+	state_index curr;
 	std::string str;
 
 	// dummy arc to the initial state (from nothing).
-	std::pair<alphabet,state> dummy(alph_end,initial_state);
+	std::pair<alphabet,state_index> dummy(alph_end, State::initial);
 	out << "ACMachine(";
 	path.push_back(dummy);
-	curr = initial_state;
+	curr = State::initial;
 	str = "";
 	//printStateOn(out,curr,str);
 
@@ -264,6 +263,9 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 			printStateOn(out,curr, str);
 			; // the first transition arc
+			for (uint16 c = 0; c < alphabet_size && states[curr].trans[c] != State::undefined; ++c) {
+
+
 			if ( states[curr].begin() != states[curr].end() ) {
 				nextlabel = states[curr].begin()->first;
 			} else {
