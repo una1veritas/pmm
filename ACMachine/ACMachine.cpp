@@ -78,7 +78,7 @@ ACMachine::state_index ACMachine::addPath(const T & patt, const uint32 & length)
 		if ( !transfer(patt[pos]) ) {
 			newstate = size(); //the next state of the existing last state
 			states.push_back(State());
-			states[current].trans[patt[pos]] = newstate;
+			states[current].trans[(uint16) patt[pos]] = newstate;
 			//transitions[current].define(patt[pos],newstate);
 			states[current].failure = initialState();
 			states[current].output.clear();
@@ -263,11 +263,10 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 			printStateOn(out,curr, str);
 			; // the first transition arc
-			for (uint16 c = 0; c < alphabet_size && states[curr].trans[c] != State::undefined; ++c) {
-
-
-			if ( states[curr].begin() != states[curr].end() ) {
-				nextlabel = states[curr].begin()->first;
+			uint16 c;
+			for (c = 0; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
+			if ( states[curr].trans[c] != State::undefined ) {
+				nextlabel = (alphabet) c;
 			} else {
 				nextlabel = alph_end;
 			}
@@ -277,21 +276,21 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			nextlabel = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			TransitionTable::const_iterator it = states[curr].find(nextlabel);
-			++it;
+			uint16 c;
+			for (c = nextlabel; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
 			// the next transition arc
-			if ( it != states[curr].end() ) {
-				nextlabel = it->first;
+			if ( states[curr].trans[c] != State::undefined ) {
+				nextlabel = (alphabet) c;
 			} else {
 				nextlabel = alph_end;
 			}
 		}
 		if ( nextlabel != alph_end ) {
-			state nexstate = states[curr].find(nextlabel)->second;
-			path.push_back(std::pair<alphabet,state>(nextlabel,nexstate)); // replace with new edge
+			state_index nexstate = states[curr].trans[nextlabel];
+			path.push_back(std::pair<alphabet,state_index>(nextlabel,nexstate)); // replace with new edge
 			curr = nexstate;
 		} else {
-			std::pair<alphabet,state> aspair = path.back();
+			std::pair<alphabet,state_index> aspair = path.back();
 			path.pop_back();
 			if ( path.empty() ) // popped the dummy path to the initial state.
 				break;
