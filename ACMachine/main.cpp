@@ -33,6 +33,12 @@ int main(const int argc, char * const * argv) {
 
 	commandargs optargs(argc, argv, "n:p:x:isvw");
 
+	/*
+	 * ./acm.exe -n $wc -x $adc -p -
+	 *
+	 * ./acm.exe -v -s -p microwords.txt smalltext.txt
+	 *
+	 */
 	pair<bool,const char*> opt;
 	opt = optargs.opt('v');
 	if ( opt.first ) {
@@ -110,14 +116,15 @@ int main(const int argc, char * const * argv) {
 		}
 	}
 	if ( patternfile.is_open() ) patternfile.close();
-	cout << "got " << words.size() << " words, ";
-	//cout << std::flush;
+	cout << "got " << words.size() << " words, " << std::flush;
+
 	if ( show_words ) {
 		cout << endl;
 		for(auto tmp : words)
 			cout << tmp << ", ";
 		cout << endl << endl;
 	}
+
 	time_t sw = clock();
 	pmm.addPatterns(words);
 	sw = clock() - sw;

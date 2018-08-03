@@ -16,6 +16,7 @@
 //#include <map>
 
 #include <cinttypes>
+#include <cstring>
 
 typedef int32_t int32;
 typedef uint32_t uint32;
@@ -48,9 +49,16 @@ private:
 		};
 
 		State() {
-			memset(trans, State::undefined, alphabet_size);
+			for(uint16 ix = 0; ix < alphabet_size; ++ix)
+				trans[ix] = State::undefined;
 			failure = initial;
 			output.clear();
+		}
+
+		uint16 firstTrans(const alphabet bc) const {
+			uint16 pos = bc;
+			for ( ; pos < alphabet_size && trans[pos] == State::undefined; ++pos );
+			return pos;
 		}
 	};
 	std::vector<State> states;

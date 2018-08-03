@@ -229,7 +229,8 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state_index i, const 
 		out << "}";
 	}
 	out << "[";
-	for(uint16 c = 0; c < alphabet_size; ++c) {
+	for (uint16 c = 0; (c = states[i].firstTrans((const alphabet) c)) != alphabet_size; ++c) {
+//	for(uint16 c = 0; c < alphabet_size; ++c) {
 		out << "'" << (char) c << "'-> " << states[i].trans[c] << ", ";
 	}
 	out << "~> " << states[i].failure;
@@ -250,6 +251,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 	path.push_back(dummy);
 	curr = State::initial;
 	str = "";
+
 	//printStateOn(out,curr,str);
 
 	alphabet nextlabel;
@@ -262,22 +264,23 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 				str[i] = path[i].first;
 			}
 			printStateOn(out,curr, str);
-			; // the first transition arc
-			uint16 c;
-			for (c = 0; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
+			// the first transition arc
+			uint16 c = states[curr].firstTrans((alphabet)0);
+//			for (c = 0; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
 			if ( states[curr].trans[c] != State::undefined ) {
 				nextlabel = (alphabet) c;
 			} else {
 				nextlabel = alph_end;
 			}
 		} else {
+			break;
 			// returned from the child that still on path top.
 			// find next to path.back()
 			nextlabel = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			uint16 c;
-			for (c = nextlabel; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
+			uint16 c = states[curr].firstTrans(nextlabel);
+//			for (c = nextlabel; c < alphabet_size && states[curr].trans[c] == State::undefined; ++c);
 			// the next transition arc
 			if ( states[curr].trans[c] != State::undefined ) {
 				nextlabel = (alphabet) c;
@@ -286,10 +289,14 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 		}
 		if ( nextlabel != alph_end ) {
+			std::cout << "nextlabel = " << (uint16) nextlabel << "'" << (char) nextlabel << "'" << std::endl;
+			break;
 			state_index nexstate = states[curr].trans[nextlabel];
 			path.push_back(std::pair<alphabet,state_index>(nextlabel,nexstate)); // replace with new edge
 			curr = nexstate;
 		} else {
+			break;
+
 			std::pair<alphabet,state_index> aspair = path.back();
 			path.pop_back();
 			if ( path.empty() ) // popped the dummy path to the initial state.
