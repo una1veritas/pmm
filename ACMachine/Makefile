@@ -7,8 +7,8 @@ CXXFLAGS = -Wall -g -O2
 
 INCDIRS = -I./
 
-INCLUDES = ACMachine.h
-OBJS = ACMachine.o cmdargs.o main.o
+INCLUDES = ACMachine_tree.h
+OBJS = ACMachine_tree.o cmdargs.o main.o
 LIBS = 
 TARGET = acm.exe
 
@@ -26,4 +26,4 @@ $(TARGET):	$(OBJS) $(INCLUDES)
 all: $(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET) *~
+	rm -f *.o $(TARGET) *~

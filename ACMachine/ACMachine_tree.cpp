@@ -5,11 +5,10 @@
  *      Author: sin
  */
 
-#include "ACMachine.h"
-
 #include <deque>
 
 #include <cctype>
+#include "ACMachine_tree.h"
 
 /*
 	std::set<std::string> patterns;
@@ -33,7 +32,7 @@ void ACMachine::setupInitialState(void) {
 	failure.push_back(initialState());
 	// failure to initial state from initial state eats up one symbol at transition.
 	output.clear();
-	output.push_back(std::set<position>());
+	output.push_back(std::vector<position>());
 	output[initialState()].clear();
 }
 
@@ -87,12 +86,12 @@ ACMachine::state ACMachine::addPath(const T & patt, const uint32 & length) {
 
 	for(pos = 0; pos < length; ++pos) {
 		if ( !transfer(patt[pos]) ) {
-			newstate = size(); //the next state of the existing last state
+			newstate = stateCount(); //the next state of the existing last state
 			states.push_back(TransitionTable());
 			(states[current])[patt[pos]] = newstate;
 			//transitions[current].define(patt[pos],newstate);
 			failure.push_back(initialState());
-			output.push_back(std::set<position>());
+			output.push_back(std::vector<position>());
 			current = newstate;
 		}
 	}
@@ -105,8 +104,8 @@ template ACMachine::state ACMachine::addPath<std::string>(const std::string & pa
 
 template <typename T>
 bool ACMachine::addOutput(const T & patt) {
-	std::pair<std::set<position>::iterator,bool> res = output[current].insert( patt.length() );
-	return res.second;
+	output[current].push_back( patt.length() );
+	return true;
 }
 
 template <typename T>
@@ -161,7 +160,8 @@ void ACMachine::addFailures() {
 				failure[nxpair.second] = initial_state;
 			} else {
 				failure[nxpair.second] = tsta;
-				output[nxpair.second].insert(output[failure[nxpair.second]].begin(),output[failure[nxpair.second]].end());
+				output[nxpair.second].insert(output[nxpair.second].end(),
+						output[failure[nxpair.second]].begin(),output[failure[nxpair.second]].end());
 			}
 //			std::cout << std::endl << "set "<< nxstate << " ~~> " <<  failure[nxstate];
 //			std::cout << std::endl;
@@ -181,7 +181,7 @@ std::vector<std::pair<position, const std::string> >
 		if ( transfer(text[pos]) ) {
 			uring.push_back(text[pos]);
 			if ( !output[current].empty() ) {
-				for(std::set<position>::iterator it = output[current].begin();
+				for(std::vector<position>::iterator it = output[current].begin();
 						it != output[current].end(); it++) {
 					const position patlen = *it;
 					std::string patt(patlen, ' ');
@@ -226,8 +226,7 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state i, const std::s
 	}
 	if ( output[i].size() > 0 ) {
 		out << "{";
-		for(std::set<position>::iterator it = output[i].begin();
-				it != output[i].end(); ) {
+		for(auto it = output[i].begin(); it != output[i].end(); ) {
 			out << pathstr.substr(pathstr.length() - *it, *it);
 			if ( ++it != output[i].end() )
 				out << ", ";

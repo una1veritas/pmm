@@ -5,18 +5,18 @@
  *      Author: sin
  */
 
-#ifndef ACMACHINE_H_
-#define ACMACHINE_H_
+#ifndef ACMACHINE_ARRAY_H_
+#define ACMACHINE_ARRAY_H_
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <array>
-#include <set>
+//#include <set>
 //#include <map>
 
 #include <cinttypes>
-#include <cstring>
+//#include <cstring>
 
 typedef int32_t int32;
 typedef uint32_t uint32;
@@ -32,14 +32,9 @@ public:
 
 	static const uint32 alphabet_size = 1<<(sizeof(alphabet)*8);
 
-	// class constants
-	enum {
-		alph_end = (alphabet) - 1,
-	};
-
 private:
 	struct State {
-		state_index trans[alphabet_size];
+		std::array<state_index, alphabet_size>  trans;
 		state_index failure;
 		std::vector< position > output;
 
@@ -49,17 +44,22 @@ private:
 		};
 
 		State() {
-			for(uint16 ix = 0; ix < alphabet_size; ++ix)
-				trans[ix] = State::undefined;
+			trans.fill(State::undefined);
 			failure = initial;
 			output.clear();
 		}
 
-		uint16 firstTrans(const alphabet bc) const {
-			uint16 pos = bc;
-			for ( ; pos < alphabet_size && trans[pos] == State::undefined; ++pos );
-			return pos;
+		uint16 firstTrans(const alphabet bc = 0) const {
+			uint16 c = bc;
+			for (auto ptr = trans.begin() + bc; ptr != trans.end(); ++c, ++ptr )
+				if (*ptr != State::undefined) break;
+			return c;
 		}
+
+		uint16 nextTrans(const alphabet bc) const {
+			return firstTrans(bc + 1);
+		}
+
 	};
 	std::vector<State> states;
 	state_index current;
@@ -76,7 +76,7 @@ private:
 public:
 	ACMachine(void);
 
-	uint32 size() const { return states.size(); }
+	uint32 stateCount() const { return states.size(); }
 
 	state_index resetState() { return current = State::initial; }
 	state_index currentState() const { return current; }
@@ -122,4 +122,4 @@ public:
 
 };
 
-#endif /* ACMACHINE_H_ */
+#endif /* ACMACHINE_ARRAY_H_ */

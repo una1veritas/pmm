@@ -5,8 +5,8 @@
  *      Author: sin
  */
 
-#ifndef ACMACHINE_H_
-#define ACMACHINE_H_
+#ifndef ACMACHINE_TREE_H_
+#define ACMACHINE_TREE_H_
 
 #include <iostream>
 #include <string>
@@ -43,7 +43,7 @@ public:
 private:
 	std::vector<TransitionTable> states;
 	std::vector<state> failure;
-	std::vector<std::set<position> > output;
+	std::vector<std::vector<position> > output;
 
 	state current;
 
@@ -60,7 +60,7 @@ public:
 	ACMachine(void);
 
 
-	uint32 size() const { return states.size(); }
+	uint32 stateCount() const { return states.size(); }
 
 
 	state resetState() { return current = initial_state; }
@@ -68,7 +68,7 @@ public:
 
 	bool atInitialState() const { return current == initial_state; }
 
-	const std::set<position> & currentOutput() const { return output[current]; }
+	const std::vector<position> & currentOutput() const { return output[current]; }
 
 	// add patt to the trie and output of the destination state.
 	template <typename T>

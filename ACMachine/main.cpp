@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#include "ACMachine.h"
+#include <ACMachine_tree.h>
 #include <cmdargs.h>
 
 #include <time.h>
@@ -100,6 +100,9 @@ int main(const int argc, char * const * argv) {
 
 	ACMachine pmm;
 
+	if ( verboseout )
+		cout << "reading... " << std::flush;
+
 	vector<string> words;
 	istringstream line;
 	string tmp;
@@ -116,7 +119,8 @@ int main(const int argc, char * const * argv) {
 		}
 	}
 	if ( patternfile.is_open() ) patternfile.close();
-	cout << "got " << words.size() << " words, " << std::flush;
+	if ( verboseout )
+		cout << "got " << words.size() << " words, " << std::endl;
 
 	if ( show_words ) {
 		cout << endl;
@@ -130,10 +134,10 @@ int main(const int argc, char * const * argv) {
 	sw = clock() - sw;
 
 	words.clear();
+	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec. for " << pmm.stateCount() << " states." << endl;
 	if ( show_machine ){
 		cout << endl << pmm << endl << endl;
 	}
-	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec. for " << pmm.size() << " states." << endl;
 	//cout << "proceed?" << endl;
 	//std::getline(cin, tmp);
 
