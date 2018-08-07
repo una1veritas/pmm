@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#include <ACMachine_tree.h>
+#include <ACMachine_array.h>
 #include <cmdargs.h>
 
 #include <time.h>
@@ -134,13 +134,14 @@ int main(const int argc, char * const * argv) {
 	sw = clock() - sw;
 
 	words.clear();
-	cout << "took " << sw / (double) CLOCKS_PER_SEC << " sec. for " << pmm.stateCount() << " states." << endl;
+	cout << "machine construction took " << sw / (double) CLOCKS_PER_SEC << " sec. for " << pmm.stateCount() << " states." << endl;
 	if ( show_machine ){
 		cout << endl << pmm << endl << endl;
 	}
 	//cout << "proceed?" << endl;
 	//std::getline(cin, tmp);
 
+	sw = clock();
 	pmm.resetState();
 	position pos = 0;
 	string swindow = "";
@@ -163,6 +164,8 @@ int main(const int argc, char * const * argv) {
 		pos++;
 	}
 	//cout << endl;
+	sw = clock() - sw;
+	cout << "search took " << sw / (double) CLOCKS_PER_SEC << " sec." << endl;
 
 	if ( targetfile ) targetfile.close();
 

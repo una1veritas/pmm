@@ -35,10 +35,11 @@ public:
 	enum {
 		alph_end = (alphabet) - 1,
 	};
-		enum {
-			initial_state = 0,
-			undef_state = (state) -1,
-		};
+
+	enum {
+		initial_state = 0,
+		undef_state = (state) -1,
+	};
 
 private:
 	std::vector<TransitionTable> states;

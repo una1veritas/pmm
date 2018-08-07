@@ -7,8 +7,8 @@ CXXFLAGS = -Wall -g -O2
 
 INCDIRS = -I./
 
-INCLUDES = ACMachine_tree.h
-OBJS = ACMachine_tree.o cmdargs.o main.o
+INCLUDES = ACMachine_varray.h
+OBJS = ACMachine_varray.o cmdargs.o main.o
 LIBS = 
 TARGET = acm.exe
 
