@@ -40,11 +40,8 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::state_index ACMachine::transition(const ACMachine::state_index s, const ACMachine::alphabet c) const {
-	for (std::vector<aspair>::const_iterator itr = states[s].trans.begin(); itr != states[s].trans.end(); ++itr) {
-		if ( itr->first == c )
-			return itr->second;
-	}
-	return State::undefined;
+	std::vector<aspair>::const_iterator itr = states[s].find(c);
+	return itr->second;
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {

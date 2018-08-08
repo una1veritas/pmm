@@ -50,15 +50,23 @@ private:
 			output.clear();
 		}
 
-		std::vector<aspair>::const_iterator firstTrans(const alphabet bc = 0) const {
+		std::vector<aspair>::const_iterator find(const alphabet c) const {
 			for (std::vector<aspair>::const_iterator itr = trans.begin() ; itr != trans.end(); ++itr ) {
+				if ( itr->first >= c )
+					return itr;
+			}
+			return trans.end();
+		}
+
+		std::vector<aspair>::iterator firstTrans(const alphabet bc = 0) {
+			for (std::vector<aspair>::iterator itr = trans.begin() ; itr != trans.end(); ++itr ) {
 				if ( itr->first >= bc )
 					return itr;
 			}
 			return trans.end();
 		}
 
-		std::vector<aspair>::const_iterator nextTrans(const alphabet bc) const {
+		std::vector<aspair>::iterator nextTrans(const alphabet bc) {
 			return firstTrans(bc + 1);
 		}
 
