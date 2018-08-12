@@ -11,7 +11,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <array>
+//#include <array>
+#include <algorithm>
 //#include <set>
 //#include <map>
 
@@ -33,7 +34,18 @@ public:
 	static const uint32 alphabet_size = 1<<(sizeof(alphabet)*8);
 
 private:
-	typedef std::pair<alphabet,state_index> aspair;
+	struct aspair {
+		alphabet label;
+		state_index state;
+
+		aspair(const alphabet c) : label(c), state(State::undefined) {}
+		aspair(const alphabet c, const state_index nstate) : label(c), state(nstate) {}
+	};
+	struct ascompare {
+		bool operator() (const aspair & left, const aspair & right) {
+			return left.label < right.label;
+		}
+	};
 	struct State {
 		std::vector<aspair> trans;
 		state_index failure;
@@ -44,30 +56,41 @@ private:
 			undefined = (state_index) -1,
 		};
 
+
 		State() {
 			trans.clear();
 			failure = initial;
 			output.clear();
 		}
 
-		std::vector<aspair>::const_iterator find(const alphabet c) const {
-			for (std::vector<aspair>::const_iterator itr = trans.begin() ; itr != trans.end(); ++itr ) {
-				if ( itr->first >= c )
-					return itr;
+		state_index & transfer(const alphabet c) {
+			ascompare comp;
+			aspair dummypair(c);
+			std::vector<aspair>::iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
+			if ( itr != trans.end() && itr->label == c )
+				return itr->state;
+			else {
+				trans.insert(itr, aspair(c,State::undefined));
+				return itr->state;
 			}
-			return trans.end();
 		}
 
-		std::vector<aspair>::iterator firstTrans(const alphabet bc = 0) {
-			for (std::vector<aspair>::iterator itr = trans.begin() ; itr != trans.end(); ++itr ) {
-				if ( itr->first >= bc )
-					return itr;
-			}
-			return trans.end();
+		state_index transfer(const alphabet c) const {
+			ascompare comp;
+			aspair dummypair(c);
+			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
+			if ( itr == trans.end() )
+				return State::undefined;
+			else if ( itr->label != c )
+				return State::undefined;
+			return itr->state;
 		}
 
-		std::vector<aspair>::iterator nextTrans(const alphabet bc) {
-			return firstTrans(bc + 1);
+		std::vector<aspair>::const_iterator nextTransfer(const alphabet c) const {
+			ascompare comp;
+			aspair dummypair(c);
+			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
+			return itr;
 		}
 
 	};

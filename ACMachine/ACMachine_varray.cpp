@@ -39,9 +39,8 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 }
 */
 
-ACMachine::state_index ACMachine::transition(const ACMachine::state_index s, const ACMachine::alphabet c) const {
-	std::vector<aspair>::const_iterator itr = states[s].find(c);
-	return itr->second;
+ACMachine::state_index ACMachine::transition(const ACMachine::state_index s, const ACMachine::alphabet c) const  {
+	return states[s].transfer(c);
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
@@ -76,7 +75,7 @@ ACMachine::state_index ACMachine::addPath(const T & patt, const uint32 & length)
 		if ( !transfer(patt[pos]) ) {
 			newstate = stateCount(); //the next state of the existing last state
 			states.push_back(State());
-			states[current].trans[(uint16) patt[pos]] = newstate;
+			states[current].transfer(patt[pos]) = newstate;
 			//transitions[current].define(patt[pos],newstate);
 			states[current].failure = initialState();
 			states[current].output.clear();
@@ -109,8 +108,9 @@ void ACMachine::addFailures() {
 	std::deque<state_index> q;
 
 	// for states whose distance from the initial state is one.
-	for(uint16 c = 0; (c = states[State::initial].firstTrans(c)) < alphabet_size; ++c) {
-		const state_index & nxstate = states[State::initial].trans[c];
+	for (std::vector<aspair>::iterator itr = states[State::initial].trans.begin();
+			itr != states[State::initial].trans.end(); ++itr) {
+		const state_index & nxstate = itr->state;
 		// if it is neither an explicit failure, nor go-root-failure
 		states[nxstate].failure  = State::initial;
 		q.push_back(nxstate);
@@ -123,9 +123,11 @@ void ACMachine::addFailures() {
 		//std::cout << std::endl << "cstate " << cstate << std::endl;
 
 		// skips if == NULL
-		for (uint16 c = 0; (c = states[cstate].firstTrans((const alphabet) c)) < alphabet_size; ++c) {
+		for (auto itr = states[cstate].trans.begin();
+				itr != states[cstate].trans.end(); ++itr) {
 		//for (uint16 c = 0; c < alphabet_size; ++c) {
-			const state_index & nxstate = states[cstate].trans[c];
+			const alphabet & c = itr->label;
+			const state_index & nxstate = itr->state;
 			//const alphabet c  = assoc.first;
 			//const state nxstate = assoc.second;
 			//if ( nxstate == State::undefined ) continue;
@@ -224,9 +226,11 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state_index i, const 
 		out << "}";
 	}
 	out << "[";
-	for (uint16 c = 0; (c = states[i].firstTrans((const alphabet) c)) != alphabet_size; ++c) {
+	for (auto itr = states[i].trans.begin(); itr != states[i].trans.end(); ++itr) {
 //	for(uint16 c = 0; c < alphabet_size; ++c) {
-		out << "'" << (char) c << "'-> " << states[i].trans[c] << ", ";
+		const alphabet & c = itr->label;
+		const state_index & s = itr->state;
+		out << "'" << (char) c << "'-> " << s << ", ";
 	}
 	out << "~> " << states[i].failure;
 	out << "], ";
@@ -247,7 +251,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 	curr = State::initial;
 	str = "";
 
-	uint16 nextlabel;
+	std::vector<aspair>::const_iterator nextpair; //nextlabel;
 	while ( !path.empty() ) {
 		if ( curr == path.back().second ) {
 			// I'm on top.
@@ -258,19 +262,19 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			}
 			printStateOn(out,curr, str);
 			// the first transition arc
-			nextlabel = states[curr].firstTrans();
+			nextpair = states[curr].trans.begin(); // .firstTrans();
 		} else {
 			// returned from the child that still on path top.
 			// find next to path.back()
-			nextlabel = path.back().first;
+			const alphabet & c = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			nextlabel = states[curr].nextTrans((const alphabet) nextlabel);
+			nextpair = states[curr].nextTransfer(c+1);
+					//states[curr].nextTrans((const alphabet) nextlabel);
 		}
-		if ( nextlabel != alphabet_size ) {
-			state_index nexstate = states[curr].trans[nextlabel];
-			path.push_back(std::pair<alphabet,state_index>(nextlabel,nexstate)); // replace with new edge
-			curr = nexstate;
+		if ( nextpair != states[curr].trans.end() ) {
+			path.push_back(std::pair<alphabet,state_index>(nextpair->label,nextpair->state)); // replace with new edge
+			curr = nextpair->state;
 		} else {
 			std::pair<alphabet,state_index> aspair = path.back();
 			path.pop_back();
