@@ -13,8 +13,8 @@
 
 using namespace std;
 
-#include <ACMachine_array.h>
-#include <cmdargs.h>
+#include "ACMachine_array.h"
+#include "cmdargs.h"
 
 #include <time.h>
 
