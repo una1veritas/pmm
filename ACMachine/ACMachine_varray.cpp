@@ -40,7 +40,7 @@ ACMachine::state ACMachine::transition(const state src, const alphabet c) {
 */
 
 ACMachine::state_index ACMachine::transition(const ACMachine::state_index s, const ACMachine::alphabet c) const  {
-	return states[s].transfer(c);
+	return states[s].transition(c);
 }
 
 bool ACMachine::transfer(const alphabet & c, const bool ignore_case) {
@@ -75,7 +75,7 @@ ACMachine::state_index ACMachine::addPath(const T & patt, const uint32 & length)
 		if ( !transfer(patt[pos]) ) {
 			newstate = stateCount(); //the next state of the existing last state
 			states.push_back(State());
-			states[current].transfer(patt[pos]) = newstate;
+			states[current].transition(patt[pos], newstate);
 			//transitions[current].define(patt[pos],newstate);
 			states[current].failure = initialState();
 			states[current].output.clear();
@@ -224,6 +224,8 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state_index i, const 
 				out << ", ";
 		}
 		out << "}";
+	} else {
+		out << "{}";
 	}
 	out << "[";
 	for (auto itr = states[i].trans.begin(); itr != states[i].trans.end(); ++itr) {
@@ -269,7 +271,7 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 			const alphabet & c = path.back().first;
 			path.pop_back(); // remove last edge
 			curr = path.back().second;
-			nextpair = states[curr].nextTransfer(c+1);
+			nextpair = states[curr].nextTransition(c+1);
 					//states[curr].nextTrans((const alphabet) nextlabel);
 		}
 		if ( nextpair != states[curr].trans.end() ) {

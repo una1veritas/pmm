@@ -150,12 +150,18 @@ int main(const int argc, char * const * argv) {
 		c = targetinput->get();
 		swindow.push_back(c);
 		if ( pmm.read(c, ignore_case) ) {
-			//cout << strwd << endl;
+			cout << "current = " << pmm.currentState() << " output size = " <<  pmm.currentOutput().size() << endl;
 			if ( !pmm.currentOutput().empty() ) {
+				for(auto itr = pmm.currentOutput().begin();
+						itr != pmm.currentOutput().end(); ++itr) {
+					cout << *itr << ", " << flush;
+				}
+				cout << "has " << pmm.currentOutput().size() << " output(s)" << endl;
 				for(auto pattlen : pmm.currentOutput()) {
+					cout << pattlen << flush;
 					cout << swindow.substr(swindow.length() - pattlen , pattlen) << " @ " << (pos - pattlen + 1) << ", ";
 				}
-				cout << endl;
+				cout << "<" << endl;
 			}
 		} else {
 			//cout << "initial state" << endl;

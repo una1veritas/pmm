@@ -1,9 +1,9 @@
 
 CC	= gcc -std=c99
-CFLAGS = -Wall -g -O2
+CFLAGS = -Wall -g 
 
 CXX = g++ -std=c++11
-CXXFLAGS = -Wall -g -O2
+CXXFLAGS = -Wall -g 
 
 INCDIRS = -I./
 

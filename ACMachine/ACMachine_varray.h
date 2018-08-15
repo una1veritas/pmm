@@ -63,19 +63,7 @@ private:
 			output.clear();
 		}
 
-		state_index & transfer(const alphabet c) {
-			ascompare comp;
-			aspair dummypair(c);
-			std::vector<aspair>::iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
-			if ( itr != trans.end() && itr->label == c )
-				return itr->state;
-			else {
-				trans.insert(itr, aspair(c,State::undefined));
-				return itr->state;
-			}
-		}
-
-		state_index transfer(const alphabet c) const {
+		state_index transition(const alphabet c) const {
 			ascompare comp;
 			aspair dummypair(c);
 			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
@@ -86,11 +74,28 @@ private:
 			return itr->state;
 		}
 
-		std::vector<aspair>::const_iterator nextTransfer(const alphabet c) const {
+		state_index transition(const alphabet c, state_index state) {
+			ascompare comp;
+			aspair dummypair(c);
+			std::vector<aspair>::iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
+			if ( itr == trans.end()) {
+				trans.insert(itr, aspair(c,state));//trans.push_back(aspair(c,state));
+			} else if ( itr->label != c ) {
+				trans.insert(itr, aspair(c,state));
+			} else {
+				return itr->state = state;
+			}
+			return state;
+		}
+
+		std::vector<aspair>::const_iterator nextTransition(const alphabet c) const {
 			ascompare comp;
 			aspair dummypair(c);
 			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
 			return itr;
+		}
+		friend std::ostream & operator<<(std::ostream & out, const State & sta) {
+			return out;
 		}
 
 	};
