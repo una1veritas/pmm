@@ -89,20 +89,15 @@ template ACMachine::state_index ACMachine::addPath<char>(const char patt[]);
 template ACMachine::state_index ACMachine::addPath<ACMachine::alphabet>(const ACMachine::alphabet patt[]);
 template ACMachine::state_index ACMachine::addPath<std::string>(const std::string & patt);
 
-template <typename T>
-bool ACMachine::addOutput(const T & patt) {
+bool ACMachine::addOutput(const std::string & patt) {
 	states[current].output.push_back( patt.length() );
 	return true;
 }
 
-template <typename T>
-	bool ACMachine::addOutput(const T patt[]) {
-	const std::string p(patt);
-	return addOutput(p);
+bool ACMachine::addOutput(const char patt[]) {
+	states[current].output.push_back( std::strlen(patt) );
+	return true;
 }
-
-template bool ACMachine::addOutput<char>(const char patt[]);
-template bool ACMachine::addOutput<std::string>(const std::string & patt);
 
 void ACMachine::addFailures() {
 	std::deque<state_index> q;
@@ -224,15 +219,13 @@ std::ostream & ACMachine::printStateOn(std::ostream & out, state_index i, const 
 				out << ", ";
 		}
 		out << "}";
-	} else {
-		out << "{}";
 	}
 	out << "[";
 	for (auto itr = states[i].trans.begin(); itr != states[i].trans.end(); ++itr) {
 //	for(uint16 c = 0; c < alphabet_size; ++c) {
 		const alphabet & c = itr->label;
 		const state_index & s = itr->state;
-		out << "'" << (char) c << "'-> " << s << ", ";
+		out << "'" << (char) c << "': " << s << ", ";
 	}
 	out << "~> " << states[i].failure;
 	out << "], ";

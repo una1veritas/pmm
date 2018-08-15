@@ -11,13 +11,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
-//#include <array>
 #include <algorithm>
-//#include <set>
-//#include <map>
 
 #include <cinttypes>
-//#include <cstring>
+#include <cstring>
 
 typedef int32_t int32;
 typedef uint32_t uint32;
@@ -29,9 +26,6 @@ class ACMachine {
 public:
 	typedef int32 state_index;
 	typedef uint8 alphabet;
-//	typedef const std::vector<alphabet> ustring;
-
-	static const uint32 alphabet_size = 1<<(sizeof(alphabet)*8);
 
 private:
 	struct aspair {
@@ -41,21 +35,22 @@ private:
 		aspair(const alphabet c) : label(c), state(State::undefined) {}
 		aspair(const alphabet c, const state_index nstate) : label(c), state(nstate) {}
 	};
+
 	struct ascompare {
 		bool operator() (const aspair & left, const aspair & right) {
 			return left.label < right.label;
 		}
 	};
+
 	struct State {
 		std::vector<aspair> trans;
 		state_index failure;
-		std::vector< position > output;
+		std::vector<position> output;
 
 		enum {
 			initial = 0,
 			undefined = (state_index) -1,
 		};
-
 
 		State() {
 			trans.clear();
@@ -63,39 +58,36 @@ private:
 			output.clear();
 		}
 
+		uint32 byteSize() const {
+			return sizeof(State) + trans.size() * sizeof(aspair) + output.size() * sizeof(position);
+		}
+
 		state_index transition(const alphabet c) const {
 			ascompare comp;
-			aspair dummypair(c);
-			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
-			if ( itr == trans.end() )
-				return State::undefined;
-			else if ( itr->label != c )
+			aspair a_pair(c);
+			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), a_pair, comp);
+			if ( itr == trans.end() || itr->label != c )
 				return State::undefined;
 			return itr->state;
 		}
 
 		state_index transition(const alphabet c, state_index state) {
 			ascompare comp;
-			aspair dummypair(c);
-			std::vector<aspair>::iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
-			if ( itr == trans.end()) {
-				trans.insert(itr, aspair(c,state));//trans.push_back(aspair(c,state));
-			} else if ( itr->label != c ) {
+			aspair a_pair(c);
+			std::vector<aspair>::iterator itr = std::lower_bound(trans.begin(), trans.end(), a_pair, comp);
+			if ( itr == trans.end() || itr->label != c ) {
 				trans.insert(itr, aspair(c,state));
 			} else {
-				return itr->state = state;
+				itr->state = state;
 			}
 			return state;
 		}
 
 		std::vector<aspair>::const_iterator nextTransition(const alphabet c) const {
 			ascompare comp;
-			aspair dummypair(c);
-			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), dummypair, comp);
+			aspair a_pair(c);
+			std::vector<aspair>::const_iterator itr = std::lower_bound(trans.begin(), trans.end(), a_pair, comp);
 			return itr;
-		}
-		friend std::ostream & operator<<(std::ostream & out, const State & sta) {
-			return out;
 		}
 
 	};
@@ -115,6 +107,12 @@ public:
 	ACMachine(void);
 
 	uint32 stateCount() const { return states.size(); }
+	uint32 byteSize() const {
+		uint32 sum = sizeof(ACMachine);
+		for (auto itr = states.begin(); itr != states.end(); ++itr)
+			sum += itr->byteSize();
+		return sum;
+	}
 
 	state_index resetState() { return current = State::initial; }
 	state_index currentState() const { return current; }
@@ -131,10 +129,8 @@ public:
 	template <typename T>
 		state_index addPath(const T & patt);
 
-	template <typename T>
-		bool addOutput(const T & patt);
-	template <typename T>
-		bool addOutput(const T patt[]);
+	bool addOutput(const std::string & patt);
+	bool addOutput(const char patt[]);
 
 	void addFailures();
 
