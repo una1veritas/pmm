@@ -27,7 +27,7 @@ int main(const int argc, char * const * argv) {
 	bool verboseout = false;
 	string target;
 	ifstream patternfile;
-	istream * patterninput;
+	istream * patterninput = &cin;
 	ifstream targetfile;
 	istream * targetinput;
 
@@ -157,7 +157,7 @@ int main(const int argc, char * const * argv) {
 						itr != pmm.currentOutput().end(); ++itr) {
 				}
 				for(auto pattlen : pmm.currentOutput()) {
-					cout << swindow.substr(swindow.length() - pattlen , pattlen) << " @ " << (pos - pattlen + 1) << ", ";
+					cout << swindow.substr(swindow.length() - pattlen, pattlen) << " @ " << (pos - pattlen + 1) << ", ";
 				}
 				cout << endl;
 			}
