@@ -31,7 +31,7 @@ uint32 nlz32_ABM(uint32 x)
 class VarintSequence {
 	vector<uint8_t> byteseq;
 
-	uint32_t sigbits(const uint32_t & x) {
+	uint32_t signifbits(const uint32_t & x) {
 		// nlz32_IEEEFP(x)
 		// Hacker's Delight 2nd by H. S. Warren Jr., 5.3, p. 104 --
 		double d = (double)x + 0.5;
@@ -43,8 +43,9 @@ public:
 	VarintSequence() { byteseq.clear(); }
 
 	void insert(const uint32_t & pos, const uint64_t & val) {
-		uint32_t cval = val;
-		uint8_t len = sigbits(cval);
+		uint64_t cval = val;
+		uint8_t len = signifbits(cval>>32);
+		len = len == 0 ? signifbits(cval) : len;
 		len = len < 5 ? 0 : (len+3)>>3;
 		uint8_t bval = (len<<4) | (uint8_t)(cval & 0x0f);
 		vector<uint8_t>::iterator it = byteseq.begin()+pos;
@@ -58,16 +59,8 @@ public:
 		}
 	}
 
-	void append(const uint32_t & val) {
-		uint32_t cval = val;
-		uint8_t len = sigbits(cval);
-		len = len < 5 ? 0 : (len+3)>>3;
-		byteseq.push_back( (len<<4) | (uint8_t)(cval & 0x0f));
-		cval >>= 4;
-		while (cval != 0) {
-			byteseq.push_back(cval & 0xff);
-			cval >>= 8;
-		}
+	void append(const uint64_t & val) {
+		insert(byteseq.size(), val);
 	}
 
 	ostream & printOn(ostream & out) {
@@ -89,9 +82,9 @@ int main() {
 	cout << "sizeof(uint64_t) = " << sizeof(uint64_t) << endl;
 
 	VarintSequence seq;
-	seq.insert(0,753);
-	seq.insert(0,13);
-	seq.append(136534);
+	seq.append(753);
+	seq.append(13);
+	seq.append(1365344459);
 
 	seq.printOn(cout);
 	return 0;
