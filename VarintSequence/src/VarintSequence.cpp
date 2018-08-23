@@ -10,33 +10,33 @@
 #include <vector>
 using namespace std;
 
-/*
-uint32 nlz32_IEEEFP(uint32 x)
+uint32_t nlz32_IEEEFP(uint32_t x)
 {
 	// Hacker's Delight 2nd by H. S. Warren Jr., 5.3, p. 104 --
 	double d = (double)x + 0.5;
-	uint32 *p = ((uint32*) &d) + 1;
+	uint32_t *p = ((uint32_t *) &d) + 1;
 	return 0x41e - (*p>>20);  // 31 - ((*(p+1)>>20) - 0x3FF)
 }
-
+/*
 uint32 nlz32_ABM(uint32 x)
 {
     int ret;
     __asm__ volatile ("lzcnt %1, %0" : "=r" (ret) : "r" (x) );
     return ret;
 }
- *
  */
 
 class VarintSequence {
 	vector<uint8_t> byteseq;
 
-	uint32_t signifbits(const uint32_t & x) {
-		// nlz32_IEEEFP(x)
-		// Hacker's Delight 2nd by H. S. Warren Jr., 5.3, p. 104 --
-		double d = (double)x + 0.5;
-		uint32_t *p = ((uint32_t*) &d) + 1;
-		return 32 - (0x41e - (*p>>20));  // 31 - ((*(p+1)>>20) - 0x3FF)
+public:
+	static uint8_t signifbits(const uint64_t & x) {
+		struct LowHigh64 {
+			uint32_t low, high;
+		};
+		LowHigh64 * lh = & (LowHigh64 &) x;
+		const uint8_t nlz_high = nlz32_IEEEFP(lh->high);
+		return (nlz_high == 32 ? 32 - nlz32_IEEEFP(lh->low) : 64 - nlz_high );
 	}
 
 public:
@@ -79,13 +79,12 @@ public:
 int main() {
 	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
 
-	cout << "sizeof(uint64_t) = " << sizeof(uint64_t) << endl;
-
 	VarintSequence seq;
 	seq.append(753);
 	seq.append(13);
 	seq.append(1365344459);
 
 	seq.printOn(cout);
+
 	return 0;
 }
