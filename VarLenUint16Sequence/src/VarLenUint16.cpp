@@ -39,64 +39,45 @@ class VarLenUint16Sequence {
 
 public:
 	typedef vector<uint16_t>::iterator iterator;
-/*
-	public:
-		iterator(vector<uint16_t> & v, vector<uint16_t>::iterator i) : vect(v), itr(i) {}
+	typedef vector<uint16_t>::const_iterator const_iterator;
 
-		bool operator!=(const iterator & another) {
-			return itr != another.itr;
-		}
-
-		iterator & operator++() {
-			if ( itr != vect.end() )
-				++itr;
-			while ( itr != vect.end() && (*itr & 0x8000) == 0 )
-				++itr;
-			return *this;
-		}
-
-		uint64_t operator*() {
-			uint64_t val = *itr & 0x7fff;
-			vector<uint16_t>::size_type cnt;
-			++itr;
-			cnt = 1;
-			while ( itr != vect.end() && (*itr & 0x8000) == 0 ) {
-				val |= ((uint64_t)(*itr & 0x7fff)) << (15*cnt);
-				++cnt;
-				++itr;
-			}
-			return val;
-		}
-	};
-	iterator begin() { return iterator(uintseq, uintseq.begin()); }
-	iterator end() { return iterator(uintseq, uintseq.end()); }
-*/
-public:
 	VarLenUint16Sequence() { uintseq.clear(); count = 0; }
 
 	position_type size() const { return count; }
 
-	iterator find(const uint64_t & key) {
-		iterator leftitr = uintseq.begin();
-		iterator rightitr = uintseq.end();
-		iterator pos;
-		while ( leftitr != rightitr ) {
-			if ( read(rightitr) >= key)
-				--rightitr;
-			pos = leftitr + ((rightitr - leftitr)>>1);
-			if ( pos != uintseq.end() && (*pos & 0x8000) == 0 )
-				skip(pos);
+	iterator begin() { return uintseq.begin(); }
+	iterator end() { return uintseq.end(); }
+
+private:
+
+	iterator const_find(const uint64_t & key) const {
+	const_iterator const_find(const uint64_t & key) const {
+		const_iterator left= uintseq.begin();
+		const_iterator right = uintseq.end();
+		const_iterator pos;
+		while ( left != right ) {
+			pos = left + ((right - left)>>1);
+			while ( pos != uintseq.end() && (*pos & 0x8000) == 0 )
+				++pos;
+			if ( pos == right ) {
+				--pos;
+				while ( (*pos & 0x8000) == 0 )
+					--pos;
+			}
 			uint64_t val;
 			val = read(pos);
 			if ( val < key ) {
-				leftitr = pos;
+				if ( left == pos )
+					next(pos);
+				left = pos;
 			} else {
-				rightitr = pos;
+				right = pos;
 			}
 		}
-		return rightitr;
+		return right;
 	}
 
+/*
 	iterator find_linear(const uint64_t & key) {
 		iterator itr = uintseq.begin();
 		iterator t_itr;
@@ -108,7 +89,7 @@ public:
 		}
 		return itr;
 	}
-
+*/
 
 	void insert(const iterator & pos, const uint64_t & orgval) {
 		uint64_t val = orgval;
@@ -126,19 +107,24 @@ public:
 		++count;
 	}
 
+public:
+	bool includes(const uint64_t & key) {
+		const_iterator itr = find(key);
+		return (itr != uintseq.end() && key == read(itr));
+	}
+
 	void add(const uint64_t & val) {
-		iterator itr = find_linear(val);
+		iterator itr = find(val);
 		insert(itr, val);
 	}
 
-
-	uint64_t at(const position_type & index) {
-		iterator it = uintseq.begin();
+	uint64_t at(const position_type & index) const {
+		const_iterator it = uintseq.begin();
 		skip(it, index);
 		return next(it);
 	}
 
-	position_type skip(iterator & pos, const position_type & count = 1) {
+	position_type skip(const_iterator & pos, const position_type & count = 1) const {
 		position_type i;
 		for(i = 0; i < count; ++i ) {
 			if ( pos == uintseq.end() )
@@ -151,8 +137,7 @@ public:
 		return i;
 	}
 
-
-	uint64_t read(const iterator & it) {
+	uint64_t read(const const_iterator & it) const {
 		position_type len = 1;
 		if ( it == uintseq.end() )
 			return (uint64_t)-1;
@@ -168,7 +153,8 @@ public:
 		return val;
 	}
 
-	uint64_t next(iterator & it) {
+	uint64_t next(iterator & it) const { return next((const_iterator&) it); }
+	uint64_t next(const_iterator & it) const {
 		position_type len = 1;
 		if ( it == uintseq.end() )
 			return (uint64_t)-1;
@@ -186,8 +172,8 @@ public:
 		return val;
 	}
 
-	ostream & printOn(ostream & out) {
-		for (iterator it = uintseq.begin(); it != uintseq.end(); ) {
+	ostream & printOn(ostream & out) const {
+		for (const_iterator it = uintseq.begin(); it != uintseq.end(); ) {
 			if ( it != uintseq.begin() ) {
 				cout << ", ";
 			}
@@ -195,6 +181,10 @@ public:
 		}
 		out << ". ";
 		return out;
+	}
+
+	friend std::ostream & operator<<(std::ostream & out, const VarLenUint16Sequence & seq) {
+		return seq.printOn(out);
 	}
 };
 
@@ -213,8 +203,13 @@ int main() {
 	seq.printOn(cout);
 	cout << endl;
 
-	VarLenUint16Sequence::iterator itr = seq.find(384);
-	cout << "found " << seq.read(itr) << endl;
-
+	uint64_t val = 23694;
+	if ( seq.includes(val) ) {
+		cout << "found." << endl;
+	} else {
+		cout << "not found." << endl;
+		seq.add(val);
+		seq.printOn(cout);
+	}
 	return 0;
 }
