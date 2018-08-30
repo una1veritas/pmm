@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : VarLenUint16Sequence.cpp
+// Name        : OrderedVLUintSequence.cpp
 // Author      : 
 // Version     :
 // Copyright   : Your copyright notice
@@ -11,7 +11,7 @@
 #include <vector>
 using namespace std;
 
-class VarLenUint16Sequence {
+class OrderedVLUintSequence {
 	/// an ordered sequence of variable digit length unsigned integer
 	/// coded in 15 bits in uint16 arrays, start word with 1<<15 flag,
 	/// in little-endian 16bit-word order
@@ -41,7 +41,7 @@ public:
 	typedef vector<uint16_t>::iterator iterator;
 	typedef vector<uint16_t>::const_iterator const_iterator;
 
-	VarLenUint16Sequence() { uintseq.clear(); count = 0; }
+	OrderedVLUintSequence() { uintseq.clear(); count = 0; }
 
 	position_type size() const { return count; }
 
@@ -49,9 +49,7 @@ public:
 	iterator end() { return uintseq.end(); }
 
 private:
-
-	iterator const_find(const uint64_t & key) const {
-	const_iterator const_find(const uint64_t & key) const {
+	const_iterator find(const uint64_t & key) const {
 		const_iterator left= uintseq.begin();
 		const_iterator right = uintseq.end();
 		const_iterator pos;
@@ -108,13 +106,13 @@ private:
 	}
 
 public:
-	bool includes(const uint64_t & key) {
+	bool includes(const uint64_t & key) const {
 		const_iterator itr = find(key);
 		return (itr != uintseq.end() && key == read(itr));
 	}
 
 	void add(const uint64_t & val) {
-		iterator itr = find(val);
+		iterator itr = uintseq.begin() + (find(val) - uintseq.begin());
 		insert(itr, val);
 	}
 
@@ -183,7 +181,7 @@ public:
 		return out;
 	}
 
-	friend std::ostream & operator<<(std::ostream & out, const VarLenUint16Sequence & seq) {
+	friend std::ostream & operator<<(std::ostream & out, const OrderedVLUintSequence & seq) {
 		return seq.printOn(out);
 	}
 };
@@ -191,7 +189,7 @@ public:
 int main() {
 	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
 
-	VarLenUint16Sequence seq;
+	OrderedVLUintSequence seq;
 	seq.add(2337659);
 	seq.add(13);
 	seq.add(884753);
