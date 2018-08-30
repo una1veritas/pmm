@@ -16,10 +16,10 @@ class OrderedVLUintSequence {
 	/// coded in 15 bits in uint16 arrays, start word with 1<<15 flag,
 	/// in little-endian 16bit-word order
 
-	typedef vector<uint16_t>::size_type position_type;
+	typedef vector<uint8_t>::size_type position;
 
-	vector<uint16_t> uintseq;
-	position_type count;
+	vector<uint8_t> uintseq;
+	position count;
 
 	static uint8_t nlz32_IEEEFP(uint32_t x) {
 		/* Hacker's Delight 2nd by H. S. Warren Jr., 5.3, p. 104 -- */
@@ -38,15 +38,12 @@ class OrderedVLUintSequence {
 	}
 
 public:
-	typedef vector<uint16_t>::iterator iterator;
-	typedef vector<uint16_t>::const_iterator const_iterator;
+	typedef vector<uint8_t>::iterator iterator;
+	typedef vector<uint8_t>::const_iterator const_iterator;
 
 	OrderedVLUintSequence() { uintseq.clear(); count = 0; }
 
-	position_type size() const { return count; }
-
-	iterator begin() { return uintseq.begin(); }
-	iterator end() { return uintseq.end(); }
+	position size() const { return count; }
 
 private:
 	const_iterator find(const uint64_t & key) const {
@@ -55,11 +52,11 @@ private:
 		const_iterator pos;
 		while ( left != right ) {
 			pos = left + ((right - left)>>1);
-			while ( pos != uintseq.end() && (*pos & 0x8000) == 0 )
+			while ( pos != uintseq.end() && (*pos & 0x80) == 0 )
 				++pos;
 			if ( pos == right ) {
 				--pos;
-				while ( (*pos & 0x8000) == 0 )
+				while ( (*pos & 0x80) == 0 )
 					--pos;
 			}
 			uint64_t val;
@@ -92,15 +89,15 @@ private:
 	void insert(const iterator & pos, const uint64_t & orgval) {
 		uint64_t val = orgval;
 		uint8_t digits = signifbits(val);
-		uint8_t len = ((digits ? digits : 1) - 1)/15 + 1;
-		position_type offset = pos - uintseq.begin();
-		uintseq.insert(pos, len, (uint16_t) ((1<<15) | (val & 0x7fff)) );
-		val >>= 15;
+		uint8_t len = ((digits ? digits : 1) - 1)/7 + 1;
+		position offset = pos - uintseq.begin();
+		uintseq.insert(pos, len, (uint16_t) ((1<<7) | (val & 0x7f)) );
+		val >>= 7;
 		iterator it = uintseq.begin() + offset + 1;
 		while ( val ) {
-			*(it) = (uint16_t) (val & 0x7fff);
+			*(it) = (uint8_t) (val & 0x7f);
 			++it;
-			val >>= 15;
+			val >>= 7;
 		}
 		++count;
 	}
@@ -116,19 +113,19 @@ public:
 		insert(itr, val);
 	}
 
-	uint64_t at(const position_type & index) const {
+	uint64_t at(const position & index) const {
 		const_iterator it = uintseq.begin();
 		skip(it, index);
 		return next(it);
 	}
 
-	position_type skip(const_iterator & pos, const position_type & count = 1) const {
-		position_type i;
+	position skip(const_iterator & pos, const position & count = 1) const {
+		position i;
 		for(i = 0; i < count; ++i ) {
 			if ( pos == uintseq.end() )
 				return i;
 			++pos;
-			while ( pos != uintseq.end() && (*pos & 0x8000) == 0 ) {
+			while ( pos != uintseq.end() && (*pos & 0x80) == 0 ) {
 				++pos;
 			}
 		}
@@ -136,35 +133,35 @@ public:
 	}
 
 	uint64_t read(const const_iterator & it) const {
-		position_type len = 1;
+		position len = 1;
 		if ( it == uintseq.end() )
 			return (uint64_t)-1;
-		while ( (it+len) != uintseq.end() && (*(it+len) & 0x8000) == 0 ) {
+		while ( (it+len) != uintseq.end() && (*(it+len) & 0x80) == 0 ) {
 			++len;
 		}
 		uint64_t val = 0;
-		for(position_type i = len; i > 0; ) {
+		for(position i = len; i > 0; ) {
 			--i;
-			val <<= 15;
-			val |= *(it+i) & 0x7fff;
+			val <<= 7;
+			val |= *(it+i) & 0x7f;
 		}
 		return val;
 	}
 
 	uint64_t next(iterator & it) const { return next((const_iterator&) it); }
 	uint64_t next(const_iterator & it) const {
-		position_type len = 1;
+		position len = 1;
 		if ( it == uintseq.end() )
 			return (uint64_t)-1;
-		while ( (it+len) != uintseq.end() && (*(it+len) & 0x8000) == 0 ) {
+		while ( (it+len) != uintseq.end() && (*(it+len) & 0x80) == 0 ) {
 			++len;
 		}
 		uint64_t val = 0;
 		//cout << "len = " << len << endl;
-		for(position_type i = len; i > 0; ) {
+		for(position i = len; i > 0; ) {
 			--i;
-			val <<= 15;
-			val |= *(it+i) & 0x7fff;
+			val <<= 7;
+			val |= *(it+i) & 0x7f;
 		}
 		it += len;
 		return val;
