@@ -27,18 +27,19 @@ int main() {
 	ACMachine pmm;
 	vector<string> words = {
 			"cat",
-			"cap",
-			"cab",
 			"at",
-			"attention",
-			"abandon",
-			"category",
-			"apple",
-			"cape",
+			"cap",
 			"bat",
+			"battery",
+			"bag",
 	};
 
 	pmm.addPatterns(words);
+	if ( pmm.parent_child(0,7) ) {
+		cout << "yes." << endl;
+	} else {
+		cout << "No." << endl;
+	}
 
 	cout << pmm << endl;
 

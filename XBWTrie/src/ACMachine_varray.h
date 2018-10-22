@@ -149,6 +149,9 @@ public:
 		return acm.printOn(out);
 	}
 
+	// as a trie
+	bool parent_child(const state_index & p, const state_index & c) const;
+
 };
 
 #endif /* ACMACHINE_ARRAY_H_ */

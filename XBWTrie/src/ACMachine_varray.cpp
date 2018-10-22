@@ -283,3 +283,13 @@ std::ostream & ACMachine::printOn(std::ostream & out) const {
 	out << ") ";
 	return out;
 }
+
+/// as a trie
+bool ACMachine::parent_child(const state_index & parent, const state_index & child) const {
+	for(auto itr = states[parent].trans.begin(); itr != states[parent].trans.end(); ++itr) {
+		if ( itr->state == child )
+			return true;
+	}
+	return false;
+}
+
