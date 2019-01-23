@@ -14,9 +14,9 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include "ACMachine.h"
 #include "xbw.h"
 #include "commandargs.h"
+#include "ACMachine.h"
 
 using namespace std;
 
