@@ -4,7 +4,7 @@
 *.txt~
 Debug
 *ignore.txt
-
+.DS_Store
 .metadata
 RemoteSystemsTempFiles
 .settings
