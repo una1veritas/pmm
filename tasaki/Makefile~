@@ -8,7 +8,7 @@ CXXFLAGS = -Wall -g -O2
 INCDIRS = -I./ -I/usr/local/include
 
 INCLUDES = 
-OBJS = main.o commandargs.o xbw.o ACMachine.o
+OBJS = main.o commandargs.o xbw.o
 LIBS = -L/usr/local/lib -lsdsl 
 TARGET = acm.exe
 
