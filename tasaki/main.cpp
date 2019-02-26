@@ -90,7 +90,7 @@ int main(const int argc, char * const * argv) {
 
 	vector<string> words;
 	istringstream line;
-	unsigned char d;
+	//unsigned char d;
 	string tmp;
 	
 	
@@ -112,8 +112,8 @@ int main(const int argc, char * const * argv) {
 	}
 	
 
-	int init_time = 0;
-	struct timeval init_start, init_end;
+	//int init_time = 0;
+	//struct timeval init_start; //, init_end;
 	if(make_xbw){
 		xbw.buildingxbw(words, show_memory, words.size(), memory_or_speed);//xbw-acmachine
 		//cout << "xbw-acmachine" << endl;

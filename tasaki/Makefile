@@ -1,8 +1,8 @@
 
-CC	= gcc -std=c99
+CC	= /opr/local/bin/gcc -std=c99
 CFLAGS = -Wall -g -O2
 
-CXX = g++ -std=c++11
+CXX = /opt/local/bin/g++ -std=c++17
 CXXFLAGS = -Wall -g -O2
 
 INCDIRS = -I./ -I/usr/local/include
@@ -24,3 +24,6 @@ $(TARGET):	$(OBJS) $(INCLUDES)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
 all: $(TARGET)
+
+clean:
+	\rm -f $(OBJS)
